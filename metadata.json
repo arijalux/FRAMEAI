@@ -1,0 +1,6 @@
+{
+  "name": "FRAMEAI",
+  "description": "AI-powered eyewear marketplace for Indonesian eyewear SMEs featuring virtual try-on, face shape styling analysis, and SME artisan seller tools.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

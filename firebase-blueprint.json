@@ -1,0 +1,189 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Customer or Artisan Seller profile in FRAMEAI",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "avatar": { "type": "string" },
+        "role": { "type": "string", "enum": ["customer", "seller"] },
+        "sellerId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "Seller": {
+      "title": "Seller",
+      "description": "Indonesian SME eyewear artisan or atelier",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "name": { "type": "string" },
+        "city": { "type": "string" },
+        "location": { "type": "string" },
+        "province": { "type": "string" },
+        "status": { "type": "string" },
+        "story": { "type": "string" },
+        "specialty": { "type": "string" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "joinedYear": { "type": "number" },
+        "artisanCount": { "type": "number" },
+        "isVerified": { "type": "boolean" },
+        "bannerImage": { "type": "string" },
+        "logo": { "type": "string" }
+      },
+      "required": ["id", "name", "city", "status"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Handcrafted eyewear frame catalog item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "tagline": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "material": { "type": "string" },
+        "shape": { "type": "string" },
+        "style": { "type": "string" },
+        "bestForFaceShapes": { "type": "array", "items": { "type": "string" } },
+        "bridgeWidth": { "type": "number" },
+        "lensWidth": { "type": "number" },
+        "templeLength": { "type": "number" },
+        "weight": { "type": "number" },
+        "sellerId": { "type": "string" },
+        "sellerName": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "colors": { "type": "array" },
+        "model3dUrl": { "type": "string" },
+        "isPublished": { "type": "boolean" },
+        "stock": { "type": "number" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" }
+      },
+      "required": ["id", "name", "price", "material", "shape", "sellerId"]
+    },
+    "Cart": {
+      "title": "Cart",
+      "description": "Active shopping cart items for user or session",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "items": { "type": "array" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "items"]
+    },
+    "Wishlist": {
+      "title": "Wishlist",
+      "description": "User curated wishlist frames",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "productIds": { "type": "array", "items": { "type": "string" } },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "productIds"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Eyewear purchase order with prescription and shipping details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "customerName", "customerEmail", "items", "totalAmount"]
+    },
+    "TryOnSession": {
+      "title": "TryOnSession",
+      "description": "Virtual AR Try-On face scan and fit metrics telemetry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "productId": { "type": "string" },
+        "userId": { "type": "string" },
+        "faceShape": { "type": "string" },
+        "pupillaryDistance": { "type": "number" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["productId", "timestamp"]
+    },
+    "Recommendation": {
+      "title": "Recommendation",
+      "description": "AI face match recommendation report",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "faceShape": { "type": "string" },
+        "recommendedProducts": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["faceShape", "recommendedProducts"]
+    },
+    "SellerAnalytics": {
+      "title": "SellerAnalytics",
+      "description": "SME artisan dashboard metrics and demographics",
+      "type": "object",
+      "properties": {
+        "sellerId": { "type": "string" },
+        "totalRevenue": { "type": "number" },
+        "tryOns": { "type": "number" },
+        "views": { "type": "number" },
+        "faceShapeDemographics": { "type": "array" }
+      },
+      "required": ["sellerId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Registered user accounts"
+    },
+    "/sellers/{sellerId}": {
+      "schema": "Seller",
+      "description": "Indonesian SME eyewear sellers"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Eyewear frame catalog"
+    },
+    "/carts/{userId}": {
+      "schema": "Cart",
+      "description": "User shopping carts"
+    },
+    "/wishlists/{userId}": {
+      "schema": "Wishlist",
+      "description": "User wishlists"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer purchase orders"
+    },
+    "/tryOnSessions/{sessionId}": {
+      "schema": "TryOnSession",
+      "description": "Virtual AR Try-on records"
+    },
+    "/recommendations/{recId}": {
+      "schema": "Recommendation",
+      "description": "AI frame recommendation results"
+    },
+    "/sellerAnalytics/{sellerId}": {
+      "schema": "SellerAnalytics",
+      "description": "Seller business and demand metrics"
+    }
+  }
+}
