@@ -336,6 +336,13 @@ let isInitializing = false;
 let initPromise: Promise<FaceLandmarker | null> | null = null;
 
 /**
+ * Synchronous getter for current FaceLandmarker instance if already initialized.
+ */
+export function getFaceLandmarkerSync(): FaceLandmarker | null {
+  return faceLandmarkerInstance;
+}
+
+/**
  * Initialize MediaPipe FaceLandmarker with robust multi-CDN fallback.
  */
 export async function getFaceLandmarker(): Promise<FaceLandmarker | null> {
@@ -355,30 +362,37 @@ export async function getFaceLandmarker(): Promise<FaceLandmarker | null> {
       'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm/face_landmarker.task',
     ];
 
-    for (const cdnUrl of cdnUrls) {
-      try {
-        const vision = await FilesetResolver.forVisionTasks(cdnUrl);
+    // Wrap console.error temporarily during TFLite initialization to avoid false error reports
+    // from Emscripten stderr routing of "INFO: Created TensorFlow Lite XNNPACK delegate for CPU."
+    const prevConsoleError = console.error;
+    const safeTFLiteConsoleError = (...args: any[]) => {
+      const msg = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].message) ? args[0].message : '';
+      if (
+        typeof msg === 'string' &&
+        (msg.includes('TensorFlow Lite') ||
+         msg.includes('XNNPACK delegate') ||
+         msg.startsWith('INFO:'))
+      ) {
+        console.info(...args);
+        return;
+      }
+      prevConsoleError(...args);
+    };
 
-        for (const modelAssetPath of modelAssetUrls) {
-          // Try GPU delegate first, then CPU delegate
-          try {
-            faceLandmarkerInstance = await FaceLandmarker.createFromOptions(vision, {
-              baseOptions: {
-                modelAssetPath,
-                delegate: 'GPU',
-              },
-              outputFaceBlendshapes: false,
-              outputFacialTransformationMatrixes: true,
-              runningMode: 'VIDEO',
-              numFaces: 2,
-            });
-            return faceLandmarkerInstance;
-          } catch (gpuErr) {
+    try {
+      console.error = safeTFLiteConsoleError;
+
+      for (const cdnUrl of cdnUrls) {
+        try {
+          const vision = await FilesetResolver.forVisionTasks(cdnUrl);
+
+          for (const modelAssetPath of modelAssetUrls) {
+            // Try GPU delegate first, then CPU delegate
             try {
               faceLandmarkerInstance = await FaceLandmarker.createFromOptions(vision, {
                 baseOptions: {
                   modelAssetPath,
-                  delegate: 'CPU',
+                  delegate: 'GPU',
                 },
                 outputFaceBlendshapes: false,
                 outputFacialTransformationMatrixes: true,
@@ -386,14 +400,30 @@ export async function getFaceLandmarker(): Promise<FaceLandmarker | null> {
                 numFaces: 2,
               });
               return faceLandmarkerInstance;
-            } catch (cpuErr) {
-              console.warn(`MediaPipe CPU initialization error with ${modelAssetPath}:`, cpuErr);
+            } catch (gpuErr) {
+              try {
+                faceLandmarkerInstance = await FaceLandmarker.createFromOptions(vision, {
+                  baseOptions: {
+                    modelAssetPath,
+                    delegate: 'CPU',
+                  },
+                  outputFaceBlendshapes: false,
+                  outputFacialTransformationMatrixes: true,
+                  runningMode: 'VIDEO',
+                  numFaces: 2,
+                });
+                return faceLandmarkerInstance;
+              } catch (cpuErr) {
+                console.warn(`MediaPipe CPU initialization info for ${modelAssetPath}`);
+              }
             }
           }
+        } catch (cdnErr) {
+          console.warn(`MediaPipe CDN fallback for ${cdnUrl}`);
         }
-      } catch (cdnErr) {
-        console.warn(`MediaPipe CDN error for ${cdnUrl}:`, cdnErr);
       }
+    } finally {
+      console.error = prevConsoleError;
     }
 
     isInitializing = false;

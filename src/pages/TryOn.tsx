@@ -30,6 +30,7 @@ import {
 import { Product } from '../types';
 import {
   getFaceLandmarker,
+  getFaceLandmarkerSync,
   extractPoseFromLandmarks,
   SmoothPoseFilter,
   FaceTrackingPose,
@@ -257,7 +258,7 @@ export const TryOn: React.FC<{ productId?: string }> = ({ productId }) => {
       }
 
       if (video && container && video.readyState >= 2 && !video.paused) {
-        const landmarker = await getFaceLandmarker();
+        const landmarker = getFaceLandmarkerSync() || (await getFaceLandmarker());
 
         if (landmarker && video.currentTime !== lastVideoTime) {
           lastVideoTime = video.currentTime;
@@ -437,7 +438,7 @@ export const TryOn: React.FC<{ productId?: string }> = ({ productId }) => {
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 30px "Playfair Display", serif';
-    ctx.fillText(`FRAMEAI • ${product.name}`, 40, 990);
+    ctx.fillText(`BJ Homemade • ${product.name}`, 40, 990);
 
     ctx.fillStyle = '#E5E5E5';
     ctx.font = '18px sans-serif';
@@ -517,8 +518,23 @@ export const TryOn: React.FC<{ productId?: string }> = ({ productId }) => {
 
           {/* Product Preview Card */}
           <div className="p-4 bg-white/5 rounded-2xl border border-white/10 flex items-center gap-4 text-left">
-            <div className="w-20 h-16 bg-[#262626] rounded-xl flex items-center justify-center overflow-hidden p-2">
-              <FrameViewer shape={product.frameShape} colorHex="#FFFFFF" width={60} height={35} />
+            <div className="w-20 h-16 bg-[#262626] rounded-xl flex items-center justify-center overflow-hidden p-1.5">
+              {product.thumbnail ? (
+                <img
+                  src={product.thumbnail}
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.dataset.triedFallback) {
+                      target.dataset.triedFallback = 'true';
+                      target.src = '/images/products/product-01-teak-rect-main.svg';
+                    }
+                  }}
+                />
+              ) : (
+                <FrameViewer shape={product.frameShape} colorHex="#FFFFFF" width={60} height={35} />
+              )}
             </div>
             <div>
               <h3 className="text-sm font-serif italic text-white font-bold">{product.name}</h3>
@@ -549,7 +565,7 @@ export const TryOn: React.FC<{ productId?: string }> = ({ productId }) => {
         </div>
 
         <footer className="text-[11px] text-white/40 text-center pb-2">
-          FRAMEAI • Real-Time Web AR Eyewear Fitting
+          BJ Homemade • Real-Time Web AR Eyewear Fitting
         </footer>
       </div>
     );
@@ -837,7 +853,7 @@ export const TryOn: React.FC<{ productId?: string }> = ({ productId }) => {
                 </button>
                 <a
                   href={snapshotUrl}
-                  download={`frameai-${product.slug}-fitting.jpg`}
+                  download={`bj-homemade-${product.slug}-fitting.jpg`}
                   className="flex-1 py-3 bg-orange-700 text-white rounded-full text-xs font-bold uppercase tracking-wider hover:bg-orange-800 flex items-center justify-center gap-1.5 transition-all shadow-lg cursor-pointer"
                 >
                   <Download size={14} />

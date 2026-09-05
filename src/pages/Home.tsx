@@ -9,19 +9,23 @@ import {
   Eye,
   Camera,
   Layers,
-  MapPin,
   ShieldCheck,
-  CheckCircle2,
-  Sliders,
   ChevronRight,
   ChevronLeft,
   Heart,
   ShoppingBag,
+  Sliders,
+  CheckCircle2,
+  Compass,
+  TreeDeciduous,
+  Hammer,
+  Leaf,
+  ScanFace,
 } from 'lucide-react';
-import { FrameShape, FrameStyle } from '../types';
+import { FrameShape } from '../types';
 
 export const Home: React.FC = () => {
-  const { navigate, products, sellers, addToCart, toggleWishlist, isWishlisted } = useApp();
+  const { navigate, products, addToCart, toggleWishlist, isWishlisted } = useApp();
 
   const spotlightProducts = products.length > 0 ? products.slice(0, 6) : [];
   const [heroCardIndex, setHeroCardIndex] = useState(0);
@@ -62,11 +66,9 @@ export const Home: React.FC = () => {
     setHeroCardIndex(index);
   };
 
-  // Trending Frames Formula: trendScore = (views * 0.1) + (tryOns * 0.4) + (wishlists * 0.2) + (purchases * 1.0)
+  // Trending Frames
   const trendingProducts = React.useMemo(() => {
     if (!products || products.length === 0) return [];
-    
-    // Sort all products by calculated trend score
     const scored = [...products].map((p) => {
       const v = p.views ?? 1000;
       const t = p.tryOns ?? 300;
@@ -75,34 +77,12 @@ export const Home: React.FC = () => {
       const calculatedScore = p.trendScore || (v * 0.1 + t * 0.4 + w * 0.2 + b * 1.0);
       return { product: p, score: calculatedScore };
     });
-
     scored.sort((a, b) => b.score - a.score);
-
-    // Pick top products with SME diversity (1 per unique SME first, then remaining top)
-    const selected: typeof products = [];
-    const seenSellers = new Set<string>();
-
-    for (const item of scored) {
-      if (!seenSellers.has(item.product.sellerId) && selected.length < 8) {
-        seenSellers.add(item.product.sellerId);
-        selected.push(item.product);
-      }
-    }
-
-    // If still less than 8, fill with next top scored products
-    for (const item of scored) {
-      if (selected.length >= 8) break;
-      if (!selected.some((p) => p.id === item.product.id)) {
-        selected.push(item.product);
-      }
-    }
-
-    return selected;
+    return scored.map((item) => item.product).slice(0, 10);
   }, [products]);
 
-  // Carousel state for Trending Handcrafted Frames
+  // Carousel state for Trending Frames
   const [trendingIndex, setTrendingIndex] = useState(0);
-  const [artisanIndex, setArtisanIndex] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(4);
 
   useEffect(() => {
@@ -122,7 +102,6 @@ export const Home: React.FC = () => {
   }, []);
 
   const maxTrendingIndex = Math.max(0, trendingProducts.length - cardsPerView);
-  const maxArtisanIndex = Math.max(0, sellers.length - cardsPerView);
 
   const handleNextTrending = () => {
     setTrendingIndex((prev) => (prev >= maxTrendingIndex ? 0 : prev + 1));
@@ -130,14 +109,6 @@ export const Home: React.FC = () => {
 
   const handlePrevTrending = () => {
     setTrendingIndex((prev) => (prev <= 0 ? maxTrendingIndex : prev - 1));
-  };
-
-  const handleNextArtisan = () => {
-    setArtisanIndex((prev) => (prev >= maxArtisanIndex ? 0 : prev + 1));
-  };
-
-  const handlePrevArtisan = () => {
-    setArtisanIndex((prev) => (prev <= 0 ? maxArtisanIndex : prev - 1));
   };
 
   const shapes: { shape: FrameShape; desc: string; iconShape: FrameShape }[] = [
@@ -149,35 +120,29 @@ export const Home: React.FC = () => {
     { shape: 'Geometric', desc: 'Faceted architectural edges', iconShape: 'Geometric' },
   ];
 
-  const styles: { style: FrameStyle; tag: string; bg: string }[] = [
-    { style: 'Minimal', tag: 'Pure lines & weightless titanium', bg: 'bg-[#EFECE6]' },
-    { style: 'Professional', tag: 'Commanding boardroom presence', bg: 'bg-[#E8E4DE]' },
-    { style: 'Casual', tag: 'Effortless everyday comfort', bg: 'bg-[#F2EEE9]' },
-    { style: 'Vintage', tag: 'Hand-carved teak & mid-century acetates', bg: 'bg-[#E5DFD7]' },
-    { style: 'Bold', tag: 'Dramatic silhouettes & rich colors', bg: 'bg-[#EFE8DF]' },
-  ];
-
   return (
     <div className="space-y-24 pb-20">
-      {/* HERO SECTION - Stitch Clean Minimalism Architecture */}
+      {/* HERO SECTION - BJ HOMEMADE */}
       <section className="relative pt-6 sm:pt-12 pb-6 sm:pb-8">
         <div className="max-w-7xl mx-auto px-6 sm:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-7 pr-0 lg:pr-6">
-              <div className="flex items-center gap-3 mb-6 text-black/50 text-xs sm:text-sm tracking-widest uppercase font-semibold">
+              <div className="flex items-center gap-3 mb-6 text-black/60 text-xs sm:text-sm tracking-widest uppercase font-semibold">
                 <div className="w-10 sm:w-12 h-px bg-black/20"></div>
-                <span>SME Eyewear Marketplace</span>
+                <span className="flex items-center gap-1.5">
+                  <TreeDeciduous size={14} className="text-orange-800" />
+                  Handcrafted Wooden Eyewear
+                </span>
               </div>
 
-              <h1 className="text-5xl sm:text-6xl lg:text-[76px] xl:text-[84px] leading-[0.95] sm:leading-[0.9] font-serif font-light mb-8 tracking-tight text-[#1A1A1A]">
-                Find the frame <br />
-                that fits your <span className="italic font-normal">face</span> <br />
-                and your <span className="italic font-normal text-orange-700">style.</span>
+              <h1 className="text-5xl sm:text-6xl lg:text-[72px] xl:text-[80px] leading-[0.95] sm:leading-[0.92] font-serif font-light mb-8 tracking-tight text-[#1A1A1A]">
+                CRAFTED BY HAND. <br />
+                DISCOVERED WITH <span className="italic font-normal text-orange-800">AI.</span>
               </h1>
 
-              <p className="text-base sm:text-lg text-black/65 max-w-lg mb-10 leading-relaxed font-normal">
-                Discover handcrafted eyewear from Indonesian artisans. Our AI analyzes your facial structure and personal aesthetics for the perfect stylistic match.
+              <p className="text-base sm:text-lg text-black/70 max-w-lg mb-10 leading-relaxed font-normal">
+                Explore handcrafted wooden eyewear from BJ Homemade and find the frame that fits your style through AI-powered recommendations and AR virtual try-on.
               </p>
 
               <div className="flex flex-wrap items-center gap-4">
@@ -195,14 +160,24 @@ export const Home: React.FC = () => {
                   className="px-8 sm:px-10 py-4 sm:py-5 border border-black/20 bg-transparent rounded-full text-xs sm:text-sm font-bold uppercase tracking-widest hover:bg-white transition-all cursor-pointer"
                   id="hero-explore-btn"
                 >
-                  Explore Frames
+                  Explore Collection
                 </button>
               </div>
 
-              {/* Artisan Locations Footnote */}
-              <div className="mt-12 pt-8 border-t border-black/10 flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-black/50">
-                <span className="font-semibold uppercase tracking-wider text-[10px]">Active Ateliers:</span>
-                <span className="text-black/80 font-medium">Bandung • Yogyakarta • Surabaya • Denpasar • Jakarta • Malang • Semarang • Solo</span>
+              {/* Brand Commitments Strip */}
+              <div className="mt-12 pt-8 border-t border-black/10 flex flex-wrap items-center gap-4 sm:gap-8 text-xs text-black/60">
+                <div className="flex items-center gap-2">
+                  <TreeDeciduous size={14} className="text-orange-800" />
+                  <span className="font-semibold text-black/80">Natural Wood Grains</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Camera size={14} className="text-orange-800" />
+                  <span className="font-semibold text-black/80">AR Webcam Fitting</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ScanFace size={14} className="text-orange-800" />
+                  <span className="font-semibold text-black/80">Gemini AI Styling</span>
+                </div>
               </div>
             </div>
 
@@ -247,103 +222,85 @@ export const Home: React.FC = () => {
                         x: 0,
                         scale: 1,
                         rotate: 0,
-                        transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
+                        transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
                       }}
                       exit={(dir: number) => ({
                         opacity: 0,
                         x: dir > 0 ? -50 : 50,
                         scale: 0.94,
                         rotate: dir > 0 ? -2 : 2,
-                        transition: { duration: 0.25, ease: 'easeIn' },
+                        transition: { duration: 0.35, ease: [0.7, 0, 0.84, 0] },
                       })}
-                      className="w-full min-h-[530px] sm:min-h-[570px] h-full bg-white rounded-[36px] sm:rounded-[40px] shadow-2xl p-6 sm:p-8 flex flex-col justify-between border border-black/5"
+                      className="w-full bg-white rounded-[40px] p-6 sm:p-8 shadow-xl border border-black/5 flex flex-col justify-between"
+                      id="hero-featured-card"
                     >
-                      {/* Card Header & Switcher Controls */}
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-orange-700 block">
-                              Spotlight Artisan
-                            </span>
-                            <span className="text-[10px] text-black/30 font-bold">•</span>
-                            <span className="text-[10px] font-mono font-bold text-black/40">
-                              {String(heroCardIndex + 1).padStart(2, '0')}/{String(spotlightProducts.length).padStart(2, '0')}
-                            </span>
-                          </div>
-                          <span className="text-xs font-semibold text-black/75 flex items-center gap-1 mt-0.5">
-                            <MapPin size={12} className="text-orange-700" />
-                            {currentHeroProduct.sellerLocation}, Indonesia
-                          </span>
-                        </div>
+                      {/* Card Header & Controls */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-amber-50 text-amber-950 rounded-full border border-amber-200/60">
+                          Handcrafted Wood
+                        </span>
 
-                        {/* Interactive Next & Prev Switcher */}
-                        <div className="flex items-center gap-1.5 bg-[#F5F2ED] p-1 rounded-full border border-black/5">
+                        <div className="flex items-center gap-1.5">
                           <button
-                            onClick={(e) => handlePrevHeroCard(e)}
-                            className="w-7 h-7 rounded-full bg-white hover:bg-black hover:text-white text-black/70 flex items-center justify-center transition-all shadow-2xs cursor-pointer"
-                            title="Previous Frame"
-                            aria-label="Previous Frame"
+                            onClick={handlePrevHeroCard}
+                            className="w-8 h-8 rounded-full bg-[#F5F2ED] hover:bg-black hover:text-white text-black/70 flex items-center justify-center transition-colors cursor-pointer"
+                            title="Previous frame"
+                            aria-label="Previous frame"
                             type="button"
-                            id="hero-card-prev-btn"
                           >
-                            <ChevronLeft size={14} />
+                            <ChevronLeft size={16} />
                           </button>
                           <button
-                            onClick={(e) => handleNextHeroCard(e)}
-                            className="w-7 h-7 rounded-full bg-white hover:bg-black hover:text-white text-black/70 flex items-center justify-center transition-all shadow-2xs cursor-pointer"
-                            title="Next Frame"
-                            aria-label="Next Frame"
+                            onClick={handleNextHeroCard}
+                            className="w-8 h-8 rounded-full bg-[#F5F2ED] hover:bg-black hover:text-white text-black/70 flex items-center justify-center transition-colors cursor-pointer"
+                            title="Next frame"
+                            aria-label="Next frame"
                             type="button"
-                            id="hero-card-next-btn"
                           >
-                            <ChevronRight size={14} />
+                            <ChevronRight size={16} />
                           </button>
                         </div>
                       </div>
 
-                      {/* Card Canvas Visual */}
-                      <div className="flex-grow flex flex-col items-center justify-center py-2">
+                      {/* Frame Visual Display */}
+                      <div className="my-6">
                         <div
                           onClick={() => navigate(`/product/${currentHeroProduct.id}`)}
-                          className="w-full h-44 sm:h-48 bg-[#F5F2ED] rounded-3xl flex items-center justify-center overflow-hidden relative group cursor-pointer border border-black/5"
+                          className="w-full h-48 sm:h-56 bg-[#F5F2ED] rounded-3xl flex items-center justify-center overflow-hidden cursor-pointer group relative p-4"
                         >
-                          <div className="absolute top-3 left-3 z-10 px-2.5 py-0.5 bg-white/90 backdrop-blur-xs rounded-full text-[9px] font-bold tracking-wider text-black uppercase border border-black/5">
-                            {currentHeroProduct.material}
-                          </div>
-
-                          <div className="absolute inset-0 bg-black/15 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-20 backdrop-blur-[2px]">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/try-on/${currentHeroProduct.id}`);
+                          {currentHeroProduct.thumbnail ? (
+                            <img
+                              src={currentHeroProduct.thumbnail}
+                              alt={currentHeroProduct.name}
+                              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (!target.dataset.triedFallback) {
+                                  target.dataset.triedFallback = 'true';
+                                  target.src = '/images/products/product-01-teak-rect-main.svg';
+                                }
                               }}
-                              className="bg-white hover:bg-black hover:text-white text-black px-5 py-2 rounded-full text-[11px] font-bold tracking-widest uppercase shadow-lg flex items-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                              <Eye size={13} />
-                              <span>Try in AR</span>
-                            </button>
-                          </div>
-
-                          {/* Frame Visual Display */}
-                          <div className="text-8xl opacity-10 font-serif select-none absolute">FRAME</div>
-                          <FrameViewer
-                            shape={currentHeroProduct.frameShape}
-                            colorHex="#1A1A1A"
-                            width={280}
-                            height={140}
-                            scale={1.05}
-                          />
+                            />
+                          ) : (
+                            <FrameViewer
+                              shape={currentHeroProduct.frameShape}
+                              colorHex="#1A1A1A"
+                              width={280}
+                              height={140}
+                              scale={1.05}
+                            />
+                          )}
                         </div>
 
                         <div className="mt-4 text-center">
                           <h2
                             onClick={() => navigate(`/product/${currentHeroProduct.id}`)}
-                            className="text-2xl sm:text-3xl font-serif mb-1 italic text-black hover:text-orange-700 transition-colors cursor-pointer"
+                            className="text-2xl sm:text-3xl font-serif mb-1 italic text-black hover:text-orange-800 transition-colors cursor-pointer"
                           >
                             {currentHeroProduct.name}
                           </h2>
                           <p className="text-xs sm:text-sm text-black/50 mb-1.5">
-                            Crafted by <span className="font-semibold text-black/70">{currentHeroProduct.sellerName}</span>
+                            {currentHeroProduct.frameShape} • {currentHeroProduct.material}
                           </p>
                           <p className="text-lg sm:text-xl font-medium tracking-tight text-black font-serif">
                             Rp {currentHeroProduct.price.toLocaleString('id-ID')}
@@ -359,10 +316,10 @@ export const Home: React.FC = () => {
                             onClick={() => handleSelectHeroCard(idx)}
                             className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                               idx === heroCardIndex
-                                ? 'w-6 bg-orange-700'
+                                ? 'w-6 bg-orange-800'
                                 : 'w-1.5 bg-black/15 hover:bg-black/30'
                             }`}
-                            aria-label={`Lihat frame ${idx + 1}`}
+                            aria-label={`View frame ${idx + 1}`}
                             type="button"
                           />
                         ))}
@@ -374,7 +331,7 @@ export const Home: React.FC = () => {
                           onClick={() => toggleWishlist(currentHeroProduct.id)}
                           className={`flex-1 h-12 flex items-center justify-center gap-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all cursor-pointer ${
                             isWishlisted(currentHeroProduct.id)
-                              ? 'bg-orange-700 text-white shadow-xs'
+                              ? 'bg-orange-800 text-white shadow-xs'
                               : 'bg-[#F5F2ED] text-black hover:bg-black/10'
                           }`}
                           type="button"
@@ -385,7 +342,7 @@ export const Home: React.FC = () => {
 
                         <button
                           onClick={() => addToCart(currentHeroProduct)}
-                          className="flex-[2] h-12 flex items-center justify-center gap-1.5 bg-black text-white rounded-full text-[11px] font-bold uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xs cursor-pointer"
+                          className="flex-[2] h-12 flex items-center justify-center gap-1.5 bg-black text-white rounded-full text-[11px] font-bold uppercase tracking-widest hover:bg-orange-800 transition-all shadow-xs cursor-pointer"
                           type="button"
                         >
                           <ShoppingBag size={14} />
@@ -401,15 +358,152 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* TRENDING FRAMES CAROUSEL */}
+      {/* BRAND STORY SECTION - THE CRAFT BEHIND THE FRAME */}
+      <section id="story" className="max-w-7xl mx-auto px-6 sm:px-12 scroll-mt-24">
+        <div className="bg-[#EAE5DC] rounded-[40px] p-8 sm:p-14 border border-black/5 relative overflow-hidden space-y-12">
+          {/* Header & Story Narrative */}
+          <div className="max-w-3xl space-y-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black text-white text-[11px] font-bold uppercase tracking-widest">
+              <TreeDeciduous size={13} className="text-orange-400" />
+              <span>Our Story • BJ Homemade</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-5xl font-serif font-light tracking-tight text-[#1A1A1A] leading-tight">
+              Crafted by hand. <br />
+              <span className="italic font-normal text-orange-800">Rooted in natural wood and thoughtful design.</span>
+            </h2>
+
+            <p className="text-base sm:text-lg text-black/80 font-serif italic leading-relaxed">
+              BJ Homemade is an independent Indonesian eyewear studio dedicated to the art of handcrafted wooden frames.
+            </p>
+
+            <p className="text-sm sm:text-base text-black/70 leading-relaxed">
+              Eyewear sits closer to your personal expression than almost any other object you wear. At BJ Homemade, we craft frames that celebrate the organic texture, grain patterns, warmth, and tactile presence of natural timber. We combine traditional benchcraft with AI-driven discovery and augmented reality, giving you confidence that your chosen frame complements your face.
+            </p>
+          </div>
+
+          {/* 4 Pillars of Craftsmanship */}
+          <div className="space-y-6">
+            <div className="border-b border-black/10 pb-3">
+              <span className="text-xs uppercase tracking-widest font-bold text-orange-800 block mb-1">
+                Core Philosophy
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-serif italic text-black">The Pillars Behind Every Frame</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white/95 rounded-3xl p-6 border border-black/5 shadow-2xs space-y-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-900 flex items-center justify-center">
+                  <Hammer size={20} />
+                </div>
+                <h4 className="font-serif italic text-xl text-black">Handcrafted Character</h4>
+                <p className="text-xs text-black/70 leading-relaxed">
+                  Every frame carries the direct touch of bench craftsmanship. Cut, shaped, filed, and hand-finished individually, ensuring that the character of the making process lives in every subtle contour.
+                </p>
+              </div>
+
+              <div className="bg-white/95 rounded-3xl p-6 border border-black/5 shadow-2xs space-y-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-900 flex items-center justify-center">
+                  <TreeDeciduous size={20} />
+                </div>
+                <h4 className="font-serif italic text-xl text-black">Wooden Material</h4>
+                <p className="text-xs text-black/70 leading-relaxed">
+                  We work with natural woods including Indonesian Teak, Sonokeling (Rosewood), and Bamboo. Wood offers distinct lightness, natural tactile warmth against the temple, and unique grain lines that make every frame genuinely one of a kind.
+                </p>
+              </div>
+
+              <div className="bg-white/95 rounded-3xl p-6 border border-black/5 shadow-2xs space-y-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-900 flex items-center justify-center">
+                  <Compass size={20} />
+                </div>
+                <h4 className="font-serif italic text-xl text-black">Local Indonesian Craft</h4>
+                <p className="text-xs text-black/70 leading-relaxed">
+                  BJ Homemade is an independent Indonesian enterprise committed to thoughtful craftsmanship. We believe local artisan production delivers world-class optical ergonomics and distinctive modern silhouettes.
+                </p>
+              </div>
+
+              <div className="bg-white/95 rounded-3xl p-6 border border-black/5 shadow-2xs space-y-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-900 flex items-center justify-center">
+                  <Leaf size={20} />
+                </div>
+                <h4 className="font-serif italic text-xl text-black">Responsible Design</h4>
+                <p className="text-xs text-black/70 leading-relaxed">
+                  We apply natural plant-oil sealants and organic beeswax polishes to protect the timber while preserving its breathability. Thoughtful assembly, repairable barrel hinges, and durable finishes ensure each pair is built to last.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Timber Spec & Finish Highlights */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div className="p-5 rounded-2xl bg-white/70 border border-black/5 space-y-1.5">
+              <span className="text-[10px] uppercase tracking-widest font-bold text-orange-900">Javanese Teak (Jati)</span>
+              <p className="text-xs text-black/70 leading-relaxed">
+                Known for golden honey hues, tight interlocking grain, and natural oils that resist humidity and daily wear.
+              </p>
+            </div>
+            <div className="p-5 rounded-2xl bg-white/70 border border-black/5 space-y-1.5">
+              <span className="text-[10px] uppercase tracking-widest font-bold text-orange-900">Sonokeling Rosewood</span>
+              <p className="text-xs text-black/70 leading-relaxed">
+                Deep rich chocolate and violet grain lines, exceptional structural density, and ultra-smooth tactile finish.
+              </p>
+            </div>
+            <div className="p-5 rounded-2xl bg-white/70 border border-black/5 space-y-1.5">
+              <span className="text-[10px] uppercase tracking-widest font-bold text-orange-900">Organic Beeswax Polish</span>
+              <p className="text-xs text-black/70 leading-relaxed">
+                Protected with botanical oils and raw Indonesian beeswax. Completely hypoallergenic and skin-friendly.
+              </p>
+            </div>
+          </div>
+
+          {/* Technology & Craftsmanship Harmony */}
+          <div className="bg-[#1C1917] text-white rounded-[32px] p-8 sm:p-10 space-y-5 shadow-xs">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-orange-400">
+              <Sparkles size={14} />
+              <span>Technology & Benchcraft Fusion</span>
+            </div>
+
+            <h3 className="text-2xl sm:text-3xl font-serif italic">
+              Modern Fitting with Digital Precision
+            </h3>
+
+            <p className="text-xs sm:text-sm text-white/70 max-w-2xl leading-relaxed">
+              Buying handcrafted wooden frames online used to come with uncertainty about face fit and proportional harmony. We bridge this gap directly: discover frames suited to your facial geometry with intelligent AI styling, try them on live with interactive webcam AR, and order directly from our Indonesian workshop.
+            </p>
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              <button
+                onClick={() => navigate('/find-my-frame')}
+                className="px-6 py-3 bg-white text-black rounded-full text-xs font-bold uppercase tracking-widest hover:bg-orange-700 hover:text-white transition-all cursor-pointer shadow-xs"
+              >
+                Find My Frame (AI)
+              </button>
+              <button
+                onClick={() => navigate('/try-on/frame-uluwatu')}
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-full text-xs font-bold uppercase tracking-widest transition-all cursor-pointer"
+              >
+                Open AR Mirror
+              </button>
+              <button
+                onClick={() => navigate('/explore')}
+                className="px-6 py-3 border border-white/20 text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all cursor-pointer"
+              >
+                Browse Collection
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURED PRODUCTS - BJ HOMEMADE COLLECTION */}
       <section className="max-w-7xl mx-auto px-6 sm:px-12">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
           <div>
-            <span className="text-xs uppercase tracking-widest font-bold text-orange-700 flex items-center gap-1.5 mb-2">
+            <span className="text-xs uppercase tracking-widest font-bold text-orange-800 flex items-center gap-1.5 mb-2">
               <Sparkles size={14} />
-              Curated Eyewear
+              Handcrafted Catalogue
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif italic text-[#1A1A1A]">Trending Handcrafted Frames</h2>
+            <h2 className="text-3xl sm:text-4xl font-serif italic text-[#1A1A1A]">BJ Homemade Collection</h2>
           </div>
 
           <div className="flex items-center gap-4">
@@ -442,15 +536,15 @@ export const Home: React.FC = () => {
 
             <button
               onClick={() => navigate('/explore')}
-              className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
+              className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors cursor-pointer"
             >
-              <span>View All ({products.length})</span>
+              <span>View All Frames ({products.length})</span>
               <ArrowRight size={14} />
             </button>
           </div>
         </div>
 
-        {/* Carousel Viewport Window (showing 4 cards on desktop) */}
+        {/* Carousel Viewport Window */}
         <div className="relative overflow-hidden w-full pb-2">
           <div
             className="flex transition-transform duration-500 ease-out gap-6"
@@ -496,7 +590,7 @@ export const Home: React.FC = () => {
       <section className="max-w-7xl mx-auto px-6 sm:px-12">
         <div className="text-center max-w-xl mx-auto mb-12">
           <span className="text-xs uppercase tracking-widest font-bold text-black/40 mb-2 block">
-            Optical Architecture
+            Optical Geometries
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif italic mb-3">Shop by Frame Shape</h2>
           <p className="text-sm text-black/60">
@@ -521,36 +615,37 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* VIRTUAL TRY-ON AR PROMOTION BANNER */}
+      {/* VIRTUAL TRY-ON AR PROMOTION CALLOUT */}
       <section className="max-w-7xl mx-auto px-6 sm:px-12">
-        <div className="bg-[#1A1A1A] text-white rounded-[40px] p-8 sm:p-14 relative overflow-hidden shadow-2xl">
+        <div className="bg-[#1C1917] text-white rounded-[40px] p-8 sm:p-14 relative overflow-hidden shadow-2xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
             <div className="lg:col-span-7 space-y-6">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 text-white text-[11px] font-bold uppercase tracking-widest">
                 <Camera size={13} className="text-orange-400" />
-                <span>Interactive Mirror & AR</span>
+                <span>Real-Time AR Mirror</span>
               </div>
 
               <h2 className="text-4xl sm:text-5xl font-serif font-light leading-tight">
-                Try frames instantly with your <span className="italic text-orange-400">camera.</span>
+                Try BJ Homemade <br />
+                <span className="italic text-orange-400">in AR.</span>
               </h2>
 
               <p className="text-sm sm:text-base text-white/70 max-w-lg leading-relaxed">
-                Experience real-time virtual fitting. Adjust bridge widths, compare two artisan frames side-by-side, switch colorways, and take high-resolution snapshots.
+                See how handcrafted wooden frames look on your face before ordering. Experience real-time virtual fitting with proportion tracking, bridge alignment, and side-by-side comparison.
               </p>
 
               <div className="flex flex-wrap gap-4 pt-2">
                 <button
                   onClick={() => navigate('/try-on/frame-the-architect')}
-                  className="px-8 py-4 bg-white text-black rounded-full text-xs font-bold uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all flex items-center gap-2 shadow-lg"
+                  className="px-8 py-4 bg-white text-black rounded-full text-xs font-bold uppercase tracking-widest hover:bg-orange-700 hover:text-white transition-all flex items-center gap-2 shadow-lg cursor-pointer"
                 >
                   <Eye size={15} />
-                  <span>Launch Virtual Try-On</span>
+                  <span>Try On Now</span>
                 </button>
 
                 <button
                   onClick={() => navigate('/compare')}
-                  className="px-8 py-4 border border-white/20 text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2"
+                  className="px-8 py-4 border border-white/20 text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <Layers size={15} />
                   <span>Compare Specs</span>
@@ -561,7 +656,7 @@ export const Home: React.FC = () => {
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative w-full max-w-[340px] aspect-[3/4] bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col items-center justify-between text-center backdrop-blur-xs">
                 <div className="w-full flex justify-between text-[10px] uppercase font-bold tracking-widest text-white/40">
-                  <span>Live Facial Tracker</span>
+                  <span>Live Face Mesh</span>
                   <span className="text-emerald-400 flex items-center gap-1">● 60 FPS</span>
                 </div>
 
@@ -571,8 +666,8 @@ export const Home: React.FC = () => {
                 </div>
 
                 <div className="text-xs text-white/80">
-                  <p className="font-serif italic text-sm text-white">The Architect (Onyx Black)</p>
-                  <p className="text-[11px] text-white/50">Optik Melati • Bandung</p>
+                  <p className="font-serif italic text-sm text-white">The Architect (Teak & Sonokeling)</p>
+                  <p className="text-[11px] text-white/50">BJ Homemade • Handcrafted Wooden Eyewear</p>
                 </div>
               </div>
             </div>
@@ -580,148 +675,16 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* LOCAL INDONESIAN SME SPOTLIGHT */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-12">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
-          <div>
-            <span className="text-xs uppercase tracking-widest font-bold text-orange-700 mb-2 block">
-              Heritage & Craftsmanship
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-serif italic text-[#1A1A1A]">Indonesian Artisan Spotlight</h2>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* Carousel Navigation Controls */}
-            {sellers.length > cardsPerView && (
-              <div className="flex items-center gap-1.5 bg-white p-1 rounded-full border border-black/10 shadow-2xs">
-                <button
-                  onClick={handlePrevArtisan}
-                  className="w-8 h-8 rounded-full bg-[#F5F2ED] hover:bg-black hover:text-white text-black/70 flex items-center justify-center transition-all cursor-pointer"
-                  title="Previous atelier"
-                  aria-label="Previous atelier"
-                  type="button"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <span className="text-[11px] font-mono font-bold text-black/50 px-2 select-none">
-                  {artisanIndex + 1}–{Math.min(artisanIndex + cardsPerView, sellers.length)} / {sellers.length}
-                </span>
-                <button
-                  onClick={handleNextArtisan}
-                  className="w-8 h-8 rounded-full bg-[#F5F2ED] hover:bg-black hover:text-white text-black/70 flex items-center justify-center transition-all cursor-pointer"
-                  title="Next atelier"
-                  aria-label="Next atelier"
-                  type="button"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            )}
-
-            <button
-              onClick={() => navigate('/explore')}
-              className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-black/70 hover:text-black transition-colors"
-            >
-              <span>All {sellers.length} Ateliers</span>
-              <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
-
-        {/* Carousel Viewport Window (showing 4 cards on desktop) */}
-        <div className="relative overflow-hidden w-full pb-2">
-          <div
-            className="flex transition-transform duration-500 ease-out gap-6"
-            style={{
-              transform: `translateX(calc(-${artisanIndex} * ( (100% + 24px) / ${cardsPerView} )))`,
-            }}
-          >
-            {sellers.map((seller) => (
-              <div
-                key={seller.id}
-                style={{
-                  width: `calc((100% - ${(cardsPerView - 1) * 24}px) / ${cardsPerView})`,
-                }}
-                className="shrink-0"
-              >
-                <div
-                  onClick={() => navigate(`/store/${seller.id}`)}
-                  className="bg-white rounded-[32px] p-6 border border-black/5 hover:shadow-xl hover:border-black/20 transition-all cursor-pointer flex flex-col justify-between group h-full"
-                >
-                  <div>
-                    <div className="relative h-40 rounded-2xl overflow-hidden mb-4">
-                      <img
-                        src={seller.bannerImage}
-                        alt={seller.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-3 right-3 px-3 py-1 bg-black/80 backdrop-blur-md text-white rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                        <MapPin size={11} className="text-orange-400" />
-                        <span>{seller.location}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 mb-3">
-                      <img
-                        src={seller.avatar}
-                        alt={seller.name}
-                        className="w-10 h-10 rounded-full object-cover border border-black/10 shrink-0"
-                      />
-                      <div>
-                        <h3 className="font-serif italic text-base sm:text-lg text-black group-hover:text-orange-700 transition-colors line-clamp-1">
-                          {seller.name}
-                        </h3>
-                        <p className="text-[11px] text-black/50">Est. {seller.foundedYear} • {seller.specialty}</p>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-black/65 leading-relaxed mb-4 line-clamp-2">
-                      {seller.shortDescription || seller.description}
-                    </p>
-                  </div>
-
-                  <div className="pt-3 border-t border-black/5 flex items-center justify-between text-xs font-semibold text-black/70">
-                    <span className="text-[11px]">{seller.productCount} Designs</span>
-                    <span className="text-orange-700 flex items-center gap-1 text-[11px] group-hover:translate-x-1 transition-transform">
-                      Visit Store <ChevronRight size={13} />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Carousel Pagination Dots */}
-        {sellers.length > cardsPerView && (
-          <div className="flex items-center justify-center gap-2 mt-6">
-            {Array.from({ length: maxArtisanIndex + 1 }).map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setArtisanIndex(idx)}
-                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                  artisanIndex === idx
-                    ? 'w-6 bg-black'
-                    : 'w-2 bg-black/20 hover:bg-black/40'
-                }`}
-                aria-label={`Go to atelier slide ${idx + 1}`}
-                type="button"
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* HOW FIND MY FRAME WORKS */}
+      {/* HOW IT WORKS */}
       <section className="max-w-7xl mx-auto px-6 sm:px-12">
         <div className="bg-[#EAE6DF] rounded-[40px] p-8 sm:p-14 border border-black/5">
           <div className="text-center max-w-xl mx-auto mb-12">
             <span className="text-xs uppercase tracking-widest font-bold text-black/40 mb-2 block">
-              Four-Step AI Styling Journey
+              Four-Step Shopping Journey
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif italic mb-3">How FRAMEAI Works</h2>
+            <h2 className="text-3xl sm:text-4xl font-serif italic mb-3">How It Works</h2>
             <p className="text-sm text-black/60">
-              We bridge traditional Indonesian optical handcraft with intelligent facial styling algorithms.
+              Discover, virtually try, compare, and order authentic BJ Homemade wooden frames through one seamless digital experience.
             </p>
           </div>
 
@@ -730,27 +693,27 @@ export const Home: React.FC = () => {
               {
                 step: '01',
                 title: 'Share Your Style',
-                desc: 'Select your preferred vibe (Minimal, Vintage, Bold) and daily usage scenarios.',
+                desc: 'Select your design preferences (Minimal, Classic, Bold) and daily optical requirements.',
               },
               {
                 step: '02',
-                title: 'AI Facial Scan',
-                desc: 'Upload a selfie or allow camera capture for facial proportion and contour analysis.',
+                title: 'AI Facial Analysis',
+                desc: 'Gemini AI evaluates facial geometry, jawline contours, and bridge dimensions.',
               },
               {
                 step: '03',
-                title: 'Virtual Try-On',
-                desc: 'See realistic virtual frames on your face with millimeter scale calibration.',
+                title: 'AR Virtual Mirror',
+                desc: 'Try BJ Homemade wooden frames live on your camera with realistic scale and perspective.',
               },
               {
                 step: '04',
-                title: 'Artisan Delivery',
-                desc: 'Handcrafted by Indonesian SMEs with prescription fitting delivered to your door.',
+                title: 'Handcrafted Delivery',
+                desc: 'Your custom-fitted frame is prepared and dispatched with a protective wooden case to your address.',
               },
             ].map((item) => (
               <div key={item.step} className="bg-white rounded-3xl p-6 border border-black/5 flex flex-col justify-between">
                 <div>
-                  <span className="text-3xl font-serif italic text-orange-700 font-bold block mb-3">
+                  <span className="text-3xl font-serif italic text-orange-800 font-bold block mb-3">
                     {item.step}
                   </span>
                   <h3 className="font-serif italic text-lg text-black mb-2">{item.title}</h3>
@@ -763,10 +726,10 @@ export const Home: React.FC = () => {
           <div className="mt-10 text-center">
             <button
               onClick={() => navigate('/find-my-frame')}
-              className="px-10 py-4 bg-black text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-orange-700 transition-all shadow-md inline-flex items-center gap-2"
+              className="px-10 py-4 bg-black text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-orange-800 transition-all shadow-md inline-flex items-center gap-2 cursor-pointer"
             >
               <Sparkles size={14} />
-              <span>Begin Find My Frame</span>
+              <span>Begin AI Assessment</span>
             </button>
           </div>
         </div>

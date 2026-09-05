@@ -16,6 +16,7 @@ import { Cart } from './pages/Cart';
 import { SellerDashboard } from './pages/SellerDashboard';
 import { Profile } from './pages/Profile';
 import { Storefront } from './pages/Storefront';
+import { About } from './pages/About';
 
 function AppContent() {
   const { currentPath, navigate, user, toastMessage } = useApp();
@@ -58,8 +59,8 @@ function AppContent() {
       return <Storefront sellerId={sellerId} />;
     }
 
-    // All seller portal routes
-    if (cleanPath.startsWith('/seller')) {
+    // Store Admin routes (/admin, /store-admin, or /seller)
+    if (cleanPath.startsWith('/seller') || cleanPath.startsWith('/admin') || cleanPath.startsWith('/store-admin')) {
       return <SellerDashboard />;
     }
 
@@ -67,6 +68,9 @@ function AppContent() {
       case '/':
       case '':
         return <Home />;
+      case '/story':
+      case '/about':
+        return <About />;
       case '/explore':
         return <Explore />;
       case '/find-my-frame':

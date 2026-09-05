@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGrad7" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#FAF8F5" />
+      <stop offset="60%" stop-color="#F0EDE6" />
+      <stop offset="100%" stop-color="#E3DFD5" />
+    </radialGradient>
+    <linearGradient id="ebonySide" x1="0%" y1="20%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#2D2D30" />
+      <stop offset="40%" stop-color="#18181A" />
+      <stop offset="80%" stop-color="#262629" />
+      <stop offset="100%" stop-color="#121214" />
+    </linearGradient>
+    <filter id="softShadow7" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="-6" dy="24" stdDeviation="18" flood-color="#121214" flood-opacity="0.25" />
+    </filter>
+  </defs>
+  <rect width="800" height="600" fill="url(#bgGrad7)" />
+  <ellipse cx="410" cy="385" rx="280" ry="45" fill="rgba(20,20,22,0.22)" filter="blur(18px)" />
+
+  <g transform="translate(400, 310)" filter="url(#softShadow7)">
+    <!-- Flat-Top Front Profile in Perspective -->
+    <path d="M-230,-100 L-130,-70 L-130,55 L-230,25 Z" fill="url(#ebonySide)" />
+    <path d="M-215,-78 L-145,-58 L-145,35 L-215,15 Z" fill="#EDE8DF" />
+
+    <!-- Signature Ultra-Wide Paddle Temple Arm (Photo 7) -->
+    <!-- Notice dramatic downward flare of paddle temple -->
+    <path d="M -130,-70 
+             C -60,-75 60,-80 180,-85 
+             C 220,-87 250,-65 275,-25 
+             C 285,15 270,35 240,25 
+             C 210,15 190,-15 150,-20 
+             C 70,-15 -40,15 -130,15 Z" 
+          fill="url(#ebonySide)" />
+
+    <!-- Top Highlight Line -->
+    <path d="M -130,-70 C -60,-75 60,-80 180,-85 C 220,-87 250,-65 275,-25" 
+          fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="4" />
+
+    <!-- Joint Screws -->
+    <circle cx="-120" cy="-50" r="3" fill="#666" />
+    <circle cx="-120" cy="-20" r="3" fill="#666" />
+  </g>
+
+  <g transform="translate(400, 530)" opacity="0.85">
+    <text text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" letter-spacing="4" fill="#36363A">BJ Homemade • WIDE PADDLE TEMPLE PROFILE</text>
+    <text y="18" text-anchor="middle" font-family="serif" font-style="italic" font-size="12" fill="#686870">Sculpted Paddle Temple Detail • Product 04 (Angle B)</text>
+  </g>
+</svg>

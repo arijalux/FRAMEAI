@@ -69,7 +69,7 @@ export const Compare: React.FC = () => {
           </div>
           <h3 className="text-2xl font-serif italic text-black">Comparison Bench is Empty</h3>
           <p className="text-xs text-black/60 max-w-md mx-auto leading-relaxed">
-            All frames have been removed from the comparison bench. Browse handcrafted Indonesian eyewear in the catalog and click compare on up to 4 models.
+            All frames have been removed from the comparison bench. Browse the BJ Homemade catalog and select up to 4 models to compare millimeter dimensions, weights, and face shape compatibility.
           </p>
           <button
             onClick={() => navigate('/explore')}
@@ -124,7 +124,7 @@ export const Compare: React.FC = () => {
                         const target = e.currentTarget;
                         if (!target.dataset.triedFallback) {
                           target.dataset.triedFallback = 'true';
-                          target.src = 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=800&q=80';
+                          target.src = '/images/products/product-01-teak-rect-main.svg';
                         }
                       }}
                     />
@@ -137,7 +137,7 @@ export const Compare: React.FC = () => {
                     >
                       {p.name}
                     </h3>
-                    <p className="text-[11px] text-black/50">{p.sellerName}, {p.sellerLocation}</p>
+                    <p className="text-[11px] text-black/50 font-medium">{p.frameShape} • {p.category}</p>
                     <p className="text-base font-bold text-black pt-1">
                       Rp {p.price.toLocaleString('id-ID')}
                     </p>

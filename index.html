@@ -3,11 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FRAMEAI - AI Eyewear Marketplace for Indonesian SMEs</title>
-    <meta name="description" content="Find the frame that fits your face and your style. AI-powered eyewear marketplace for Indonesian artisans and optical SMEs." />
+    <title>BJ Homemade | Handcrafted Wooden Eyewear</title>
+    <meta name="description" content="BJ Homemade: Handcrafted wooden eyewear studio featuring intelligent face recommendations, virtual AR try-on, and custom optical orders." />
+    <link rel="icon" type="image/svg+xml" href="/bj-emblem.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        // Intercept standard output from WebAssembly / TensorFlow Lite Emscripten runtime.
+        // TensorFlow Lite outputs diagnostic INFO logs (such as "INFO: Created TensorFlow Lite XNNPACK delegate for CPU.")
+        // to stderr, which Emscripten routes directly to console.error.
+        const originalError = console.error;
+        console.error = function(...args) {
+          const message = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].message) ? args[0].message : '';
+          if (
+            typeof message === 'string' &&
+            (message.includes('TensorFlow Lite') ||
+             message.includes('XNNPACK delegate') ||
+             message.startsWith('INFO: Created TensorFlow') ||
+             message.startsWith('INFO:') ||
+             message.includes('Could not reach Cloud Firestore backend') ||
+             message.includes('operate in offline mode') ||
+             message.includes('@firebase/firestore') ||
+             message.includes('code=unavailable'))
+          ) {
+            console.info(...args);
+            return;
+          }
+          originalError.apply(console, args);
+        };
+
+        window.addEventListener('error', function(event) {
+          if (event && event.message && (
+            event.message.includes('TensorFlow Lite') ||
+            event.message.includes('XNNPACK delegate') ||
+            event.message.includes('INFO: Created TensorFlow') ||
+            event.message.includes('Could not reach Cloud Firestore backend') ||
+            event.message.includes('operate in offline mode') ||
+            event.message.includes('@firebase/firestore') ||
+            event.message.includes('code=unavailable')
+          )) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+      })();
+    </script>
   </head>
   <body class="bg-[#F5F2ED] text-[#1A1A1A] antialiased selection:bg-orange-700 selection:text-white">
     <div id="root"></div>

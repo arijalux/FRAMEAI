@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sparkles, MapPin, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { Sparkles, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { BjBrandLogo } from '../ui/BjBrandLogo';
 
 export const Footer: React.FC = () => {
   const { navigate } = useApp();
@@ -11,117 +12,118 @@ export const Footer: React.FC = () => {
         {/* Top Editorial Row */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-14 border-b border-black/10">
           {/* Brand Info */}
-          <div className="md:col-span-4 space-y-4">
+          <div className="md:col-span-5 space-y-4">
             <div
               onClick={() => navigate('/')}
-              className="cursor-pointer text-2xl font-bold tracking-tight italic flex items-center"
+              className="cursor-pointer flex items-center gap-3 group"
             >
-              <span className="font-serif text-2xl">FRAMEAI</span>
+              <BjBrandLogo className="h-8 w-auto text-black group-hover:opacity-80 transition-opacity shrink-0" color="#000000" />
+              <div className="flex flex-col items-start">
+                <span className="font-serif text-2xl font-bold tracking-tight text-black group-hover:opacity-80 transition-opacity">
+                  BJ Homemade
+                </span>
+                <span className="text-[10px] tracking-wider uppercase text-neutral-500 font-medium mt-0.5">
+                  Handcrafted Wooden Eyewear • Est. Indonesia
+                </span>
+              </div>
             </div>
-            <p className="text-sm text-black/60 leading-relaxed max-w-sm">
-              Empowering Indonesian eyewear artisans and optical SMEs with AI face-shape matching, virtual AR try-on, and seamless digital commerce.
+            <p className="text-sm text-black/70 leading-relaxed max-w-sm">
+              Handcrafted Indonesian wooden frames paired with intelligent facial analysis and real-time AR try-on. Natural wood grains, sustainable timber, and digital precision.
             </p>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-orange-700">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-orange-800">
               <Sparkles size={14} />
-              <span>AI Styling for Nusantara Artisans</span>
+              <span>Crafted by Hand. Discovered with AI.</span>
             </div>
           </div>
 
           {/* Quick Links */}
-          <div className="md:col-span-2 space-y-3">
-            <span className="text-[11px] uppercase tracking-widest font-bold text-black/40">Navigation</span>
-            <ul className="space-y-2 text-sm text-black/70">
-              <li>
-                <button onClick={() => navigate('/explore')} className="hover:text-black transition-colors">
-                  Explore Catalog
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate('/find-my-frame')} className="hover:text-black transition-colors">
-                  Find My Frame
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate('/try-on/frame-the-architect')} className="hover:text-black transition-colors">
-                  Virtual Try-On
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate('/compare')} className="hover:text-black transition-colors">
-                  Compare Specs
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* SME Artisans */}
           <div className="md:col-span-3 space-y-3">
-            <span className="text-[11px] uppercase tracking-widest font-bold text-black/40">SME Hub</span>
-            <ul className="space-y-2 text-sm text-black/70">
+            <span className="text-[11px] uppercase tracking-widest font-bold text-black/40">BJ Homemade</span>
+            <ul className="space-y-2.5 text-sm text-black/70">
               <li>
-                <button onClick={() => navigate('/seller')} className="hover:text-black transition-colors flex items-center gap-1">
-                  <span>SME Seller Portal</span>
-                  <ArrowUpRight size={13} />
+                <button onClick={() => navigate('/explore')} className="hover:text-black transition-colors cursor-pointer">
+                  Handcrafted Collection
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('/seller/products/new')} className="hover:text-black transition-colors">
-                  Submit Eyewear Design
+                <button onClick={() => navigate('/find-my-frame')} className="hover:text-black transition-colors cursor-pointer">
+                  Find My Frame (AI)
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('/seller/qr')} className="hover:text-black transition-colors">
-                  Offline-to-Online QR
+                <button onClick={() => navigate('/try-on/frame-uluwatu')} className="hover:text-black transition-colors cursor-pointer">
+                  Virtual AR Try-On
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('/seller/ai-insights')} className="hover:text-black transition-colors">
-                  Artisan AI Advisory
+                <button onClick={() => navigate('/compare')} className="hover:text-black transition-colors cursor-pointer">
+                  Compare Frames
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    navigate('/');
+                    setTimeout(() => {
+                      document.getElementById('story')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
+                  className="hover:text-black transition-colors cursor-pointer"
+                >
+                  Our Story & Craft
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Live AI Insight */}
-          <div className="md:col-span-3 space-y-3 bg-[#F5F2ED] p-5 rounded-3xl border border-black/5">
-            <span className="text-[10px] uppercase tracking-widest text-black/40 font-bold flex items-center gap-1.5">
-              <Sparkles size={12} className="text-orange-700" />
-              Latest AI Insight
-            </span>
-            <p className="text-xs italic text-black/80 font-serif leading-relaxed">
-              "Rectangular silhouettes create harmonic contrast for oval and round face shapes, elevating minimalist professional poise."
-            </p>
-            <div className="pt-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-black/50 font-semibold">
-              <span>Bandung • Jakarta</span>
-              <span className="text-emerald-600 font-bold">98% Match Rate</span>
+          {/* Business & Administration */}
+          <div className="md:col-span-4 space-y-4">
+            <div className="bg-[#F5F2ED] p-6 rounded-3xl border border-black/5 space-y-3">
+              <span className="text-[10px] uppercase tracking-widest text-black/40 font-bold flex items-center gap-1.5">
+                <Sparkles size={12} className="text-orange-700" />
+                BJ Homemade Atelier
+              </span>
+              <p className="text-xs text-black/75 leading-relaxed">
+                Every frame is hand-carved from Indonesian teakwood, finished with natural beeswax, and fitted with precision optical lenses.
+              </p>
+              <div className="pt-2 border-t border-black/5 flex items-center justify-between">
+                <button
+                  onClick={() => navigate('/store-admin')}
+                  className="text-[11px] font-bold uppercase tracking-wider text-black/60 hover:text-black transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Store Admin</span>
+                  <ArrowUpRight size={12} />
+                </button>
+                <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                  <ShieldCheck size={12} /> 30-Day Fit Guarantee
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Stitch Location Strip */}
+        {/* Bottom Strip */}
         <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex flex-wrap items-center gap-6 text-xs text-black/60">
-            <div className="flex items-center gap-2 font-semibold uppercase tracking-widest text-[11px] text-black/40">
-              <MapPin size={13} className="text-orange-700" />
-              <span>Artisan Network:</span>
-            </div>
-            <span className="hover:text-black cursor-pointer" onClick={() => navigate('/explore')}>Bandung</span>
-            <span>•</span>
-            <span className="hover:text-black cursor-pointer" onClick={() => navigate('/explore')}>Yogyakarta</span>
-            <span>•</span>
-            <span className="hover:text-black cursor-pointer" onClick={() => navigate('/explore')}>Jakarta</span>
-            <span>•</span>
-            <span className="hover:text-black cursor-pointer" onClick={() => navigate('/explore')}>Bali</span>
-            <span>•</span>
-            <span className="hover:text-black cursor-pointer" onClick={() => navigate('/explore')}>Surabaya</span>
+          <div className="text-xs text-black/50">
+            <span>© 2026 BJ Homemade. Handcrafted Wooden Eyewear. All rights reserved.</span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-black/40">
-            <span>© 2026 FRAMEAI. All rights reserved.</span>
-            <span className="flex items-center gap-1 text-black/60 font-medium">
-              <ShieldCheck size={14} className="text-emerald-600" />
-              Indonesian Optical SME Certified
-            </span>
+          <div className="flex items-center gap-6 text-xs text-black/60 font-medium">
+            <span>Free Nationwide Insured Delivery</span>
+            <span>•</span>
+            <span>Handcrafted in Indonesia</span>
+            <span>•</span>
+            <button
+              onClick={() => {
+                navigate('/');
+                setTimeout(() => {
+                  document.getElementById('story')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              className="hover:text-black transition-colors cursor-pointer"
+            >
+              Our Story
+            </button>
           </div>
         </div>
       </div>

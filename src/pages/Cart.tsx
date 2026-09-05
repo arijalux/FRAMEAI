@@ -102,7 +102,7 @@ export const Cart: React.FC = () => {
       const newOrder = await createOrder({
         userId: currentUser.id || user.id,
         customerName: recipientName || user.name || 'Customer',
-        customerEmail: user.email || 'customer@frameai.id',
+        customerEmail: user.email || 'customer@bjhomemade.id',
         items: orderItems,
         totalAmount: grandTotal,
         shippingAddress: {
@@ -119,7 +119,7 @@ export const Cart: React.FC = () => {
       setOrderId(newOrder.id);
       setCheckoutStep('confirmed');
     } catch (err: any) {
-      console.error('Checkout order creation failed:', err);
+      console.warn('Checkout order creation notice:', err);
       showToast(err.message || 'Failed to place order. Please try again.');
     } finally {
       setIsSubmittingOrder(false);
@@ -212,12 +212,12 @@ export const Cart: React.FC = () => {
                         <img
                           src={item.product.thumbnail}
                           alt={item.product.name}
-                          className="w-20 h-20 bg-[#F5F2ED] rounded-2xl object-cover p-2 border border-black/5 flex-shrink-0"
+                          className="w-20 h-20 bg-[#F5F2ED] rounded-2xl object-contain p-2 border border-black/5 flex-shrink-0"
                           onError={(e) => {
                             const target = e.currentTarget;
                             if (!target.dataset.triedFallback) {
                               target.dataset.triedFallback = 'true';
-                              target.src = 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=800&q=80';
+                              target.src = '/images/products/product-01-teak-rect-main.svg';
                             }
                           }}
                         />

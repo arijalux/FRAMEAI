@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { BjBrandLogo } from '../ui/BjBrandLogo';
 import {
-  Store,
   LayoutDashboard,
   Package,
   ClipboardList,
-  QrCode,
+  Box,
   Sparkles,
   ExternalLink,
   User,
   LogOut,
   Menu,
   X,
-  ArrowRight,
-  ChevronDown,
-  Building2,
+  Shield,
+  Store,
 } from 'lucide-react';
 
 export const SellerNavigation: React.FC = () => {
@@ -22,8 +21,6 @@ export const SellerNavigation: React.FC = () => {
     currentPath,
     navigate,
     user,
-    sellers,
-    setUserRole,
     signOut,
     orders,
   } = useApp();
@@ -31,33 +28,24 @@ export const SellerNavigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  // Active seller determination
-  const currentSeller =
-    sellers.find((s) => s.id === user.sellerId) ||
-    sellers[0] || {
-      id: 'seller-optik-melati',
-      name: 'Optik Melati Bandung',
-      location: 'Bandung',
-      province: 'West Java',
-    };
-
   const pendingOrdersCount = orders.filter((o) => o.status === 'Pending' || o.status === 'Paid' || o.status === 'Processing').length;
 
-  const sellerNavLinks = [
-    { label: 'Dashboard', path: '/seller' },
-    { label: 'Catalog', path: '/seller/catalog' },
+  const adminNavLinks = [
+    { label: 'Dashboard', path: '/seller', icon: LayoutDashboard },
+    { label: 'Products', path: '/seller/catalog', icon: Package },
     {
       label: 'Orders',
       path: '/seller/orders',
+      icon: ClipboardList,
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
     },
-    { label: 'AR Product Display', path: '/seller/ar-display' },
-    { label: 'AI Advisory', path: '/seller/ai-advisory' },
+    { label: 'AR Display', path: '/seller/ar-display', icon: Box },
+    { label: 'AI Advisory', path: '/seller/ai-advisory', icon: Sparkles },
   ];
 
   const isCurrent = (path: string) => {
     const safePath = (currentPath || '/').toString();
-    if (path === '/seller' && (safePath === '/seller' || safePath === '/seller/dashboard')) return true;
+    if (path === '/seller' && (safePath === '/seller' || safePath === '/seller/dashboard' || safePath === '/admin')) return true;
     if (path === '/seller/ar-display' && (safePath.startsWith('/seller/ar-display') || safePath.startsWith('/seller/qr'))) return true;
     if (path !== '/seller' && safePath.startsWith(path)) return true;
     return false;
@@ -68,26 +56,34 @@ export const SellerNavigation: React.FC = () => {
   };
 
   const handlePreviewStorefront = () => {
-    navigate(`/store/${currentSeller.id}`);
+    navigate('/explore');
   };
 
   return (
     <header className="sticky top-0 z-40 bg-[#1C1917] text-white border-b border-white/10 shadow-lg transition-all">
       <div className="max-w-7xl mx-auto px-6 sm:px-12 py-4 flex items-center justify-between">
-        {/* Brand & Seller Identification */}
-        <div className="flex items-center gap-4">
+        {/* Brand & Admin Identification */}
+        <div className="flex items-center gap-3">
           <div
             onClick={() => navigate('/seller')}
-            className="cursor-pointer text-2xl font-bold tracking-tight italic flex items-center group"
+            className="cursor-pointer flex items-center gap-2.5 group select-none"
             id="seller-nav-logo"
           >
-            <span className="font-serif tracking-tighter text-2xl text-white">FRAMEAI</span>
+            <BjBrandLogo className="h-7 w-auto text-white group-hover:opacity-80 transition-opacity shrink-0" color="#FFFFFF" />
+            <div className="flex flex-col">
+              <span className="font-serif font-bold tracking-tight text-xl sm:text-2xl text-white leading-none">
+                BJ Homemade
+              </span>
+              <span className="text-[9px] uppercase tracking-widest text-white/50 font-sans mt-0.5 font-medium">
+                Store Admin
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Seller Navigation Links */}
+        {/* Admin Navigation Links */}
         <nav className="hidden md:flex items-center gap-6 text-xs font-semibold uppercase tracking-widest text-white/70">
-          {sellerNavLinks.map((link) => (
+          {adminNavLinks.map((link) => (
             <button
               key={link.path}
               onClick={() => navigate(link.path)}
@@ -95,7 +91,8 @@ export const SellerNavigation: React.FC = () => {
                 isCurrent(link.path) ? 'text-white font-bold' : ''
               }`}
             >
-              {link.label}
+              <link.icon size={13} className={isCurrent(link.path) ? 'text-orange-400' : 'text-white/50'} />
+              <span>{link.label}</span>
               {link.badge !== undefined && (
                 <span className="w-4 h-4 bg-orange-600 text-white rounded-full text-[9px] flex items-center justify-center font-bold animate-pulse">
                   {link.badge}
@@ -114,11 +111,11 @@ export const SellerNavigation: React.FC = () => {
           <button
             onClick={handlePreviewStorefront}
             className="hidden sm:flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider h-10 px-4 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-white transition-all cursor-pointer shadow-xs"
-            title="View public storefront as a customer"
+            title="Preview customer storefront"
             id="seller-preview-storefront-btn"
           >
             <ExternalLink size={13} className="text-orange-400" />
-            <span>Preview Store</span>
+            <span>Storefront</span>
           </button>
 
           {/* Switch to Customer View Pill */}
@@ -132,7 +129,7 @@ export const SellerNavigation: React.FC = () => {
             <span>Customer View</span>
           </button>
 
-          {/* User/Atelier Profile Dropdown */}
+          {/* User Profile Dropdown */}
           <div className="relative">
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
@@ -151,8 +148,8 @@ export const SellerNavigation: React.FC = () => {
             {profileDropdownOpen && (
               <div className="absolute right-0 top-12 w-56 bg-[#262320] border border-white/10 rounded-2xl p-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 text-white">
                 <div className="px-3 py-2 border-b border-white/10 text-xs">
-                  <p className="font-bold text-white truncate">{currentSeller.name}</p>
-                  <p className="text-[10px] text-white/50">{currentSeller.location}, {currentSeller.province}</p>
+                  <p className="font-bold text-white truncate">{user.name}</p>
+                  <p className="text-[10px] text-orange-400 uppercase font-semibold">Store Administrator</p>
                 </div>
 
                 <button
@@ -160,7 +157,7 @@ export const SellerNavigation: React.FC = () => {
                     handlePreviewStorefront();
                     setProfileDropdownOpen(false);
                   }}
-                  className="w-full text-left px-3 py-2 text-xs font-semibold text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 text-xs font-semibold text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2 cursor-pointer"
                 >
                   <ExternalLink size={13} className="text-orange-400" />
                   <span>Public Storefront</span>
@@ -171,7 +168,7 @@ export const SellerNavigation: React.FC = () => {
                     navigate('/seller/orders');
                     setProfileDropdownOpen(false);
                   }}
-                  className="w-full text-left px-3 py-2 text-xs font-semibold text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 text-xs font-semibold text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2 cursor-pointer"
                 >
                   <ClipboardList size={13} />
                   <span>Manage Orders ({orders.length})</span>
@@ -182,7 +179,7 @@ export const SellerNavigation: React.FC = () => {
                     handleSwitchToCustomer();
                     setProfileDropdownOpen(false);
                   }}
-                  className="w-full text-left px-3 py-2 text-xs font-semibold text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 text-xs font-semibold text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2 cursor-pointer"
                 >
                   <User size={13} />
                   <span>Switch to Customer View</span>
@@ -218,7 +215,7 @@ export const SellerNavigation: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-[#24211E] border-b border-white/10 px-6 py-6 space-y-4 animate-in slide-in-from-top-2">
           <div className="flex flex-col space-y-2">
-            {sellerNavLinks.map((link) => (
+            {adminNavLinks.map((link) => (
               <button
                 key={link.path}
                 onClick={() => {
@@ -229,7 +226,10 @@ export const SellerNavigation: React.FC = () => {
                   isCurrent(link.path) ? 'bg-orange-700 text-white' : 'text-white/80 hover:bg-white/5'
                 }`}
               >
-                <span>{link.label}</span>
+                <div className="flex items-center gap-2">
+                  <link.icon size={14} />
+                  <span>{link.label}</span>
+                </div>
                 {link.badge && (
                   <span className="px-2 py-0.5 bg-orange-500 text-white rounded-full text-[10px]">
                     {link.badge}

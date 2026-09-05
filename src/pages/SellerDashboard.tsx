@@ -73,10 +73,10 @@ export const SellerDashboard: React.FC = () => {
   const currentSeller =
     sellers.find((s) => s.id === user.sellerId) ||
     sellers[0] || {
-      id: 'optik-melati',
-      name: 'Optik Melati Bandung',
-      location: 'Bandung',
-      province: 'Jawa Barat',
+      id: 'bj-homemade',
+      name: 'BJ Homemade',
+      location: 'Indonesia',
+      province: 'Indonesia',
     };
 
   type TabType = 'analytics' | 'products' | 'orders' | 'ar-display' | 'ai-insights';
@@ -108,25 +108,25 @@ export const SellerDashboard: React.FC = () => {
   // New Frame Form State
   const [newFrameName, setNewFrameName] = useState('');
   const [newFrameShape, setNewFrameShape] = useState<FrameShape>('Rectangle');
-  const [newFrameMaterial, setNewFrameMaterial] = useState('Italian Acetate');
+  const [newFrameMaterial, setNewFrameMaterial] = useState('Handcrafted Teak & Bio-Acetate');
   const [newFramePrice, setNewFramePrice] = useState<number>(1450000);
   const [newFrameStock, setNewFrameStock] = useState<number>(12);
   const [newFrameWeight, setNewFrameWeight] = useState<number>(18);
   const [newFrameDesc, setNewFrameDesc] = useState('');
   const [newFrameImageUrl, setNewFrameImageUrl] = useState(
-    'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=800&q=80'
+    '/images/products/product-01-teak-rect-main.svg'
   );
 
   // QR Code Frame Selection
   const [selectedQrProduct, setSelectedQrProduct] = useState<Product>(
     products[0] || {
       id: 'frame-default',
-      name: 'The Architect',
-      material: 'Italian Acetate',
-      price: 1450000,
-      sellerLocation: 'Bandung',
-      sellerName: 'Optik Melati',
-      thumbnail: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=800&q=80',
+      name: 'Product 01 • Teak Rectangle',
+      material: 'Handcrafted Natural Teakwood',
+      price: 589000,
+      sellerLocation: 'Indonesia',
+      sellerName: 'BJ Homemade',
+      thumbnail: '/images/products/product-01-teak-rect-main.svg',
       frameShape: 'Rectangle',
     } as Product
   );
@@ -232,15 +232,15 @@ export const SellerDashboard: React.FC = () => {
           <div className="space-y-3 max-w-lg mx-auto">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 text-neutral-800 text-[10px] font-bold uppercase tracking-widest rounded-full">
               <Lock size={11} />
-              <span>Artisan Portal Access</span>
+              <span>Store Admin Portal</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-serif italic text-black">
-              {isAuthenticated ? 'Atelier Registration Required' : 'Artisan Portal Sign In'}
+              {isAuthenticated ? 'Admin Authorization Required' : 'Store Admin Sign In'}
             </h1>
             <p className="text-xs sm:text-sm text-black/60 leading-relaxed">
               {isAuthenticated
-                ? `You are currently signed in as a Customer (${user.email || user.name}). The Seller Dashboard is exclusively for verified optical ateliers, artisans, and workshop partners.`
-                : 'The FRAMEAI Seller Dashboard is reserved for Indonesian optical artisans, eyewear craftspeople, and registered partner ateliers.'}
+                ? `You are currently signed in as a Customer (${user.email || user.name}). The Store Admin interface is reserved for BJ Homemade store administrators and workshop managers.`
+                : 'The BJ Homemade Store Admin interface is reserved for authorized store administrators, catalog managers, and workshop operations staff.'}
             </p>
           </div>
 
@@ -252,7 +252,7 @@ export const SellerDashboard: React.FC = () => {
               id="seller-gate-demo-login-btn"
             >
               <Store size={14} />
-              <span>Sign In as Optik Melati Demo Seller</span>
+              <span>Sign In as BJ Homemade Store Admin</span>
             </button>
 
             {!isAuthenticated ? (
@@ -262,7 +262,7 @@ export const SellerDashboard: React.FC = () => {
                 id="seller-gate-auth-modal-btn"
               >
                 <User size={14} />
-                <span>Sign In with Custom Seller Account</span>
+                <span>Sign In with Custom Admin Account</span>
               </button>
             ) : (
               <button
@@ -271,7 +271,7 @@ export const SellerDashboard: React.FC = () => {
                 id="seller-gate-register-atelier-btn"
               >
                 <Plus size={14} />
-                <span>{showOnboardingForm ? 'Hide Onboarding Form' : 'Register Your Atelier (Become a Seller)'}</span>
+                <span>{showOnboardingForm ? 'Hide Form' : 'Request Admin Role'}</span>
               </button>
             )}
 
@@ -280,7 +280,7 @@ export const SellerDashboard: React.FC = () => {
               className="w-full py-3 text-xs font-semibold text-black/60 hover:text-black flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               <ArrowLeft size={13} />
-              <span>Return to Customer Marketplace</span>
+              <span>Return to Storefront</span>
             </button>
           </div>
 
@@ -367,19 +367,18 @@ export const SellerDashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-6 sm:px-12 py-8 space-y-8">
-      {/* Seller Header with atelier profile info and quick preview */}
+      {/* Store Admin Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-black/10">
         <div>
           <div className="flex items-center gap-2 mb-2 text-xs uppercase tracking-widest font-bold text-orange-700">
             <Store size={14} />
-            <span>Indonesian Optical SME Atelier Portal</span>
+            <span>BJ Homemade • Store Operations Portal</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-serif italic text-[#1A1A1A]">
-            {currentSeller.name}
+          <h1 className="text-2xl sm:text-3xl font-serif italic text-[#1A1A1A]">
+            Store Admin
           </h1>
           <p className="text-xs text-black/60 mt-1 flex items-center gap-2">
-            <MapPin size={13} className="text-orange-700" />
-            <span>{currentSeller.location}, {currentSeller.province} • Active Artisan Atelier</span>
+            <span>Catalog, Orders & Analytics</span>
           </p>
         </div>
 
@@ -387,14 +386,14 @@ export const SellerDashboard: React.FC = () => {
         <div className="flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-full border border-black/10 shadow-xs">
           {[
             { id: 'analytics' as TabType, label: 'Dashboard', icon: TrendingUp },
-            { id: 'products' as TabType, label: `Catalog (${products.length})`, icon: Package },
+            { id: 'products' as TabType, label: `Products (${products.length})`, icon: Package },
             {
               id: 'orders' as TabType,
               label: `Orders (${orders.length})`,
               icon: ClipboardList,
               badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
             },
-            { id: 'ar-display' as TabType, label: 'AR Product Display', icon: Box },
+            { id: 'ar-display' as TabType, label: 'AR Display', icon: Box },
             { id: 'ai-insights' as TabType, label: 'AI Advisory', icon: Sparkles },
           ].map((tab) => (
             <button
@@ -427,7 +426,7 @@ export const SellerDashboard: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white rounded-[32px] p-6 border border-black/5 shadow-xs space-y-2">
               <span className="text-[10px] uppercase tracking-widest font-bold text-black/40 block">
-                Total SME Revenue
+                Total Store Revenue
               </span>
               <p className="text-2xl sm:text-3xl font-serif italic text-black font-bold">
                 Rp {sellerAnalytics.totalRevenue.toLocaleString('id-ID')}
@@ -919,7 +918,7 @@ export const SellerDashboard: React.FC = () => {
                   <span>Calibrated Reference Marker (100 mm × 100 mm)</span>
                 </div>
                 <p className="text-[11px] text-orange-950/70 leading-relaxed">
-                  The printed standee includes a high-contrast fiducial marker. When customers point their phone at it, FRAMEAI calculates exact optical scale based on the known 100mm physical width.
+                  The printed standee includes a high-contrast fiducial marker. When customers point their phone at it, the system calculates exact optical scale based on the known 100mm physical width.
                 </p>
               </div>
 
@@ -946,7 +945,7 @@ export const SellerDashboard: React.FC = () => {
               >
                 {/* Atelier Top Brand Header */}
                 <div className="flex justify-between items-center text-[9px] uppercase tracking-widest font-bold text-black/50 border-b border-black/10 pb-2.5">
-                  <span>FRAMEAI • Atelier Series</span>
+                  <span>BJ Homemade • Handcrafted Series</span>
                   <span>{currentSeller.location}</span>
                 </div>
 
@@ -980,7 +979,7 @@ export const SellerDashboard: React.FC = () => {
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
                         typeof window !== 'undefined'
                           ? `${window.location.origin}/ar-display/${selectedQrProduct.id}?mode=mobileAR`
-                          : `https://frameai.id/ar-display/${selectedQrProduct.id}?mode=mobileAR`
+                          : `https://bjhomemade.id/ar-display/${selectedQrProduct.id}?mode=mobileAR`
                       )}&format=svg&margin=2`}
                       alt="AR Product Display QR Code"
                       className="w-24 h-24 object-contain mx-auto bg-white p-1 rounded-xl shadow-xs"

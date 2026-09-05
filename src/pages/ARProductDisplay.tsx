@@ -53,13 +53,13 @@ export const ARProductDisplay: React.FC<ARProductDisplayProps> = ({ productId })
     products.find((p) => p.id === productId) ||
     products[0] || {
       id: 'frame-the-architect',
-      name: 'The Architect',
+      name: 'The Architect (Product 01 • Teak Rectangle)',
       frameShape: 'Rectangle' as FrameShape,
-      material: 'Italian Acetate',
-      price: 1450000,
-      sellerName: 'Optik Melati',
-      sellerLocation: 'Bandung',
-      thumbnail: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=800&q=80',
+      material: 'Handcrafted Natural Teakwood',
+      price: 589000,
+      sellerName: 'BJ Homemade',
+      sellerLocation: 'Indonesia',
+      thumbnail: '/images/products/product-01-teak-rect-main.svg',
       frameColors: [
         { name: 'Onyx Black', hex: '#1A1A1A', texture: 'glossy' },
         { name: 'Smoked Amber', hex: '#8B5A2B', texture: 'tortoise' },
@@ -135,7 +135,7 @@ export const ARProductDisplay: React.FC<ARProductDisplayProps> = ({ productId })
 
   // Mobile Deep Link URL for QR
   const mobileDeepLinkUrl = useMemo(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://frameai.id';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bjhomemade.id';
     return `${origin}/ar-display/${activeProduct.id}?mode=mobileAR`;
   }, [activeProduct.id]);
 
@@ -655,7 +655,7 @@ export const ARProductDisplay: React.FC<ARProductDisplayProps> = ({ productId })
             </button>
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400 block">
-                FRAMEAI AR
+                BJ Homemade AR
               </span>
               <h1 className="text-base font-serif italic text-white leading-tight">
                 AR Product Display
@@ -722,7 +722,7 @@ export const ARProductDisplay: React.FC<ARProductDisplayProps> = ({ productId })
                   1
                 </span>
                 <p className="leading-relaxed">
-                  Place the <strong>100mm FRAMEAI reference marker</strong> flat on a table or surface.
+                  Place the <strong>100mm reference marker</strong> flat on a table or surface.
                 </p>
               </div>
 
@@ -906,7 +906,7 @@ export const ARProductDisplay: React.FC<ARProductDisplayProps> = ({ productId })
               id="ar-marker-searching-badge"
             >
               <span className="w-2 h-2 rounded-full bg-amber-400" />
-              <span>SEARCHING FOR FRAMEAI MARKER</span>
+              <span>SEARCHING FOR AR TARGET</span>
             </div>
           )}
 
@@ -980,12 +980,12 @@ export const ARProductDisplay: React.FC<ARProductDisplayProps> = ({ productId })
                   ? 'TARGET LOST'
                   : trackingState === 'CAMERA_STARTING'
                   ? 'STARTING CAMERA'
-                  : 'SEARCHING FOR FRAMEAI MARKER'}
+                  : 'SEARCHING FOR AR TARGET'}
               </p>
               <p className="text-[11px] text-white/80 leading-snug">
                 {trackingState === 'MARKER_LOST'
-                  ? 'Point your camera back at the FRAMEAI marker.'
-                  : 'Point your camera at the printed FRAMEAI AR marker.'}
+                  ? 'Point your camera back at the target marker.'
+                  : 'Point your camera at the printed AR target marker.'}
               </p>
             </div>
           </div>
@@ -1009,7 +1009,7 @@ export const ARProductDisplay: React.FC<ARProductDisplayProps> = ({ productId })
               </span>
             ) : (
               <span className="text-amber-300">
-                SEARCHING FOR FRAMEAI MARKER
+                SEARCHING FOR AR TARGET
               </span>
             )}
           </span>

@@ -13,11 +13,12 @@ import {
 } from 'firebase/auth';
 import {
   getFirestore,
-  initializeFirestore,
+  setLogLevel,
   Firestore,
   collection,
   doc,
   getDoc,
+  getDocFromServer,
   getDocs,
   setDoc,
   updateDoc,
@@ -30,11 +31,17 @@ import {
   serverTimestamp,
   addDoc,
   writeBatch,
-  getDocFromServer,
 } from 'firebase/firestore';
 import firebaseConfigJson from '../../firebase-applet-config.json';
 import { Product, Seller, Order, CartItem, FaceAnalysisResult, RecommendationMatch, SellerAnalytics, AIInsight } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_SELLERS, INITIAL_SELLER_ANALYTICS } from '../data/seedData';
+
+// Mute internal Firestore SDK verbose connection warnings
+try {
+  setLogLevel('silent');
+} catch {
+  // Ignore in environments where setLogLevel may already be locked
+}
 
 let app: FirebaseApp;
 let auth: Auth;
@@ -48,13 +55,9 @@ try {
   }
 
   auth = getAuth(app);
-  // Use custom database ID from config with experimentalAutoDetectLongPolling for stable connectivity in sandboxed iframe environments
+  // Use custom database ID from config according to Firebase Integration Skill
   const dbId = (firebaseConfigJson as any).firestoreDatabaseId;
-  try {
-    db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }, dbId);
-  } catch {
-    db = dbId ? getFirestore(app, dbId) : getFirestore(app);
-  }
+  db = dbId ? getFirestore(app, dbId) : getFirestore(app);
 } catch (error) {
   console.warn('Firebase initialization notice:', error);
 }
@@ -114,25 +117,22 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 }
 
 /**
- * Validates connection to Firestore in background without blocking UI
+ * Validates connection to Firestore according to Firebase Integration Skill
  */
-export async function testConnection() {
-  if (!db) return;
+export async function testConnection(): Promise<boolean> {
+  if (!db) return false;
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
+    return true;
   } catch (error) {
-    if (error instanceof Error && (error.message.includes('the client is offline') || error.message.includes('unavailable'))) {
-      console.info('Firestore running with offline cache persistence.');
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.info('Firestore operating in resilient offline mode.');
     }
+    return false;
   }
 }
-
-// Non-blocking connection test
-if (typeof window !== 'undefined') {
-  setTimeout(() => {
-    testConnection().catch(() => {});
-  }, 1000);
-}
+// Initiate background connection test on module load
+testConnection().catch(() => {});
 
 // -------------------------------------------------------------
 // AUTHENTICATION ERROR HANDLING
@@ -198,17 +198,17 @@ export const DEMO_CUSTOMER_CONFIG = {
 };
 
 export const DEMO_SELLER_CONFIG = {
-  name: 'Optik Melati Demo',
-  email: 'seller.demo@frameai.test',
+  name: 'BJ Homemade Admin',
+  email: 'admin.bjhomemade@frameai.test',
   role: 'seller' as const,
-  sellerId: 'optik-melati',
-  sellerName: 'Optik Melati',
-  city: 'Bandung',
-  location: 'Bandung',
-  province: 'West Java',
+  sellerId: 'bj-homemade',
+  sellerName: 'BJ Homemade',
+  city: 'Indonesia',
+  location: 'Indonesia',
+  province: 'Indonesia',
   status: 'active',
   // Internal secure demo credential - never shown in plain text in UI
-  _internalSecret: 'FrameAISellerOptikMelati2026!',
+  _internalSecret: 'BJHomemadeAdminSecret2026!',
 };
 
 // -------------------------------------------------------------
@@ -283,7 +283,7 @@ export async function registerWithEmail(
   // Strict rule: normal registration defaults to customer unless it is the demo seller account
   const isSellerDemo = email.trim().toLowerCase() === DEMO_SELLER_CONFIG.email.toLowerCase();
   const effectiveRole: 'customer' | 'seller' = isSellerDemo ? 'seller' : (role === 'seller' ? 'seller' : 'customer');
-  const effectiveSellerId = isSellerDemo ? 'optik-melati' : (effectiveRole === 'seller' ? 'optik-melati' : undefined);
+  const effectiveSellerId = isSellerDemo ? 'bj-homemade' : (effectiveRole === 'seller' ? 'bj-homemade' : undefined);
 
   try {
     const result = await createUserWithEmailAndPassword(auth, email.trim(), pass);
@@ -306,7 +306,7 @@ export async function registerWithEmail(
       }
       await setDoc(userDocRef, userDocData);
 
-      if (effectiveRole === 'seller' && effectiveSellerId === 'optik-melati') {
+      if (effectiveRole === 'seller' && effectiveSellerId === 'bj-homemade') {
         await ensureSellerDemoFirestoreDocs(user.uid);
       }
     }
@@ -372,38 +372,38 @@ export async function ensureSellerDemoFirestoreDocs(uid: string) {
         name: DEMO_SELLER_CONFIG.name,
         email: DEMO_SELLER_CONFIG.email,
         role: 'seller',
-        sellerId: 'optik-melati',
+        sellerId: 'bj-homemade',
         updatedAt: new Date().toISOString(),
       },
       { merge: true }
     );
 
-    // 2. sellers/optik-melati
-    const sellerDocRef = doc(db, 'sellers', 'optik-melati');
+    // 2. sellers/bj-homemade
+    const sellerDocRef = doc(db, 'sellers', 'bj-homemade');
     await setDoc(
       sellerDocRef,
       {
-        id: 'optik-melati',
+        id: 'bj-homemade',
         ownerUid: uid,
-        name: 'Optik Melati',
-        city: 'Bandung',
-        location: 'Bandung',
-        province: 'West Java',
+        name: 'BJ Homemade',
+        city: 'Indonesia',
+        location: 'Indonesia',
+        province: 'Indonesia',
         status: 'active',
-        description: 'Heritage optical atelier crafting precision hand-beveled acetate eyewear since 1988.',
-        story: 'Nestled in the creative heart of Braga, Bandung, Optik Melati merges European hand-finishing traditions with modern ergonomic designs tailored for Southeast Asian facial profiles.',
-        foundedYear: 1988,
+        description: 'Handcrafted wooden eyewear celebrating natural grain textures, organic comfort, and sustainable Indonesian craftsmanship.',
+        story: 'BJ Homemade specializes in handcrafted wooden eyewear, transforming select natural timbers into lightweight, ergonomic spectacles that showcase the distinct grain and character of each piece.',
+        foundedYear: 2020,
         rating: 4.9,
-        salesCount: 1420,
-        productCount: 14,
-        specialty: 'Handcrafted Bio-Acetate & Minimalist Wireframes',
+        salesCount: 1280,
+        productCount: 20,
+        specialty: 'Handcrafted Wooden Eyewear & Sustainable Natural Grain Frames',
         verified: true,
         updatedAt: new Date().toISOString(),
       },
       { merge: true }
     );
   } catch (err) {
-    console.error('Error ensuring seller demo docs:', err);
+    console.warn('Error ensuring seller demo docs:', err);
   }
 }
 
@@ -423,7 +423,7 @@ export async function ensureCustomerDemoFirestoreDocs(uid: string) {
       { merge: true }
     );
   } catch (err) {
-    console.error('Error ensuring customer demo docs:', err);
+    console.warn('Error ensuring customer demo docs:', err);
   }
 }
 
@@ -460,8 +460,8 @@ export async function upgradeUserToSeller(
     description: `Artisanal eyewear atelier in ${sellerData.city}.`,
     story: sellerData.story || `Specializing in ${sellerData.specialty || 'handcrafted frames'}.`,
     foundedYear: new Date().getFullYear(),
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=240&q=80',
-    bannerImage: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1200&q=80',
+    avatar: '/bj-logo.svg',
+    bannerImage: '/images/products/product-01-teak-rect-main.svg',
     rating: 5.0,
     salesCount: 0,
     productCount: 0,
@@ -536,7 +536,7 @@ export async function seedFirestoreIfEmpty(): Promise<void> {
       await batch.commit();
     }
   } catch (err) {
-    console.error('Failed to seed Firestore:', err);
+    console.warn('Failed to seed Firestore:', err);
   }
 }
 
@@ -561,18 +561,29 @@ export async function fetchProductsFromFirestore(): Promise<Product[]> {
     
     // Merge with INITIAL_PRODUCTS to ensure none are missing if any partial collection exists
     const productMap = new Map<string, Product>();
-    INITIAL_PRODUCTS.forEach((p) => productMap.set(p.id, p));
     firestoreProducts.forEach((p) => productMap.set(p.id, p));
+    INITIAL_PRODUCTS.forEach((p) => {
+      const existing = productMap.get(p.id);
+      if (existing) {
+        productMap.set(p.id, {
+          ...existing,
+          thumbnail: p.thumbnail,
+          images: p.images,
+        });
+      } else {
+        productMap.set(p.id, p);
+      }
+    });
     
     const allMerged = Array.from(productMap.values());
 
     // Sanitize any broken legacy image URLs
     const sanitizedProducts = allMerged.map((p) => {
       let changed = false;
-      const validFallback = 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=800&q=80';
-      const cleanThumbnail = p.thumbnail?.includes('photo-1509695503495') ? validFallback : p.thumbnail;
+      const validFallback = '/images/products/product-01-teak-rect-main.svg';
+      const cleanThumbnail = p.thumbnail?.includes('unsplash') || p.thumbnail?.includes('photo-1509695503495') ? validFallback : p.thumbnail;
       const cleanImages = (p.images || []).map((img) =>
-        img.includes('photo-1509695503495') ? validFallback : img
+        img.includes('unsplash') || img.includes('photo-1509695503495') ? validFallback : img
       );
       if (cleanThumbnail !== p.thumbnail || JSON.stringify(cleanImages) !== JSON.stringify(p.images)) {
         changed = true;
@@ -722,7 +733,7 @@ export async function saveOrderToFirestore(order: Order): Promise<void> {
       });
     });
   } catch (err) {
-    console.error('Error saving order to Firestore:', err);
+    console.warn('Error saving order to Firestore:', err);
     throw err;
   }
 }

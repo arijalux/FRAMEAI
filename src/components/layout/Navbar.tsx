@@ -7,9 +7,9 @@ export const Navbar: React.FC = () => {
   const { currentPath, user } = useApp();
   const safePath = (currentPath || '').toString();
 
-  const isSellerMode = user.role === 'seller' && safePath.startsWith('/seller');
+  const isAdminMode = safePath.startsWith('/seller') || safePath.startsWith('/admin') || safePath.startsWith('/store-admin');
 
-  if (isSellerMode) {
+  if (isAdminMode) {
     return <SellerNavigation />;
   }
 

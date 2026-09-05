@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ShoppingBag, Heart, Store, User, Menu, X, ArrowRight, LogIn, LogOut, SlidersHorizontal } from 'lucide-react';
+import { BjBrandLogo } from '../ui/BjBrandLogo';
 
 export const CustomerNavigation: React.FC = () => {
   const {
@@ -19,11 +20,11 @@ export const CustomerNavigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  const customerNavLinks = [
-    { label: 'Explore', path: '/explore' },
+  const customerNavLinks: { label: string; path: string; badge?: string | number }[] = [
+    { label: 'Home', path: '/' },
+    { label: 'Collection', path: '/explore' },
     { label: 'Find My Frame', path: '/find-my-frame' },
-    { label: 'Try-On', path: '/try-on/frame-the-architect' },
-    { label: 'Compare', path: '/compare', badge: compareList.length > 0 ? compareList.length : undefined },
+    { label: 'AR Try-On', path: '/try-on/frame-uluwatu' },
   ];
 
   const isCurrent = (path: string) => {
@@ -43,10 +44,13 @@ export const CustomerNavigation: React.FC = () => {
         {/* Brand Logo */}
         <div
           onClick={() => navigate('/')}
-          className="cursor-pointer text-2xl font-bold tracking-tight italic flex items-center group"
+          className="cursor-pointer flex items-center group select-none"
           id="customer-nav-logo"
         >
-          <span className="font-serif tracking-tighter text-2xl text-[#1A1A1A]">FRAMEAI</span>
+          <BjBrandLogo
+            className="h-8 sm:h-9 w-auto text-black group-hover:opacity-80 transition-opacity shrink-0"
+            color="#000000"
+          />
         </div>
 
         {/* Customer Navigation Links */}
@@ -110,13 +114,14 @@ export const CustomerNavigation: React.FC = () => {
                   </button>
                   <button
                     onClick={() => {
-                      handleSwitchToSeller();
+                      navigate('/admin');
                       setProfileDropdownOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold text-black hover:bg-[#F5F2ED] rounded-xl flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-xs font-semibold text-black/70 hover:text-black hover:bg-[#F5F2ED] rounded-xl flex items-center gap-2"
+                    id="nav-store-admin-btn"
                   >
-                    <Store size={13} className="text-orange-700" />
-                    <span>Switch to SME Seller Mode</span>
+                    <Store size={13} />
+                    <span>Store Admin</span>
                   </button>
                   <button
                     onClick={async () => {
@@ -142,6 +147,21 @@ export const CustomerNavigation: React.FC = () => {
               <span>Sign In</span>
             </button>
           )}
+
+          {/* Compare Button */}
+          <button
+            onClick={() => navigate('/compare')}
+            className="relative w-10 h-10 rounded-full border border-black/10 flex items-center justify-center text-black/70 hover:text-black hover:border-black/30 hover:bg-white transition-all cursor-pointer"
+            title="Compare frames"
+            id="customer-nav-compare-btn"
+          >
+            <SlidersHorizontal size={15} />
+            {compareList.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-700 text-white rounded-full text-[9px] flex items-center justify-center font-bold">
+                {compareList.length}
+              </span>
+            )}
+          </button>
 
           {/* Wishlist Button */}
           <button
@@ -206,17 +226,6 @@ export const CustomerNavigation: React.FC = () => {
           </div>
 
           <div className="pt-4 border-t border-black/10 flex flex-col gap-2.5">
-            <button
-              onClick={() => {
-                handleSwitchToSeller();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full py-3 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-full flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Store size={14} />
-              <span>Switch to SME Seller Mode</span>
-            </button>
-
             {isAuthenticated ? (
               <button
                 onClick={async () => {

@@ -18,7 +18,7 @@ export const Recommendations: React.FC = () => {
         </div>
         <h1 className="text-4xl font-serif italic text-black">No Active Frame Profile Found</h1>
         <p className="text-sm text-black/60 max-w-md mx-auto leading-relaxed">
-          Complete our short 4-step AI styling assessment to calculate your face proportions and unlock personalized Indonesian SME recommendations.
+          Complete our short 4-step AI styling assessment to calculate your face proportions and unlock personalized frame recommendations.
         </p>
         <button
           onClick={() => navigate('/find-my-frame')}
@@ -53,7 +53,7 @@ export const Recommendations: React.FC = () => {
               Your Frame <span className="italic text-orange-400">Profile</span>
             </h1>
             <p className="text-sm text-white/70 max-w-lg mt-2 leading-relaxed">
-              Curated specifically for your facial geometry and styling preferences from certified Indonesian optical ateliers.
+              Curated specifically for your facial geometry and styling preferences from the BJ Homemade handcrafted collection.
             </p>
           </div>
 
@@ -146,7 +146,14 @@ export const Recommendations: React.FC = () => {
                 <img
                   src={match.product.thumbnail}
                   alt={match.product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.dataset.triedFallback) {
+                      target.dataset.triedFallback = 'true';
+                      target.src = '/images/products/product-01-teak-rect-main.svg';
+                    }
+                  }}
                 />
 
                 <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[9px] font-bold uppercase tracking-wider text-black">
@@ -163,8 +170,8 @@ export const Recommendations: React.FC = () => {
                   >
                     {match.product.name}
                   </h3>
-                  <p className="text-xs text-black/50">
-                    {match.product.sellerName} • {match.product.sellerLocation}
+                  <p className="text-xs text-black/50 font-medium">
+                    {match.product.frameShape} • {match.product.material}
                   </p>
                 </div>
 

@@ -81,7 +81,7 @@ export async function handleAnalyzeFace(reqBody: any): Promise<GeminiFindMyFrame
   }
 
   try {
-    const systemPrompt = `You are FRAMEAI's chief eyewear stylist advisor for Indonesian optical ateliers and artisans.
+    const systemPrompt = `You are BJ Homemade's chief eyewear stylist advisor for handcrafted wooden eyewear.
 Your task is to analyze the user's styling inputs and uploaded front selfie to provide a personalized eyewear STYLE recommendation.
 
 CRITICAL DISCLAIMER & RESTRICTION:

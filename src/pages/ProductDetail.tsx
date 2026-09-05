@@ -99,7 +99,7 @@ export const ProductDetail: React.FC<{ productId: string }> = ({ productId }) =>
           className="inline-flex items-center gap-1.5 font-bold uppercase tracking-wider text-black hover:text-orange-700 transition-colors"
         >
           <ArrowLeft size={14} />
-          <span>Back to Marketplace</span>
+          <span>Back to Collection</span>
         </button>
 
         <div className="flex items-center gap-2">
@@ -143,7 +143,7 @@ export const ProductDetail: React.FC<{ productId: string }> = ({ productId }) =>
                   const target = e.currentTarget;
                   if (!target.dataset.triedFallback) {
                     target.dataset.triedFallback = 'true';
-                    target.src = 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=800&q=80';
+                    target.src = '/images/products/product-01-teak-rect-main.svg';
                   }
                 }}
               />
@@ -173,12 +173,12 @@ export const ProductDetail: React.FC<{ productId: string }> = ({ productId }) =>
                 <img
                   src={img}
                   alt=""
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain p-1"
                   onError={(e) => {
                     const target = e.currentTarget;
                     if (!target.dataset.triedFallback) {
                       target.dataset.triedFallback = 'true';
-                      target.src = 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=800&q=80';
+                      target.src = '/images/products/product-01-teak-rect-main.svg';
                     }
                   }}
                 />
@@ -241,9 +241,9 @@ export const ProductDetail: React.FC<{ productId: string }> = ({ productId }) =>
           {/* Header Info */}
           <div className="space-y-3 pb-6 border-b border-black/10">
             <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-widest font-bold text-orange-700 flex items-center gap-1">
-                <MapPin size={13} />
-                <span>{product.sellerName} • {product.sellerLocation}, Indonesia</span>
+              <span className="text-xs uppercase tracking-widest font-bold text-orange-800 flex items-center gap-1.5">
+                <Sparkles size={13} />
+                <span>BJ Homemade • {product.frameShape}</span>
               </span>
 
               <button
@@ -414,65 +414,44 @@ export const ProductDetail: React.FC<{ productId: string }> = ({ productId }) =>
             </button>
           </div>
 
-          {/* SME Story & Guarantees */}
-          {seller && (
-            <div className="pt-6 border-t border-black/10 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={seller.avatar}
-                    alt={seller.name}
-                    className="w-12 h-12 rounded-full object-cover border border-black/10"
-                  />
-                  <div>
-                    <h4 className="font-serif italic text-base text-black font-semibold">
-                      Crafted by {seller.name}
-                    </h4>
-                    <p className="text-xs text-black/50">
-                      {seller.location}, {seller.province} • Active since {seller.foundedYear}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => navigate(`/store/${seller.id}`)}
-                  className="px-3.5 py-1.5 bg-black text-white text-[11px] font-bold uppercase tracking-wider rounded-full hover:bg-orange-700 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
-                  id="product-detail-view-storefront-btn"
-                >
-                  <Store size={12} />
-                  <span>Visit Storefront</span>
-                </button>
-              </div>
-
-              <p className="text-xs text-black/70 leading-relaxed bg-[#F5F2ED] p-4 rounded-2xl">
-                {seller.story}
+          {/* BJ Homemade Store Assurance */}
+          <div className="pt-6 border-t border-black/10 space-y-4">
+            <div className="bg-[#F5F2ED] p-5 rounded-2xl space-y-2 border border-black/5">
+              <span className="text-[11px] uppercase tracking-widest font-bold text-black/60 flex items-center gap-1.5">
+                <ShieldCheck size={14} className="text-emerald-700" />
+                <span>BJ Homemade Craft & Fit Assurance</span>
+              </span>
+              <p className="text-xs text-black/75 leading-relaxed">
+                Handcrafted in Indonesia using natural timber, plant-oil and organic beeswax finishes, and precision barrel hinges. Calibrated for bridge comfort and accompanied by a protective case and our 30-day fit guarantee.
               </p>
-
-              <div className="flex items-center gap-6 text-[11px] text-black/60 font-semibold">
-                <span className="flex items-center gap-1 text-emerald-700">
-                  <ShieldCheck size={14} /> Free 30-Day Fit Guarantee
-                </span>
-                <span>•</span>
-                <span>Insured Nationwide Shipping</span>
-              </div>
             </div>
-          )}
+
+            <div className="flex flex-wrap items-center gap-6 text-[11px] text-black/60 font-semibold">
+              <span className="flex items-center gap-1 text-emerald-700">
+                <ShieldCheck size={14} /> 30-Day Fit Guarantee
+              </span>
+              <span>•</span>
+              <span>Free Nationwide Insured Delivery</span>
+              <span>•</span>
+              <span>Prescription Verified</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Similar Artisan Frames */}
+      {/* Similar Frames */}
       {similarProducts.length > 0 && (
         <div className="pt-12 border-t border-black/10 space-y-8">
           <div className="flex justify-between items-end">
             <div>
               <span className="text-xs uppercase tracking-widest font-bold text-black/40 block mb-1">
-                More from our Ateliers
+                Complementary Styles
               </span>
-              <h2 className="text-3xl font-serif italic text-black">Similar Handcrafted Eyewear</h2>
+              <h2 className="text-3xl font-serif italic text-black">More From the Collection</h2>
             </div>
             <button
               onClick={() => navigate('/explore')}
-              className="text-xs font-bold uppercase tracking-widest text-orange-700 hover:underline"
+              className="text-xs font-bold uppercase tracking-widest text-orange-700 hover:underline cursor-pointer"
             >
               View Full Collection
             </button>

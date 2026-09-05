@@ -73,7 +73,7 @@ export const ARPrintableStandee: React.FC<ARPrintableStandeeProps> = ({
           <div className="flex justify-between items-start border-b-2 border-neutral-900 pb-4">
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-orange-600 block">
-                FRAMEAI • INDONESIAN ARTISAN EYEWEAR
+                BJ Homemade • Handcrafted Wooden Eyewear
               </span>
               <h2 className="text-2xl sm:text-3xl font-serif italic text-neutral-900 mt-0.5">
                 {product.name}
@@ -155,7 +155,7 @@ export const ARPrintableStandee: React.FC<ARPrintableStandeeProps> = ({
 
           {/* Footer Card Instructions */}
           <div className="flex justify-between items-center text-[10px] text-neutral-500 pt-2 border-t border-neutral-200">
-            <span>© 2026 FRAMEAI Optical Platform</span>
+            <span>© 2026 BJ Homemade Eyewear</span>
             <span>Scale Calibration Verified: 100mm Marker = 1:1 Ratio</span>
           </div>
         </div>

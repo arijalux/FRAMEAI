@@ -118,7 +118,7 @@ export const ARMarkerTarget: React.FC<ARMarkerTargetProps> = ({
           fontWeight="bold"
           letterSpacing="2"
         >
-          FRAMEAI 1:1 AR SCALE TARGET
+          BJ Homemade 1:1 AR Scale Target
         </text>
 
         <text

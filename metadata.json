@@ -1,6 +1,6 @@
 {
   "name": "FRAMEAI",
-  "description": "AI-powered eyewear marketplace for Indonesian eyewear SMEs featuring virtual try-on, face shape styling analysis, and SME artisan seller tools.",
+  "description": "BJ Homemade: Handcrafted wooden eyewear studio featuring intelligent face recommendations, virtual AR try-on, and custom optical orders.",
   "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -449,7 +449,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const signUpWithEmail = async (email: string, pass: string, name: string, role: 'customer' | 'seller' = 'customer') => {
     try {
       const fbUser = await firebaseEmailRegister(email, pass, name, role);
-      showToast(`Account created! Welcome to FRAMEAI, ${name}.`);
+      showToast(`Account created! Welcome to BJ Homemade, ${name}.`);
       handlePostAuthRedirect();
     } catch (err: any) {
       showToast(err.message || 'Registration failed');
@@ -460,7 +460,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const loginDemoAccount = async (type: 'customer' | 'seller') => {
     try {
       await firebaseLoginAsDemo(type);
-      showToast(`Signed in as ${type === 'seller' ? 'Optik Melati Demo' : 'Demo Customer'}.`);
+      showToast(`Signed in as ${type === 'seller' ? 'BJ Homemade Admin' : 'Demo Customer'}.`);
       handlePostAuthRedirect();
     } catch (err: any) {
       // If Firebase Auth provider is not enabled yet in console (operation-not-allowed)
@@ -468,12 +468,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (err.message?.includes('Sign-up is not enabled yet') || err.code === 'auth/operation-not-allowed') {
         const isSeller = type === 'seller';
         const demoProfile: UserProfile = {
-          id: isSeller ? 'demo-seller-optik-melati' : 'demo-customer-uid',
+          id: isSeller ? 'demo-seller-bj-homemade' : 'demo-customer-uid',
           name: isSeller ? DEMO_SELLER_CONFIG.name : DEMO_CUSTOMER_CONFIG.name,
           email: isSeller ? DEMO_SELLER_CONFIG.email : DEMO_CUSTOMER_CONFIG.email,
-          avatar: isSeller ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=240&q=80' : '',
+          avatar: isSeller ? '/bj-logo.svg' : '',
           role: isSeller ? 'seller' : 'customer',
-          sellerId: isSeller ? 'optik-melati' : undefined,
+          sellerId: isSeller ? 'bj-homemade' : undefined,
           wishlist: wishlist.length > 0 ? wishlist : ['frame-the-architect'],
           recentTryOns: ['frame-the-architect'],
         };
@@ -485,7 +485,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } else {
           ensureCustomerDemoFirestoreDocs(demoProfile.id).catch(console.warn);
         }
-        showToast(`Signed in as ${isSeller ? 'Optik Melati Demo' : 'Demo Customer'}.`);
+        showToast(`Signed in as ${isSeller ? 'BJ Homemade Admin' : 'Demo Customer'}.`);
         handlePostAuthRedirect();
         return;
       }
@@ -508,7 +508,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       setCurrentUser(updatedProfile);
       setUser(updatedProfile);
-      showToast(`Welcome to the FRAMEAI Artisan Network, ${sellerData.name}! Seller mode activated.`);
+      showToast(`Welcome, ${sellerData.name}! Store Admin mode activated.`);
       navigate('/seller');
     } catch (err: any) {
       showToast(err.message || 'Failed to complete seller onboarding');
@@ -526,7 +526,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showToast('Signed out successfully');
       navigate('/');
     } catch (err: any) {
-      console.error('Sign out error:', err);
+      console.warn('Sign out notice:', err);
       showToast('Sign out error. Please try again.');
     }
   };

@@ -35,7 +35,7 @@ export const AiAnalysis: React.FC = () => {
 
     const t2 = setTimeout(() => {
       setProgress(75);
-      setCurrentStatus('Matching silhouettes with Indonesian SME artisan workshops...');
+      setCurrentStatus('Matching silhouettes with BJ Homemade handcrafted frames...');
     }, 2200);
 
     // Call API / service
@@ -99,7 +99,7 @@ export const AiAnalysis: React.FC = () => {
             {/* Consumer disclaimer note */}
             <div className="p-4 bg-[#F5F2ED] rounded-2xl max-w-md text-center text-xs text-black/60 leading-relaxed border border-black/5">
               <span className="font-semibold text-black block mb-0.5">Styling Calibration in Progress</span>
-              FRAMEAI uses consumer styling algorithms to match frame silhouettes to natural facial contours.
+              Intelligent styling algorithms match frame silhouettes to natural facial contours.
             </div>
           </div>
         ) : (
@@ -178,7 +178,7 @@ export const AiAnalysis: React.FC = () => {
                   className="w-full sm:w-auto px-10 py-5 bg-orange-700 text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                   id="view-recommendations-btn"
                 >
-                  <span>View Recommended Artisan Frames</span>
+                  <span>View Recommended BJ Homemade Frames</span>
                   <ArrowRight size={15} />
                 </button>
               </div>

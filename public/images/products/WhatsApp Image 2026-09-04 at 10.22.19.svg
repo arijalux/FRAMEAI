@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGrad3" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#FAF8F5" />
+      <stop offset="60%" stop-color="#F0EDE6" />
+      <stop offset="100%" stop-color="#E3DFD5" />
+    </radialGradient>
+    <linearGradient id="teakGrainSide" x1="0%" y1="30%" x2="100%" y2="70%">
+      <stop offset="0%" stop-color="#965F32" />
+      <stop offset="30%" stop-color="#B57D4A" />
+      <stop offset="60%" stop-color="#845127" />
+      <stop offset="100%" stop-color="#6E3E1A" />
+    </linearGradient>
+    <filter id="softShadowSide" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="-5" dy="20" stdDeviation="16" flood-color="#2B241C" flood-opacity="0.2" />
+    </filter>
+  </defs>
+  <rect width="800" height="600" fill="url(#bgGrad3)" />
+  <ellipse cx="410" cy="380" rx="280" ry="40" fill="rgba(40,30,20,0.18)" filter="blur(16px)" />
+
+  <!-- Standing Side 3/4 View (Photo 3) -->
+  <g transform="translate(400, 310)" filter="url(#softShadowSide)">
+    <!-- Front Face in Perspective -->
+    <path d="M-220,-80 L-140,-55 L-140,50 L-220,20 Z" fill="url(#teakGrainSide)" />
+    <path d="M-205,-60 L-155,-45 L-155,30 L-205,10 Z" fill="#EDE8DF" />
+
+    <!-- Open Temple Arm extending across (Photo 3) -->
+    <path d="M -140,-60 
+             C -90,-62 80,-70 200,-75 
+             C 240,-77 270,-65 290,-25 
+             C 295,-15 285,-5 270,-10 
+             C 255,-15 240,-45 200,-50 
+             C 90,-45 -90,-35 -140,-35 Z" 
+          fill="url(#teakGrainSide)" />
+
+    <!-- Temple Chamfer / Highlight -->
+    <path d="M -140,-60 C -90,-62 80,-70 200,-75 C 240,-77 270,-65 290,-25" 
+          fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="4" />
+
+    <!-- Brass Hinge Detail at Joint -->
+    <rect x="-142" y="-58" width="8" height="20" rx="2" fill="#D4AF37" />
+    <circle cx="-138" cy="-48" r="2" fill="#5A4515" />
+
+    <!-- Nose Pad Relief on Front -->
+    <ellipse cx="-145" cy="-5" rx="10" ry="16" fill="#A8713F" />
+  </g>
+
+  <g transform="translate(400, 530)" opacity="0.85">
+    <text text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" letter-spacing="4" fill="#6E5848">BJ Homemade • SIDE PROFILE &amp; HINGE</text>
+    <text y="18" text-anchor="middle" font-family="serif" font-style="italic" font-size="12" fill="#9C7A60">Handcrafted Teak Temple Arm • Product 01 (Angle B)</text>
+  </g>
+</svg>

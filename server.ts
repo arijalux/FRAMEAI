@@ -59,6 +59,30 @@ async function startServer() {
     }
   });
 
+  // Serve static files from public directory with proper MIME types
+  app.use('/images', express.static(path.join(process.cwd(), 'public/images'), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.svg') || filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+        try {
+          const buffer = path.extname(filePath) === '.svg' ? 'svg' : '';
+          if (buffer || filePath.endsWith('.svg')) {
+            res.setHeader('Content-Type', 'image/svg+xml');
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }));
+
+  app.use(express.static(path.join(process.cwd(), 'public'), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.svg')) {
+        res.setHeader('Content-Type', 'image/svg+xml');
+      }
+    }
+  }));
+
   // Vite middleware for development vs static in production
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({

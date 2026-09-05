@@ -139,9 +139,9 @@ export const Profile: React.FC = () => {
 
           <div className="flex items-center gap-4 text-xs">
             <img
-              src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=800&q=80"
+              src="/images/products/product-01-teak-rect-main.svg"
               alt=""
-              className="w-16 h-16 bg-[#F5F2ED] rounded-xl object-cover p-1"
+              className="w-16 h-16 bg-[#F5F2ED] rounded-xl object-contain p-1"
             />
             <div>
               <h4 className="font-serif italic text-base text-black font-semibold">The Architect</h4>

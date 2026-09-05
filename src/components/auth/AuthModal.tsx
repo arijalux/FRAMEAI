@@ -94,7 +94,7 @@ export const AuthModal: React.FC = () => {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-full">
               <Sparkles size={11} className="text-orange-400" />
-              <span>FRAMEAI AUTHENTICATION</span>
+              <span>BJ Homemade Account</span>
             </div>
             <h2 className="text-3xl font-serif italic text-black font-normal">
               {isSignUp ? 'Create account' : 'Sign in to continue'}
@@ -221,7 +221,7 @@ export const AuthModal: React.FC = () => {
               }}
               className="text-xs text-black/60 hover:text-black font-semibold cursor-pointer"
             >
-              {isSignUp ? 'Already have an account? Sign in' : 'New to FRAMEAI? Create account'}
+              {isSignUp ? 'Already have an account? Sign in' : 'New to BJ Homemade? Create account'}
             </button>
           </div>
 
@@ -241,7 +241,7 @@ export const AuthModal: React.FC = () => {
                   <User size={12} />
                   <span>Demo Customer</span>
                 </div>
-                <span className="text-[9px] text-black/50 font-normal">customer.demo@frameai.test</span>
+                <span className="text-[9px] text-black/50 font-normal">Customer Account</span>
               </button>
 
               <button
@@ -252,9 +252,9 @@ export const AuthModal: React.FC = () => {
               >
                 <div className="flex items-center gap-1 text-black/80">
                   <Store size={12} />
-                  <span>Optik Melati</span>
+                  <span>BJ Homemade Admin</span>
                 </div>
-                <span className="text-[9px] text-black/50 font-normal">seller.demo@frameai.test</span>
+                <span className="text-[9px] text-black/50 font-normal">Store Management</span>
               </button>
             </div>
           </div>

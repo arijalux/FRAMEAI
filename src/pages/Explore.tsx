@@ -1,19 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { ProductCard } from '../components/ui/ProductCard';
-import { Search, Filter, SlidersHorizontal, X, Sparkles, MapPin, Check, RotateCcw, Building2, Store } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, X, Sparkles, Check, RotateCcw } from 'lucide-react';
 import { FrameShape, FrameStyle, Product } from '../types';
 
 export const Explore: React.FC = () => {
-  const { products, sellers, currentPath, navigate } = useApp();
+  const { products, currentPath, navigate } = useApp();
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedShapes, setSelectedShapes] = useState<FrameShape[]>([]);
   const [selectedStyles, setSelectedStyles] = useState<FrameStyle[]>([]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [selectedSellers, setSelectedSellers] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [maxPrice, setMaxPrice] = useState<number>(2000000);
   const [sortBy, setSortBy] = useState<
@@ -21,7 +19,7 @@ export const Explore: React.FC = () => {
   >('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Sync URL query params if any (e.g. /explore?shape=Rectangle or /explore?seller=optik-melati)
+  // Sync URL query params if any (e.g. /explore?shape=Rectangle)
   useEffect(() => {
     const safePath = (currentPath || '').toString();
     if (safePath.includes('?')) {
@@ -31,18 +29,10 @@ export const Explore: React.FC = () => {
       if (shapeParam) {
         setSelectedShapes([shapeParam as FrameShape]);
       }
-      const sellerParam = params.get('seller');
-      if (sellerParam) {
-        setSelectedSellers([sellerParam]);
-      }
-      const locParam = params.get('location');
-      if (locParam) {
-        setSelectedLocations([locParam]);
-      }
     }
   }, [currentPath]);
 
-  const categories = ['All', 'Eyeglasses', 'Sunglasses', 'Blue Light', 'Artisan Custom'];
+  const categories = ['All', 'Eyeglasses', 'Sunglasses', 'Blue Light', 'Signature Line'];
   const allShapes: FrameShape[] = [
     'Rectangle',
     'Round',
@@ -55,27 +45,14 @@ export const Explore: React.FC = () => {
     'Geometric',
   ];
   const allStyles: FrameStyle[] = ['Minimal', 'Professional', 'Casual', 'Vintage', 'Bold'];
-  
-  // Location list representing all Indonesian regional clusters
-  const allLocations = [
-    { label: 'Bandung', key: 'Bandung' },
-    { label: 'Yogyakarta', key: 'Yogyakarta' },
-    { label: 'Surabaya', key: 'Surabaya' },
-    { label: 'Bali / Denpasar', key: 'Bali' },
-    { label: 'Jakarta', key: 'Jakarta' },
-    { label: 'Malang', key: 'Malang' },
-    { label: 'Semarang', key: 'Semarang' },
-    { label: 'Solo', key: 'Solo' },
-  ];
 
   const allMaterials = [
-    'Italian Acetate',
-    'Bio-Acetate',
-    'Recycled Ocean Bio-Acetate',
-    'Japanese Titanium',
-    'Javanese Teak & Bamboo',
-    'Stainless Steel',
-    'Ultralight TR90',
+    'Handcrafted Teak & Bio-Acetate',
+    'Natural Teak & Sonokeling',
+    'Sustainable Teakwood & Bamboo',
+    'Ultralight Teak & Titanium',
+    'Organic Sandalwood & Teak',
+    'Hand-carved Bamboo & Alloy',
   ];
 
   const toggleShape = (shape: FrameShape) => {
@@ -90,18 +67,6 @@ export const Explore: React.FC = () => {
     );
   };
 
-  const toggleLocation = (locKey: string) => {
-    setSelectedLocations((prev) =>
-      prev.includes(locKey) ? prev.filter((l) => l !== locKey) : [...prev, locKey]
-    );
-  };
-
-  const toggleSeller = (sellerId: string) => {
-    setSelectedSellers((prev) =>
-      prev.includes(sellerId) ? prev.filter((s) => s !== sellerId) : [...prev, sellerId]
-    );
-  };
-
   const toggleMaterial = (mat: string) => {
     setSelectedMaterials((prev) =>
       prev.includes(mat) ? prev.filter((m) => m !== mat) : [...prev, mat]
@@ -111,10 +76,8 @@ export const Explore: React.FC = () => {
   const resetFilters = () => {
     setSearchQuery('');
     setSelectedCategory('All');
-    setSelectedSellers([]);
     setSelectedShapes([]);
     setSelectedStyles([]);
-    setSelectedLocations([]);
     setSelectedMaterials([]);
     setMaxPrice(2000000);
     setSortBy('featured');
@@ -122,133 +85,45 @@ export const Explore: React.FC = () => {
 
   const activeFilterCount =
     (selectedCategory !== 'All' ? 1 : 0) +
-    selectedSellers.length +
     selectedShapes.length +
     selectedStyles.length +
-    selectedLocations.length +
     selectedMaterials.length +
     (maxPrice < 2000000 ? 1 : 0) +
     (searchQuery ? 1 : 0);
 
-  // Interleave products from different SMEs for Featured sorting
-  const interleaveMultiSmeProducts = (items: Product[]): Product[] => {
-    const bySeller = new Map<string, Product[]>();
-    items.forEach((item) => {
-      const list = bySeller.get(item.sellerId) || [];
-      list.push(item);
-      bySeller.set(item.sellerId, list);
-    });
-
-    // Sort products within each seller
-    bySeller.forEach((list) => {
-      list.sort((a, b) => {
-        const scoreA = (a.isSpotlight ? 1000 : 0) + (a.trendScore || 0);
-        const scoreB = (b.isSpotlight ? 1000 : 0) + (b.trendScore || 0);
-        return scoreB - scoreA;
-      });
-    });
-
-    // Distinct regional round-robin order: Bandung -> Yogya -> Surabaya -> Bali -> Jakarta -> Malang -> Semarang -> Solo
-    const preferredOrder = [
-      'optik-melati',
-      'mata-rupa-studio',
-      'kaca-selatan',
-      'nusa-frames',
-      'lensa-kota',
-      'terang-atelier',
-      'bening-works',
-      'ruang-mata',
-    ];
-
-    const sellerIds = Array.from(bySeller.keys()).sort((a, b) => {
-      const idxA = preferredOrder.indexOf(a);
-      const idxB = preferredOrder.indexOf(b);
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-      return a.localeCompare(b);
-    });
-
-    const result: Product[] = [];
-    let hasMore = true;
-    let round = 0;
-
-    while (hasMore) {
-      hasMore = false;
-      for (const sId of sellerIds) {
-        const list = bySeller.get(sId);
-        if (list && round < list.length) {
-          result.push(list[round]);
-          if (round + 1 < list.length) {
-            hasMore = true;
-          }
-        }
-      }
-      round++;
-    }
-
-    return result;
-  };
-
-  // Filtered & Sorted Products
+  // Filtered and Sorted products
   const filteredProducts = useMemo(() => {
     const filtered = products.filter((p) => {
-      // Search Query
+      // Search query (name, shape, material, style, usage)
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchesName = p.name.toLowerCase().includes(q);
-        const matchesSeller = p.sellerName.toLowerCase().includes(q);
-        const matchesLoc = p.sellerLocation.toLowerCase().includes(q);
-        const matchesDesc = p.description.toLowerCase().includes(q);
-        const matchesShape = p.frameShape.toLowerCase().includes(q);
-        const matchesMaterial = p.material.toLowerCase().includes(q);
-        if (!matchesName && !matchesSeller && !matchesLoc && !matchesDesc && !matchesShape && !matchesMaterial) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchName = p.name.toLowerCase().includes(q);
+        const matchShape = p.frameShape.toLowerCase().includes(q);
+        const matchMaterial = p.material.toLowerCase().includes(q);
+        const matchStyle = p.style.some((s) => s.toLowerCase().includes(q));
+        const matchUsage = p.usage?.some((u) => u.toLowerCase().includes(q));
+        if (!matchName && !matchShape && !matchMaterial && !matchStyle && !matchUsage) {
           return false;
         }
       }
 
       // Category
-      if (selectedCategory !== 'All' && p.category !== selectedCategory) {
-        return false;
+      if (selectedCategory !== 'All') {
+        if (selectedCategory === 'Signature Line') {
+          if (!p.isSpotlight && !p.isTrending) return false;
+        } else if (p.category !== selectedCategory) {
+          return false;
+        }
       }
 
-      // Selected Sellers
-      if (selectedSellers.length > 0) {
-        const matchesSelectedSeller = selectedSellers.some(
-          (sel) =>
-            p.sellerId === sel ||
-            p.sellerId === `seller-${sel}` ||
-            p.sellerName.toLowerCase().includes(sel.toLowerCase())
-        );
-        if (!matchesSelectedSeller) return false;
-      }
-
-      // Frame Shapes
+      // Shapes
       if (selectedShapes.length > 0 && !selectedShapes.includes(p.frameShape)) {
         return false;
       }
 
-      // Aesthetic Styles
-      if (
-        selectedStyles.length > 0 &&
-        !p.style.some((s) => selectedStyles.includes(s))
-      ) {
+      // Styles
+      if (selectedStyles.length > 0 && !p.style.some((s) => selectedStyles.includes(s))) {
         return false;
-      }
-
-      // Locations (with Denpasar/Bali matching)
-      if (selectedLocations.length > 0) {
-        const matchLocation = selectedLocations.some((loc) => {
-          if (loc === 'Bali' || loc === 'Denpasar') {
-            return (
-              p.sellerLocation === 'Denpasar' ||
-              p.sellerLocation === 'Bali' ||
-              p.sellerId === 'nusa-frames'
-            );
-          }
-          return p.sellerLocation.toLowerCase() === loc.toLowerCase();
-        });
-        if (!matchLocation) return false;
       }
 
       // Materials
@@ -269,7 +144,7 @@ export const Explore: React.FC = () => {
 
     // Sorting
     if (sortBy === 'featured') {
-      return interleaveMultiSmeProducts(filtered);
+      return [...filtered].sort((a, b) => (b.isSpotlight ? 1 : 0) - (a.isSpotlight ? 1 : 0));
     } else if (sortBy === 'trending') {
       return [...filtered].sort((a, b) => {
         const scoreA = a.trendScore || ((a.views || 0) * 0.1 + (a.tryOns || 0) * 0.4 + (a.wishlists || 0) * 0.2 + (a.purchases || 0));
@@ -293,10 +168,8 @@ export const Explore: React.FC = () => {
     products,
     searchQuery,
     selectedCategory,
-    selectedSellers,
     selectedShapes,
     selectedStyles,
-    selectedLocations,
     selectedMaterials,
     maxPrice,
     sortBy,
@@ -306,71 +179,59 @@ export const Explore: React.FC = () => {
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { All: products.length };
     categories.forEach((cat) => {
-      if (cat !== 'All') {
+      if (cat === 'Signature Line') {
+        counts[cat] = products.filter((p) => p.isSpotlight || p.isTrending).length;
+      } else if (cat !== 'All') {
         counts[cat] = products.filter((p) => p.category === cat).length;
       }
     });
     return counts;
   }, [products]);
 
-  // Counts by location
-  const locationCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    allLocations.forEach((loc) => {
-      counts[loc.key] = products.filter((p) => {
-        if (loc.key === 'Bali') {
-          return p.sellerLocation === 'Denpasar' || p.sellerLocation === 'Bali' || p.sellerId === 'nusa-frames';
-        }
-        return p.sellerLocation.toLowerCase() === loc.key.toLowerCase();
-      }).length;
-    });
-    return counts;
-  }, [products]);
-
-  // Counts by seller
-  const sellerCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    sellers.forEach((s) => {
-      counts[s.id] = products.filter((p) => p.sellerId === s.id || p.sellerName.toLowerCase() === s.name.toLowerCase()).length;
-    });
-    return counts;
-  }, [products, sellers]);
-
   return (
     <div className="max-w-7xl mx-auto px-6 sm:px-12 py-8 space-y-8">
       {/* Header & Page Title */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-black/10 pb-8">
-        <div>
-          <div className="flex items-center gap-2 mb-2 text-xs uppercase tracking-widest font-bold text-orange-700">
-            <Sparkles size={14} />
-            <span>Indonesian Multi-SME Eyewear Marketplace</span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-serif italic text-[#1A1A1A]">
-            Explore Artisan Eyewear
+      <div 
+        id="explore-header-section"
+        className="flex flex-row justify-between items-center gap-3 sm:gap-6 pb-5 sm:pb-6 border-b border-black/10 transition-all"
+      >
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-serif italic text-[#1A1A1A] tracking-tight whitespace-nowrap">
+            BJ Collection
           </h1>
-          <p className="text-sm text-black/60 mt-1 max-w-xl leading-relaxed">
-            Discover {products.length} bespoke frames crafted by {sellers.length} independent optical ateliers across Bandung, Yogyakarta, Surabaya, Bali, Jakarta, Malang, Semarang, and Solo.
-          </p>
+          <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#EAE5DC] border border-black/10 text-[10px] sm:text-xs font-semibold text-orange-800 uppercase tracking-wider whitespace-nowrap">
+            {products.length} Frames
+          </span>
         </div>
 
         {/* Search Bar */}
-        <div className="w-full md:w-80 relative">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-black/40" />
-          <input
-            type="text"
-            placeholder="Search frames, shape, or SME..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white border border-black/10 rounded-full text-xs font-medium text-black focus:outline-none focus:border-black placeholder:text-black/40 shadow-xs"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-black/40 hover:text-black cursor-pointer"
-            >
-              <X size={14} />
-            </button>
-          )}
+        <div 
+          id="explore-search-bar"
+          className="w-44 sm:w-64 md:w-72 lg:w-80 shrink-0 relative group"
+        >
+          <div className="relative flex items-center">
+            <Search 
+              size={16} 
+              className="absolute left-3.5 text-black/40 group-focus-within:text-black transition-colors pointer-events-none" 
+            />
+            <input
+              type="text"
+              placeholder="Search frames..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 sm:pl-10 pr-8 sm:pr-9 py-2 sm:py-2.5 bg-white border border-black/15 rounded-full text-xs sm:text-sm font-medium text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black/60 placeholder:text-black/40 shadow-xs transition-all"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                className="absolute right-2.5 p-1 rounded-full text-black/40 hover:text-black hover:bg-black/5 active:scale-95 transition-all cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -421,13 +282,13 @@ export const Explore: React.FC = () => {
               onChange={(e: any) => setSortBy(e.target.value)}
               className="bg-transparent text-xs font-bold text-black focus:outline-none cursor-pointer"
             >
-              <option value="featured">Featured / Marketplace Spotlight</option>
-              <option value="trending">Trending Frames (Most Popular)</option>
+              <option value="featured">Featured Silhouettes</option>
+              <option value="trending">Trending (Most Popular)</option>
               <option value="try-ons">Most Tried-On (AR)</option>
               <option value="price-asc">Price: Low to High</option>
               <option value="price-desc">Price: High to Low</option>
               <option value="rating">Highest Rated</option>
-              <option value="newest">Newest Additions</option>
+              <option value="newest">Newest Releases</option>
             </select>
           </div>
         </div>
@@ -450,39 +311,13 @@ export const Explore: React.FC = () => {
             </span>
           )}
 
-          {selectedSellers.map((sId) => {
-            const sellerObj = sellers.find((s) => s.id === sId);
-            const name = sellerObj ? sellerObj.name : sId;
-            return (
-              <span
-                key={sId}
-                onClick={() => toggleSeller(sId)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-full cursor-pointer hover:bg-black transition-colors"
-              >
-                <span>Artisan: {name}</span>
-                <X size={12} />
-              </span>
-            );
-          })}
-
-          {selectedLocations.map((locKey) => (
-            <span
-              key={locKey}
-              onClick={() => toggleLocation(locKey)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-black/20 text-black text-[10px] font-bold uppercase tracking-wider rounded-full cursor-pointer hover:bg-black hover:text-white transition-colors"
-            >
-              <span>City: {locKey}</span>
-              <X size={12} />
-            </span>
-          ))}
-
           {selectedShapes.map((shape) => (
             <span
               key={shape}
               onClick={() => toggleShape(shape)}
               className="inline-flex items-center gap-1.5 px-3 py-1 bg-black text-white text-[10px] font-bold uppercase tracking-wider rounded-full cursor-pointer hover:bg-orange-700 transition-colors"
             >
-              <span>{shape}</span>
+              <span>Shape: {shape}</span>
               <X size={12} />
             </span>
           ))}
@@ -491,9 +326,9 @@ export const Explore: React.FC = () => {
             <span
               key={style}
               onClick={() => toggleStyle(style)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-700 text-white text-[10px] font-bold uppercase tracking-wider rounded-full cursor-pointer hover:bg-black transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#1A1A1A]/80 text-white text-[10px] font-bold uppercase tracking-wider rounded-full cursor-pointer hover:bg-orange-700 transition-colors"
             >
-              <span>{style}</span>
+              <span>Style: {style}</span>
               <X size={12} />
             </span>
           ))}
@@ -552,83 +387,8 @@ export const Explore: React.FC = () => {
             )}
           </div>
 
-          {/* SME Location Filter */}
-          <div className="space-y-3">
-            <span className="text-[11px] uppercase tracking-widest font-bold text-black/40 block flex items-center justify-between">
-              <span>SME Location</span>
-              <span className="text-[9px] text-black/30 font-normal">Indonesian Hubs</span>
-            </span>
-            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-              {allLocations.map((loc) => {
-                const isSelected = selectedLocations.includes(loc.key);
-                const count = locationCounts[loc.key] ?? 0;
-                return (
-                  <label
-                    key={loc.key}
-                    onClick={() => toggleLocation(loc.key)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-xl hover:bg-[#F5F2ED] text-xs text-black/80 cursor-pointer select-none transition-colors"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${
-                          isSelected
-                            ? 'bg-black border-black text-white'
-                            : 'border-black/20 bg-white'
-                        }`}
-                      >
-                        {isSelected && <Check size={10} />}
-                      </div>
-                      <span className={isSelected ? 'font-bold text-black' : ''}>{loc.label}</span>
-                    </div>
-                    <span className="text-[10px] text-black/40 font-mono">({count})</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Artisan / SME Filter */}
-          <div className="space-y-3 pt-4 border-t border-black/5">
-            <span className="text-[11px] uppercase tracking-widest font-bold text-black/40 block flex items-center justify-between">
-              <span>Artisan / SME</span>
-              <span className="text-[9px] text-black/30 font-normal">{sellers.length} Ateliers</span>
-            </span>
-            <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
-              {sellers.map((seller) => {
-                const isSelected = selectedSellers.includes(seller.id);
-                const count = sellerCounts[seller.id] ?? 0;
-                return (
-                  <label
-                    key={seller.id}
-                    onClick={() => toggleSeller(seller.id)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-xl hover:bg-[#F5F2ED] text-xs text-black/80 cursor-pointer select-none transition-colors"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${
-                          isSelected
-                            ? 'bg-orange-700 border-orange-700 text-white'
-                            : 'border-black/20 bg-white'
-                        }`}
-                      >
-                        {isSelected && <Check size={10} />}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className={`text-xs ${isSelected ? 'font-bold text-black' : ''}`}>
-                          {seller.name}
-                        </span>
-                        <span className="text-[9px] text-black/40">{seller.location}</span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] text-black/40 font-mono">({count})</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Frame Shapes */}
-          <div className="space-y-3 pt-4 border-t border-black/5">
+          <div className="space-y-3">
             <span className="text-[11px] uppercase tracking-widest font-bold text-black/40 block">
               Frame Shape
             </span>
@@ -661,52 +421,64 @@ export const Explore: React.FC = () => {
             <span className="text-[11px] uppercase tracking-widest font-bold text-black/40 block">
               Aesthetic Style
             </span>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="space-y-1.5">
               {allStyles.map((style) => {
                 const isSelected = selectedStyles.includes(style);
+                const count = products.filter((p) => p.style.includes(style)).length;
                 return (
-                  <button
+                  <label
                     key={style}
                     onClick={() => toggleStyle(style)}
-                    className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all border cursor-pointer ${
-                      isSelected
-                        ? 'bg-orange-700 text-white border-orange-700 shadow-xs'
-                        : 'bg-transparent text-black/70 border-black/15 hover:border-black'
-                    }`}
+                    className="flex items-center justify-between py-1.5 px-2 rounded-xl hover:bg-[#F5F2ED] text-xs text-black/80 cursor-pointer select-none transition-colors"
                   >
-                    {style}
-                  </button>
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? 'bg-black border-black text-white'
+                            : 'border-black/20 bg-white'
+                        }`}
+                      >
+                        {isSelected && <Check size={10} />}
+                      </div>
+                      <span className={isSelected ? 'font-bold text-black' : ''}>{style}</span>
+                    </div>
+                    <span className="text-[10px] text-black/40 font-mono">({count})</span>
+                  </label>
                 );
               })}
             </div>
           </div>
 
-          {/* Material Filter */}
+          {/* Premium Materials */}
           <div className="space-y-3 pt-4 border-t border-black/5">
             <span className="text-[11px] uppercase tracking-widest font-bold text-black/40 block">
-              Handcrafted Material
+              Material
             </span>
             <div className="space-y-1.5">
               {allMaterials.map((mat) => {
                 const isSelected = selectedMaterials.includes(mat);
                 const count = products.filter((p) => p.material.toLowerCase().includes(mat.toLowerCase())).length;
+                if (count === 0) return null;
                 return (
                   <label
                     key={mat}
                     onClick={() => toggleMaterial(mat)}
-                    className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-[#F5F2ED] text-xs text-black/80 cursor-pointer select-none transition-colors"
+                    className="flex items-center justify-between py-1.5 px-2 rounded-xl hover:bg-[#F5F2ED] text-xs text-black/80 cursor-pointer select-none transition-colors"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-3.5 h-3.5 rounded border flex items-center justify-center ${
-                          isSelected ? 'bg-black border-black text-white' : 'border-black/20 bg-white'
+                        className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? 'bg-black border-black text-white'
+                            : 'border-black/20 bg-white'
                         }`}
                       >
-                        {isSelected && <Check size={9} />}
+                        {isSelected && <Check size={10} />}
                       </div>
-                      <span className={`text-[11px] ${isSelected ? 'font-bold text-black' : ''}`}>{mat}</span>
+                      <span className={isSelected ? 'font-bold text-black' : ''}>{mat}</span>
                     </div>
-                    <span className="text-[9px] text-black/40 font-mono">({count})</span>
+                    <span className="text-[10px] text-black/40 font-mono">({count})</span>
                   </label>
                 );
               })}
@@ -715,26 +487,22 @@ export const Explore: React.FC = () => {
 
           {/* Price Range Slider */}
           <div className="space-y-3 pt-4 border-t border-black/5">
-            <div className="flex justify-between items-center">
-              <span className="text-[11px] uppercase tracking-widest font-bold text-black/40">
-                Budget Ceiling
-              </span>
-              <span className="text-xs font-bold text-black">
-                Rp {maxPrice.toLocaleString('id-ID')}
-              </span>
+            <div className="flex justify-between items-center text-[11px] font-bold">
+              <span className="uppercase tracking-widest text-black/40">Max Price</span>
+              <span className="text-black font-mono">Rp {maxPrice.toLocaleString('id-ID')}</span>
             </div>
             <input
               type="range"
-              min="200000"
+              min="500000"
               max="2000000"
-              step="25000"
+              step="50000"
               value={maxPrice}
               onChange={(e) => setMaxPrice(Number(e.target.value))}
               className="w-full accent-black cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-black/40">
-              <span>Rp 200k (Entry)</span>
-              <span>Rp 2.0M (Masterpiece)</span>
+            <div className="flex justify-between text-[9px] text-black/40 font-mono">
+              <span>Rp 500rb</span>
+              <span>Rp 2.0jt</span>
             </div>
           </div>
 
@@ -745,7 +513,7 @@ export const Explore: React.FC = () => {
               AI Face Fit Advisor
             </span>
             <p className="text-xs text-black/70 font-medium leading-relaxed">
-              Scan your facial proportions and let Gemini match the ideal frame shape for your jawline.
+              Scan your facial proportions and let AI match the ideal frame shape for your geometry.
             </p>
             <button
               onClick={() => navigate('/find-my-frame')}
@@ -762,24 +530,22 @@ export const Explore: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-6 bg-white px-6 py-4 rounded-2xl border border-black/5">
             <div>
               <p className="text-xs font-bold text-black uppercase tracking-widest">
-                SHOWING {filteredProducts.length} HANDCRAFTED {filteredProducts.length === 1 ? 'FRAME' : 'FRAMES'}
+                SHOWING {filteredProducts.length} {filteredProducts.length === 1 ? 'FRAME' : 'FRAMES'}
               </p>
               <p className="text-[11px] text-black/50 mt-0.5">
-                {activeFilterCount > 0
-                  ? `Filtered across ${new Set(filteredProducts.map((p) => p.sellerId)).size} independent ateliers`
-                  : `Curated across all ${sellers.length} Indonesian optical ateliers`}
+                Handcrafted wooden frames with real-time AR try-on and custom sizing.
               </p>
             </div>
 
             <div className="flex items-center gap-2 text-xs text-black/50">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>AR Try-On & Spatial Fit Ready</span>
+              <span>AR Face Try-On Ready</span>
             </div>
           </div>
 
           {/* Grid of Product Cards */}
           {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -790,10 +556,10 @@ export const Explore: React.FC = () => {
                 <Search size={28} />
               </div>
               <h3 className="text-2xl font-serif italic text-black">
-                No handcrafted frames match these filters
+                No frames match these filters
               </h3>
               <p className="text-xs sm:text-sm text-black/60 max-w-md mx-auto leading-relaxed">
-                We couldn't find any artisan frames matching your current selection. Try resetting filters or exploring other regions.
+                We couldn't find any frames matching your current selection. Try resetting filters or choosing a different shape or style.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
@@ -809,16 +575,7 @@ export const Explore: React.FC = () => {
                   }}
                   className="px-5 py-3 bg-[#F5F2ED] text-black rounded-full text-xs font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-all cursor-pointer"
                 >
-                  View Eyeglasses (14)
-                </button>
-                <button
-                  onClick={() => {
-                    resetFilters();
-                    setSelectedLocations(['Bali']);
-                  }}
-                  className="px-5 py-3 bg-[#F5F2ED] text-black rounded-full text-xs font-bold uppercase tracking-wider hover:bg-black hover:text-white transition-all cursor-pointer"
-                >
-                  View Bali Ateliers (3)
+                  View Eyeglasses
                 </button>
               </div>
             </div>
@@ -828,4 +585,3 @@ export const Explore: React.FC = () => {
     </div>
   );
 };
-
