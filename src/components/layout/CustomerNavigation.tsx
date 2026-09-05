@@ -44,13 +44,19 @@ export const CustomerNavigation: React.FC = () => {
         {/* Brand Logo */}
         <div
           onClick={() => navigate('/')}
-          className="cursor-pointer flex items-center group select-none"
+          className="cursor-pointer flex items-center gap-2.5 sm:gap-3 group select-none"
           id="customer-nav-logo"
         >
           <BjBrandLogo
             className="h-8 sm:h-9 w-auto text-black group-hover:opacity-80 transition-opacity shrink-0"
             color="#000000"
           />
+          <span 
+            id="customer-nav-brand-text"
+            className="font-serif font-bold tracking-tight text-xl sm:text-2xl text-black leading-none group-hover:opacity-80 transition-opacity"
+          >
+            Bj Homemade
+          </span>
         </div>
 
         {/* Customer Navigation Links */}

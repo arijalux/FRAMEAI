@@ -118,17 +118,6 @@ export const SellerNavigation: React.FC = () => {
             <span>Storefront</span>
           </button>
 
-          {/* Switch to Customer View Pill */}
-          <button
-            onClick={handleSwitchToCustomer}
-            className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider h-10 px-4 rounded-full bg-white text-black hover:bg-neutral-200 transition-all shadow-sm cursor-pointer"
-            title="Return to Customer Shopping Experience"
-            id="nav-switch-to-customer-btn"
-          >
-            <User size={14} />
-            <span>Customer View</span>
-          </button>
-
           {/* User Profile Dropdown */}
           <div className="relative">
             <button
