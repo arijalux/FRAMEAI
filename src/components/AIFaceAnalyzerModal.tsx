@@ -17,6 +17,8 @@ interface AIFaceAnalyzerModalProps {
   frames: OpticalFrame[];
   onApplyAnalysis: (result: FaceAnalysisResult) => void;
   onSelectFrameForTryOn: (frame: OpticalFrame) => void;
+  /** Used inside the Cari dengan AI flow: hand the result back and close instead of showing it */
+  closeOnResult?: boolean;
 }
 
 const PRESET_ARCHETYPES = [
@@ -58,6 +60,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
   frames,
   onApplyAnalysis,
   onSelectFrameForTryOn,
+  closeOnResult = false,
 }) => {
   const [mode, setMode] = useState<'upload' | 'camera' | 'presets'>('presets');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -201,8 +204,14 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
       const data = await response.json().catch(() => null);
 
       if (response.ok && data?.analysis) {
-        setAnalysisResult(data.analysis);
         onApplyAnalysis(data.analysis);
+        if (closeOnResult) {
+          handleStopCamera();
+          setSelectedImage(null);
+          onClose();
+        } else {
+          setAnalysisResult(data.analysis);
+        }
       } else {
         setAnalysisError(data?.error || 'Analisis wajah gagal. Silakan coba lagi.');
       }
