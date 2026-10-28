@@ -75,6 +75,8 @@ export default function App() {
   // match scores are hidden until then rather than assuming a face shape
   const [userFaceShape, setUserFaceShape] = useState<FaceShape | null>(null);
   const [heroIndex, setHeroIndex] = useState<number>(0);
+  // Free-text question sent to Gemini from the navbar's AI search button
+  const [aiQuery, setAiQuery] = useState<string>('');
 
   // AI & Modals
   const [faceAnalysis, setFaceAnalysis] = useState<FaceAnalysisResult | null>(null);
@@ -227,16 +229,51 @@ export default function App() {
       {/* Main Navigation Header */}
       <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-line">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center">
+          <div className="flex items-center shrink-0">
             <button onClick={() => setActiveView('home')} aria-label="Beranda frameai" className="flex items-center gap-2 text-left">
               <span className="w-8 h-8 rounded-full border-[1.5px] border-ink flex items-center justify-center">
                 <Eye className="w-4 h-4 text-ink" />
               </span>
-              <span className="text-xl font-medium tracking-[-0.04em] text-ink">frameai</span>
+              <span className="hidden sm:inline text-xl font-medium tracking-[-0.04em] text-ink">frameai</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Search: Enter filters Koleksi; the AI button asks Gemini in natural language */}
+          <form
+            role="search"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setActiveView('catalog');
+            }}
+            className="relative flex-1 max-w-xl"
+          >
+            <Search className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="search"
+              aria-label="Cari frame"
+              placeholder="Cari frame, atau tanya AI..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (activeView !== 'catalog' && e.target.value) setActiveView('catalog');
+              }}
+              className="w-full h-10 pl-10 pr-12 rounded-full bg-soft text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-1 focus:ring-ink [&::-webkit-search-cancel-button]:hidden"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setAiQuery(searchQuery.trim());
+                setActiveView('finder');
+              }}
+              aria-label="Cari dengan AI"
+              title={searchQuery.trim() ? 'Tanya AI tentang pencarian ini' : 'Cari dengan AI'}
+              className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-ink hover:bg-ink-soft text-white flex items-center justify-center transition-colors"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+          </form>
+
+          <div className="flex items-center gap-2 shrink-0">
             {navItems.map((item) => {
               const Icon = item.view === 'seller' ? Store : LayoutGrid;
               return (
@@ -302,7 +339,10 @@ export default function App() {
 
                 <div className="flex flex-wrap items-center gap-3">
                   <button
-                    onClick={() => setActiveView('finder')}
+                    onClick={() => {
+                    setAiQuery('');
+                    setActiveView('finder');
+                  }}
                     className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center gap-2 transition-colors"
                   >
                     <Sparkles className="w-4 h-4" />
@@ -358,7 +398,10 @@ export default function App() {
                           Biarkan Gemini memilihkan frame yang cocok dengan wajah dan gayamu.
                         </p>
                         <button
-                          onClick={() => setActiveView('finder')}
+                          onClick={() => {
+                    setAiQuery('');
+                    setActiveView('finder');
+                  }}
                           className="pt-2 border-t border-line w-full flex items-center gap-1.5 text-xs text-sage hover:text-ink"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
@@ -453,7 +496,10 @@ export default function App() {
                     ))}
                   </div>
                   <button
-                    onClick={() => setActiveView('finder')}
+                    onClick={() => {
+                    setAiQuery('');
+                    setActiveView('finder');
+                  }}
                     className="flex items-center gap-1.5 text-sm text-sage hover:text-ink"
                   >
                     <Sparkles className="w-4 h-4" />
@@ -461,18 +507,8 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* One row at every width: search stretches, and on phones the row scrolls sideways */}
+                {/* Filters stay on one row; on phones the row scrolls sideways. Text search lives in the navbar. */}
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-                  <div className="relative flex-1 min-w-[200px]">
-                    <Search className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="Cari frame..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-10 w-full pl-10 pr-4 rounded-full bg-soft text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-1 focus:ring-ink"
-                    />
-                  </div>
                   <select
                     aria-label="Filter frame berdasarkan bentuk"
                     value={shapeFilter}
@@ -755,6 +791,8 @@ export default function App() {
         {/* VIEW 5: Cari dengan AI (questionnaire → face scan → Gemini picks) */}
         {activeView === 'finder' && (
           <AIFrameFinder
+            key={aiQuery || 'guided'}
+            aiQuery={aiQuery || undefined}
             frames={frames}
             faceAnalysis={faceAnalysis}
             onScanResult={(res) => {
@@ -809,7 +847,10 @@ export default function App() {
                 {item.label}
               </button>
             ))}
-            <button onClick={() => setActiveView('finder')} className="hover:text-ink transition-colors">
+            <button onClick={() => {
+                    setAiQuery('');
+                    setActiveView('finder');
+                  }} className="hover:text-ink transition-colors">
               Cari dengan AI
             </button>
             <button onClick={() => setIsVaultOpen(true)} className="hover:text-ink transition-colors">

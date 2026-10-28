@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Camera, Check, RotateCcw, Sparkles, ShieldCheck } from 'lucide-react';
 import { FaceScanPanel } from './FaceScanPanel';
 import { OpticalFrame, FaceShape, FaceAnalysisResult } from '../types';
@@ -14,6 +14,8 @@ interface AIFrameFinderProps {
   onPickFaceShape: (shape: FaceShape) => void;
   onSelectFrameForTryOn: (frame: OpticalFrame) => void;
   onConfigureLenses: (frame: OpticalFrame) => void;
+  /** Free-text search from the navbar AI button; skips straight to results */
+  aiQuery?: string;
 }
 
 interface Answers {
@@ -113,6 +115,23 @@ function rankLocally(frames: OpticalFrame[], answers: Answers, faceShape: FaceSh
     .map(({ frame, reason }) => ({ frame, reason }));
 }
 
+/** Fallback for a free-text search: frames whose name, description, shape or material mention a query word */
+function searchLocally(frames: OpticalFrame[], query: string): Recommendation[] {
+  const words = query.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+  return frames
+    .map((f) => {
+      const haystack = [f.name, f.description, f.shape, f.material, frameShapeLabel(f.shape), materialLabel(f.material)]
+        .join(' ')
+        .toLowerCase();
+      const hits = words.filter((w) => haystack.includes(w));
+      return { frame: f, hits };
+    })
+    .filter((r) => r.hits.length > 0)
+    .sort((a, b) => b.hits.length - a.hits.length)
+    .slice(0, 3)
+    .map(({ frame, hits }) => ({ frame, reason: `Cocok dengan kata kunci: ${hits.join(', ')}.` }));
+}
+
 export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
   frames,
   faceAnalysis,
@@ -120,6 +139,7 @@ export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
   onPickFaceShape,
   onSelectFrameForTryOn,
   onConfigureLenses,
+  aiQuery,
 }) => {
   const [step, setStep] = useState<Step>('lifestyle');
   const [answers, setAnswers] = useState<Answers>({});
@@ -133,7 +153,11 @@ export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
   const faceShape: FaceShape | null = manualShape ?? faceAnalysis?.faceShape ?? null;
   const stepIndex = STEP_ORDER.indexOf(step);
 
-  const fetchRecommendations = async (shape: FaceShape | null, scan: FaceAnalysisResult | null = faceAnalysis) => {
+  const fetchRecommendations = async (
+    shape: FaceShape | null,
+    scan: FaceAnalysisResult | null = faceAnalysis,
+    query?: string
+  ) => {
     setStep('result');
     setIsLoading(true);
     setResults(null);
@@ -143,7 +167,7 @@ export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
       const res = await fetch('/api/recommend-frames', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers, face, frames }),
+        body: JSON.stringify({ answers, face, frames, query }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.recommendations?.length) throw new Error(data?.error || 'No recommendations');
@@ -156,13 +180,20 @@ export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
       setSummary(data.summary ?? '');
     } catch (e) {
       console.warn('AI recommendations unavailable, using local ranking:', e);
-      setResults(rankLocally(frames, answers, shape));
+      const textHits = query ? searchLocally(frames, query) : [];
+      setResults(textHits.length ? textHits : rankLocally(frames, answers, shape));
       setSummary('');
       setIsFallback(true);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // A search from the navbar jumps straight to AI results for that text
+  useEffect(() => {
+    if (aiQuery) fetchRecommendations(faceAnalysis?.faceShape ?? null, faceAnalysis, aiQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiQuery]);
 
   const answer = (key: keyof Answers, value: string) => {
     setAnswers((a) => ({ ...a, [key]: value }));
@@ -314,12 +345,18 @@ export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="space-y-2 max-w-2xl">
               <h2 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">
-                {isLoading ? 'Gemini sedang memilih frame...' : 'Frame yang paling cocok untukmu'}
+                {isLoading
+                  ? 'Gemini sedang memilih frame...'
+                  : aiQuery
+                  ? `Hasil untuk “${aiQuery}”`
+                  : 'Frame yang paling cocok untukmu'}
               </h2>
               {!isLoading && (
                 <p className="text-muted leading-relaxed">
                   {isFallback
-                    ? 'Gemini sedang tidak tersedia, jadi ini rekomendasi otomatis berdasarkan jawaban dan bentuk wajahmu.'
+                    ? aiQuery
+                      ? 'Gemini sedang tidak tersedia, jadi ini hasil otomatis berdasarkan kata kunci pencarianmu.'
+                      : 'Gemini sedang tidak tersedia, jadi ini rekomendasi otomatis berdasarkan jawaban dan bentuk wajahmu.'
                     : summary}
                 </p>
               )}
