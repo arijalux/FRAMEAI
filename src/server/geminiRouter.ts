@@ -1,7 +1,51 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { GoogleGenAI, Type } from '@google/genai';
 
 export const apiRouter = Router();
+
+// Simple in-memory fixed-window rate limiter per client IP, protecting the Gemini quota.
+// Per-instance only: good enough for a single Cloud Run container, not a global limit.
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 10;
+const requestCounts = new Map<string, { count: number; windowStart: number }>();
+
+function rateLimit(req: Request, res: Response, next: NextFunction): void {
+  const now = Date.now();
+  const key = req.ip || req.socket.remoteAddress || 'unknown';
+  const entry = requestCounts.get(key);
+
+  if (!entry || now - entry.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    requestCounts.set(key, { count: 1, windowStart: now });
+    // Opportunistically drop stale entries so the map cannot grow without bound
+    if (requestCounts.size > 10_000) {
+      for (const [k, v] of requestCounts) {
+        if (now - v.windowStart >= RATE_LIMIT_WINDOW_MS) requestCounts.delete(k);
+      }
+    }
+    next();
+    return;
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    const retryAfterSec = Math.ceil((entry.windowStart + RATE_LIMIT_WINDOW_MS - now) / 1000);
+    res.setHeader('Retry-After', String(retryAfterSec));
+    res.status(429).json({ success: false, error: 'Too many requests. Please try again shortly.' });
+    return;
+  }
+
+  entry.count++;
+  next();
+}
+
+apiRouter.use(rateLimit);
+
+// Never fabricate AI results: report the failure so the UI can tell the user honestly
+function sendAiUnavailable(res: Response): void {
+  res.status(503).json({
+    success: false,
+    error: 'AI analysis is temporarily unavailable. Please try again.',
+  });
+}
 
 // Initialize GoogleGenAI SDK with required telemetry User-Agent header
 const ai = new GoogleGenAI({
@@ -123,31 +167,9 @@ ${mockDescriptor ? `Note: User selected preset facial profile archetype: ${mockD
     const outputText = response.text || '{}';
     const parsed = JSON.parse(outputText);
     res.json({ success: true, analysis: parsed });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error analyzing face with Gemini:', error);
-    // Robust graceful fallback with randomized sensible optical metrics
-    const faceShapes = ['Oval', 'Square', 'Round', 'Heart', 'Diamond'] as const;
-    const randomShape = faceShapes[Math.floor(Math.random() * faceShapes.length)];
-    res.json({
-      success: true,
-      fallback: true,
-      analysis: {
-        faceShape: randomShape,
-        skinUndertone: 'Warm',
-        jawline: 'Angular defined',
-        estimatedPd: 63,
-        faceWidthToHeightRatio: 1.34,
-        cheekboneProminence: 'High',
-        confidenceScore: 94,
-        stylingTips: [
-          'Choose a frame width that mirrors your cheekbone breadth (±2mm).',
-          'A keyhole or slim titanium bridge keeps the optical center aligned with your pupils.',
-          'Contrasting rim geometry will balance your natural facial curves.',
-        ],
-        reasoning: `Your ${randomShape.toLowerCase()} facial structure features balanced symmetry. Frames with refined geometric edges or subtle upward curves elevate your cheekbone line while maintaining natural harmony.`,
-        recommendedShapes: randomShape === 'Square' ? ['Round', 'Oval', 'Cat-Eye'] : ['Geometric', 'Aviator', 'Square'],
-      },
-    });
+    sendAiUnavailable(res);
   }
 });
 
@@ -178,10 +200,7 @@ Highlight how the bridge, rim shape, and proportions complement their features.
     });
   } catch (error) {
     console.error('Error in /api/why-this-frame:', error);
-    res.json({
-      success: true,
-      reasoning: `The curated proportions and refined bridge of this frame create a flattering optical focal point that harmonizes beautifully with your facial geometry.`,
-    });
+    sendAiUnavailable(res);
   }
 });
 
@@ -269,29 +288,6 @@ Generate strategic merchant store intelligence including:
     res.json({ success: true, insights: parsed });
   } catch (error) {
     console.error('Error in /api/seller-insights:', error);
-    res.json({
-      success: true,
-      fallback: true,
-      insights: {
-        summary: 'Virtual try-on engagement is driving a 42% increase in lightweight titanium frame sales and high-index lens customizations.',
-        trendingFaceShapes: [
-          { shape: 'Oval', percentage: 38, description: 'Dominant segment gravitating toward architectural geometric and aviator rims.' },
-          { shape: 'Square', percentage: 27, description: 'Strong preference for Nordic round and soft circular silhouettes.' },
-          { shape: 'Heart', percentage: 19, description: 'High affinity for upswept Cat-Eye and delicate bottom-rim frames.' },
-          { shape: 'Round', percentage: 16, description: 'Frequent selection of angular square beveled acetate.' },
-        ],
-        lensUpgradeTrends: [
-          { name: 'Blue Light Shield', adoptionRate: '68% of optical orders' },
-          { name: '1.67 Ultra-Thin High Index', adoptionRate: '44% of orders' },
-          { name: 'Photochromic Transitions', adoptionRate: '29% of orders' },
-        ],
-        restockRecommendations: [
-          { frameName: 'AeroTitanium 01', urgency: 'High', rationale: 'Inventory at 24 units; virtual try-on conversion rate is exceeding 3.8x baseline.' },
-          { frameName: 'Geneva Chrono Titanium', urgency: 'High', rationale: 'Critical threshold: only 9 units remaining with high cart hold velocity.' },
-          { frameName: 'Monaco Sculpted Acetate', urgency: 'Medium', rationale: 'Consistent demand for Havana Dark Tortoise colorway.' },
-        ],
-        projectedDemandSummary: 'Anticipate a 35% surge in aerospace titanium demand over the next quarter driven by lightweight remote work eyewear trends.',
-      },
-    });
+    sendAiUnavailable(res);
   }
 });

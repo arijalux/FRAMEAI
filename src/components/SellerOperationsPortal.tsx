@@ -36,6 +36,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
   const [activeTab, setActiveTab] = useState<'inventory' | 'orders' | 'ai_insights'>('inventory');
   const [aiInsights, setAiInsights] = useState<SellerInsights | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState<boolean>(false);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
   const [showAddFrameModal, setShowAddFrameModal] = useState<boolean>(false);
 
   // New frame form state
@@ -51,6 +52,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
 
   const fetchAiInsights = async () => {
     setIsLoadingInsights(true);
+    setInsightsError(null);
     try {
       const res = await fetch('/api/seller-insights', {
         method: 'POST',
@@ -61,12 +63,15 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
           lowStockCount: lowStockFrames.length,
         }),
       });
-      const data = await res.json();
-      if (data.insights) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.insights) {
         setAiInsights(data.insights);
+      } else {
+        setInsightsError(data?.error || 'AI insights are unavailable right now.');
       }
     } catch (e) {
       console.error(e);
+      setInsightsError('Could not reach the insights service.');
     } finally {
       setIsLoadingInsights(false);
     }
@@ -409,6 +414,12 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
               {isLoadingInsights ? 'Analyzing Trends...' : 'Refresh Insights'}
             </button>
           </div>
+
+          {insightsError && !isLoadingInsights && (
+            <div role="alert" className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+              {insightsError}
+            </div>
+          )}
 
           {isLoadingInsights && !aiInsights && (
             <div className="py-20 text-center space-y-3">
