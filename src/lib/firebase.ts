@@ -3,6 +3,7 @@ import {
   getFirestore,
   doc,
   getDocFromServer,
+  getDoc,
   collection,
   getDocs,
   setDoc,
@@ -16,6 +17,8 @@ import {
 import {
   getAuth,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
@@ -25,7 +28,7 @@ import {
 export { onAuthStateChanged };
 export type { User };
 import firebaseConfig from '../../firebase-applet-config.json';
-import { OpticalFrame, Order, TryOnLook } from '../types';
+import { OpticalFrame, Order, TryOnLook, UserProfile } from '../types';
 import { INITIAL_FRAMES } from '../data/initialFrames';
 
 const app = initializeApp(firebaseConfig);
@@ -93,10 +96,48 @@ testConnection();
 
 // Google Auth Helpers
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-export async function loginWithGoogle(): Promise<User> {
-  const result = await signInWithPopup(auth, googleProvider);
-  return result.user;
+// Complete a redirect sign-in started by loginWithGoogle's fallback; errors surface on the next attempt
+getRedirectResult(auth).catch((e) => console.warn('Google redirect sign-in failed:', e));
+
+/**
+ * Signs in with a Google popup. If the browser blocks popups, falls back to a full-page
+ * redirect (the page reloads and onAuthStateChanged picks up the user).
+ */
+export async function loginWithGoogle(): Promise<User | null> {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
+    throw error;
+  }
+}
+
+/** Turns Firebase Auth errors into a message for the user, or null if they simply cancelled */
+export function describeAuthError(error: unknown): string | null {
+  const code = (error as { code?: string }).code;
+  switch (code) {
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+    case 'auth/user-cancelled':
+      return null;
+    case 'auth/unauthorized-domain':
+      return `Domain ${window.location.hostname} belum diizinkan untuk login. Admin perlu menambahkannya di Firebase Console → Authentication → Settings → Authorized domains.`;
+    case 'auth/operation-not-allowed':
+      return 'Login Google belum diaktifkan. Admin perlu mengaktifkannya di Firebase Console → Authentication → Sign-in method.';
+    case 'auth/network-request-failed':
+      return 'Koneksi bermasalah. Periksa internet Anda lalu coba lagi.';
+    case 'auth/too-many-requests':
+      return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.';
+    default:
+      return 'Login gagal. Silakan coba lagi.';
+  }
 }
 
 export async function logoutUser(): Promise<void> {
@@ -199,12 +240,50 @@ export async function fetchUserTryOnLooks(): Promise<TryOnLook[]> {
   }
 }
 
+export async function fetchUserProfile(uid: string): Promise<UserProfile | null> {
+  const path = `users/${uid}`;
+  try {
+    const snap = await getDoc(doc(db, 'users', uid));
+    return snap.exists() ? (snap.data() as UserProfile) : null;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+  }
+}
+
+export async function saveUserProfile(uid: string, profile: UserProfile): Promise<void> {
+  const path = `users/${uid}`;
+  try {
+    // Firestore rejects undefined values (e.g. an empty PD), so drop them
+    const data = Object.fromEntries(
+      Object.entries({ ...profile, updatedAt: new Date().toISOString() }).filter(([, v]) => v !== undefined)
+    );
+    await setDoc(doc(db, 'users', uid), data);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/** Orders placed by the signed-in user, newest first */
+export async function fetchMyOrders(uid: string): Promise<Order[]> {
+  const path = 'orders';
+  try {
+    const snap = await getDocs(query(collection(db, path), where('userId', '==', uid)));
+    const orders: Order[] = [];
+    snap.forEach((d) => orders.push({ id: d.id, ...d.data() } as Order));
+    return orders.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+  }
+}
+
 export async function createCustomerOrder(orderData: Omit<Order, 'id'>): Promise<string> {
   const path = 'orders';
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error('Login diperlukan untuk membuat pesanan.');
   try {
     const docRef = await addDoc(collection(db, path), {
       ...orderData,
-      userId: auth.currentUser?.uid || 'guest-checkout',
+      userId: uid,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });

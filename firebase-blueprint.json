@@ -39,6 +39,19 @@
       },
       "required": ["id", "userId", "frameId", "frameName", "createdAt"]
     },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Signed-in customer's profile: contact details, default shipping address and pupillary distance",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string", "maxLength": 120 },
+        "phone": { "type": "string", "maxLength": 20 },
+        "shippingAddress": { "type": "object" },
+        "pd": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName", "phone", "shippingAddress"]
+    },
     "Order": {
       "title": "Order",
       "description": "Customer eyewear order with custom lenses and prescription",
@@ -69,6 +82,7 @@
       "schema": "TryOnLook",
       "description": "User saved virtual try-on looks"
     },
+    "/users/{userId}": { "schema": "UserProfile", "description": "Private account profile, readable and writable only by its owner" },
     "/orders/{orderId}": {
       "schema": "Order",
       "description": "Eyewear purchases with custom lens options"
