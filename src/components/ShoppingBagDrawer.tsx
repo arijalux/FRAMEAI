@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { CartItem, Order } from '../types';
+import { CartItem, Order, ShippingAddress, UserProfile } from '../types';
 import { X, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { formatRupiah, lensTypeLabel, PPN_RATE } from '../utils/format';
-import { createCustomerOrder } from '../lib/firebase';
+import { createCustomerOrder, type User } from '../lib/firebase';
 
 interface ShoppingBagDrawerProps {
   isOpen: boolean;
@@ -11,6 +11,11 @@ interface ShoppingBagDrawerProps {
   onRemoveItem: (itemId: string) => void;
   onUpdateQuantity: (itemId: string, qty: number) => void;
   onOrderPlaced: (order: Order) => void;
+  user: User | null;
+  profile: UserProfile | null;
+  /** Called instead of opening the checkout form when nobody is signed in */
+  onRequireLogin: () => void;
+  onSaveAddress: (name: string, address: ShippingAddress) => void;
 }
 
 export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
@@ -20,6 +25,10 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
   onRemoveItem,
   onUpdateQuantity,
   onOrderPlaced,
+  user,
+  profile,
+  onRequireLogin,
+  onSaveAddress,
 }) => {
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'checkout' | 'success'>('cart');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -33,8 +42,24 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
   const [postalCode, setPostalCode] = useState<string>('');
   const [country, setCountry] = useState<string>('Indonesia');
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [saveAddress, setSaveAddress] = useState<boolean>(true);
 
   if (!isOpen) return null;
+
+  // Checkout needs an account: orders are tied to the user and tracked in their profile
+  const startCheckout = () => {
+    if (!user) {
+      onRequireLogin();
+      return;
+    }
+    // Prefill from the account and saved profile, without overwriting anything already typed
+    setCustomerName((v) => v || profile?.displayName || user.displayName || '');
+    setCustomerEmail((v) => v || user.email || '');
+    setAddress((v) => v || profile?.shippingAddress.address || '');
+    setCity((v) => v || profile?.shippingAddress.city || '');
+    setPostalCode((v) => v || profile?.shippingAddress.postalCode || '');
+    setCheckoutStep('checkout');
+  };
 
   const subtotal = items.reduce((acc, it) => acc + it.calculatedPrice * it.quantity, 0);
   const tax = Math.round(subtotal * PPN_RATE);
@@ -46,7 +71,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
     setCheckoutError(null);
 
     const orderData: Omit<Order, 'id'> = {
-      // Overwritten by createCustomerOrder with the signed-in uid or 'guest-checkout'
+      // Overwritten by createCustomerOrder with the signed-in uid
       userId: '',
       customerName,
       customerEmail,
@@ -69,6 +94,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
       setPlacedOrder(completedOrder);
       setCheckoutStep('success');
       onOrderPlaced(completedOrder);
+      if (saveAddress) onSaveAddress(customerName, { address, city, postalCode, country });
     } catch (err) {
       // Never show a success screen for an order that was not saved
       console.error(err);
@@ -254,6 +280,16 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                 </div>
               </div>
 
+              <label className="flex items-center gap-2 text-xs text-body cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={saveAddress}
+                  onChange={(e) => setSaveAddress(e.target.checked)}
+                  className="w-4 h-4 accent-ink"
+                />
+                Simpan alamat ini ke profil saya
+              </label>
+
               <div className="p-4 rounded-2xl bg-soft border border-line space-y-2 text-xs">
                 <div className="flex items-center gap-2 text-emerald-700 font-medium">
                   <ShieldCheck className="w-4 h-4" />
@@ -329,7 +365,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
 
             {checkoutStep === 'cart' ? (
               <button
-                onClick={() => setCheckoutStep('checkout')}
+                onClick={startCheckout}
                 className="w-full py-3 px-4 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-sm shadow-card flex items-center justify-center gap-2 transition-all"
               >
                 Lanjut ke Checkout

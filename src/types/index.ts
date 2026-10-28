@@ -104,14 +104,25 @@ export interface Order {
   items: CartItem[];
   totalAmount: number;
   status: OrderStatus;
-  shippingAddress: {
-    address: string;
-    city: string;
-    postalCode: string;
-    country: string;
-  };
+  shippingAddress: ShippingAddress;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ShippingAddress {
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+}
+
+/** Stored at users/{uid}; only the owner can read or write it */
+export interface UserProfile {
+  displayName: string;
+  phone: string;
+  shippingAddress: ShippingAddress;
+  pd?: number; // pupillary distance in mm, e.g. from the AI face scan
+  updatedAt?: string;
 }
 
 export interface SellerInsights {

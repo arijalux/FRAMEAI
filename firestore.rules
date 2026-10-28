@@ -41,15 +41,28 @@ service cloud.firestore {
       allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
+    // Account profiles (name, phone, shipping address, PD): private to their owner
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow create, update: if isOwner(userId)
+                            && request.resource.data.displayName is string
+                            && request.resource.data.displayName.size() <= 120
+                            && request.resource.data.phone is string
+                            && request.resource.data.phone.size() <= 20
+                            && request.resource.data.shippingAddress is map;
+      allow delete: if isOwner(userId);
+    }
+
     // Orders with custom lenses
     // Orders contain customer PII (name, email, address): never publicly readable.
     match /orders/{orderId} {
-      allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow list: if isAdmin();
+      // Owners may read (and list, with a userId filter) their own orders
+      allow get, list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Checkout requires an account
       allow create: if isValidId(orderId)
-                    && request.resource.data.customerEmail is string
-                    && ((isSignedIn() && request.resource.data.userId == request.auth.uid)
-                        || (!isSignedIn() && request.resource.data.userId == 'guest-checkout'));
+                    && isSignedIn()
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.customerEmail is string;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }

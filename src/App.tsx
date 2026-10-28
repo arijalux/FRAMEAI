@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { OpticalFrame, CartItem, Order, OrderStatus, FaceAnalysisResult, FrameShape, FrameMaterial, FaceShape } from './types';
+import { OpticalFrame, CartItem, Order, OrderStatus, FaceAnalysisResult, FrameShape, FrameMaterial, FaceShape, UserProfile } from './types';
 import { INITIAL_FRAMES } from './data/initialFrames';
 import {
   fetchCatalogFrames,
@@ -7,8 +7,10 @@ import {
   saveFrameToDb,
   updateOrderStatusInDb,
   checkIsAdmin,
+  fetchUserProfile,
+  saveUserProfile,
+  fetchMyOrders,
   auth,
-  loginWithGoogle,
   logoutUser,
   onAuthStateChanged,
   User,
@@ -22,6 +24,8 @@ import { AIFaceAnalyzerModal } from './components/AIFaceAnalyzerModal';
 import { LensConfiguratorModal } from './components/LensConfiguratorModal';
 import { ShoppingBagDrawer } from './components/ShoppingBagDrawer';
 import { UserSavedLooksModal } from './components/UserSavedLooksModal';
+import { AuthModal } from './components/AuthModal';
+import { ProfilePage } from './components/ProfilePage';
 
 // Secondary views are code-split so the catalog loads fast
 const ARFaceTryOn = lazy(() => import('./components/ARFaceTryOn').then((m) => ({ default: m.ARFaceTryOn })));
@@ -58,7 +62,7 @@ import {
 
 export default function App() {
   // Navigation View
-  const [activeView, setActiveView] = useState<'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'quiz' | 'seller'>('catalog');
+  const [activeView, setActiveView] = useState<'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'quiz' | 'seller' | 'profile'>('catalog');
 
   // Catalog & Frame State
   const [frames, setFrames] = useState<OpticalFrame[]>(INITIAL_FRAMES);
@@ -88,6 +92,11 @@ export default function App() {
 
   // Auth User
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [authPrompt, setAuthPrompt] = useState<{ open: boolean; reason?: string }>({ open: false });
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState<boolean>(false);
+  // Reopen the bag after a sign-in that was requested for checkout
+  const [resumeCheckout, setResumeCheckout] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   // Load Catalog from Firestore
@@ -101,6 +110,10 @@ export default function App() {
 
     const unsubscribe = onAuthStateChanged(auth, async (usr) => {
       setCurrentUser(usr);
+      setIsAccountMenuOpen(false);
+      if (usr) setAuthPrompt({ open: false });
+      setProfile(usr ? await fetchUserProfile(usr.uid).catch(() => null) : null);
+      setMyOrders(usr ? await fetchMyOrders(usr.uid).catch(() => []) : []);
       const admin = await checkIsAdmin(usr);
       setIsAdmin(admin);
       setAllOrders(admin ? await fetchAllOrders().catch(() => []) : []);
@@ -113,6 +126,19 @@ export default function App() {
   useEffect(() => {
     if (activeView === 'seller' && !isAdmin) setActiveView('catalog');
   }, [activeView, isAdmin]);
+
+  // The profile page needs a signed-in user
+  useEffect(() => {
+    if (activeView === 'profile' && !currentUser) setActiveView('catalog');
+  }, [activeView, currentUser]);
+
+  // Continue to checkout once the user signs in from the bag
+  useEffect(() => {
+    if (currentUser && resumeCheckout) {
+      setResumeCheckout(false);
+      setIsBagOpen(true);
+    }
+  }, [currentUser, resumeCheckout]);
 
   // Filtered frames
   const filteredFrames = frames
@@ -195,17 +221,15 @@ export default function App() {
     }
   };
 
-  // Auth toggle
-  const handleAuthAction = async () => {
-    if (currentUser) {
-      await logoutUser();
-    } else {
-      try {
-        await loginWithGoogle();
-      } catch (e) {
-        console.warn('Google sign-in popup closed or cancelled:', e);
-      }
-    }
+  const handleSignOut = async () => {
+    setIsAccountMenuOpen(false);
+    await logoutUser();
+  };
+
+  const handleSaveProfile = async (next: UserProfile) => {
+    if (!currentUser) return;
+    await saveUserProfile(currentUser.uid, next);
+    setProfile(next);
   };
 
   const navItems: { view: typeof activeView; label: string }[] = [
@@ -275,13 +299,71 @@ export default function App() {
               )}
             </button>
 
-            <button
-              onClick={handleAuthAction}
-              className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-full text-sm text-muted hover:text-ink whitespace-nowrap transition-colors"
-            >
-              <UserIcon className="w-4 h-4" />
-              <span>{currentUser ? currentUser.displayName || 'Akun' : 'Masuk'}</span>
-            </button>
+            {currentUser ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsAccountMenuOpen((o) => !o)}
+                  aria-haspopup="menu"
+                  aria-expanded={isAccountMenuOpen}
+                  aria-label="Menu akun"
+                  className="w-9 h-9 rounded-full border border-line hover:border-ink overflow-hidden flex items-center justify-center text-sm text-ink transition-colors"
+                >
+                  {currentUser.photoURL ? (
+                    <img src={currentUser.photoURL} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                  ) : (
+                    (currentUser.displayName ?? currentUser.email ?? '?').charAt(0).toUpperCase()
+                  )}
+                </button>
+
+                {isAccountMenuOpen && (
+                  <>
+                    {/* Click-away layer */}
+                    <div className="fixed inset-0 z-40" onClick={() => setIsAccountMenuOpen(false)} />
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-11 z-50 w-60 rounded-2xl bg-white border border-line shadow-float p-2"
+                    >
+                      <div className="px-3 py-2.5 border-b border-line mb-1">
+                        <p className="text-sm text-ink truncate">{profile?.displayName || currentUser.displayName || 'Akun Saya'}</p>
+                        <p className="text-xs text-muted truncate">{currentUser.email}</p>
+                      </div>
+                      {[
+                        { label: 'Profil', onClick: () => setActiveView('profile') },
+                        { label: `Pesanan & look tersimpan`, onClick: () => setIsVaultOpen(true) },
+                        ...(isAdmin ? [{ label: 'Portal Toko', onClick: () => setActiveView('seller') }] : []),
+                      ].map((item) => (
+                        <button
+                          key={item.label}
+                          role="menuitem"
+                          onClick={() => {
+                            setIsAccountMenuOpen(false);
+                            item.onClick();
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-xl text-sm text-ink hover:bg-soft"
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                      <button
+                        role="menuitem"
+                        onClick={handleSignOut}
+                        className="w-full text-left px-3 py-2 rounded-xl text-sm text-muted hover:bg-soft hover:text-ink"
+                      >
+                        Keluar
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setAuthPrompt({ open: true })}
+                className="flex items-center gap-1.5 h-9 px-3 rounded-full text-sm text-muted hover:text-ink whitespace-nowrap transition-colors"
+              >
+                <UserIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">Masuk</span>
+              </button>
+            )}
 
             <button
               onClick={() => setIsFaceAnalyzerOpen(true)}
@@ -636,7 +718,7 @@ export default function App() {
               frames={frames}
               activeFrame={selectedFrame}
               onSelectFrame={setSelectedFrame}
-              userPd={faceAnalysis?.estimatedPd || 63}
+              userPd={profile?.pd || faceAnalysis?.estimatedPd || 63}
             />
           </div>
         )}
@@ -774,6 +856,18 @@ export default function App() {
             onUpdateOrderStatus={handleUpdateOrderStatus}
           />
         )}
+        {/* VIEW 7: Account profile */}
+        {activeView === 'profile' && currentUser && (
+          <ProfilePage
+            user={currentUser}
+            profile={profile}
+            orders={myOrders}
+            scannedPd={faceAnalysis?.estimatedPd}
+            onSave={handleSaveProfile}
+            onOpenOrders={() => setIsVaultOpen(true)}
+            onSignOut={handleSignOut}
+          />
+        )}
         </Suspense>
       </main>
 
@@ -830,6 +924,29 @@ export default function App() {
           setMyOrders((prev) => [newOrder, ...prev]);
           if (isAdmin) setAllOrders((prev) => [newOrder, ...prev]);
           setCartItems([]);
+        }}
+        user={currentUser}
+        profile={profile}
+        onRequireLogin={() => {
+          setIsBagOpen(false);
+          setResumeCheckout(true);
+          setAuthPrompt({ open: true, reason: 'Masuk dulu untuk melanjutkan checkout dan melacak pesanan Anda.' });
+        }}
+        onSaveAddress={(name, address) => {
+          if (!currentUser) return;
+          const base = profile ?? { displayName: name, phone: '', shippingAddress: address };
+          handleSaveProfile({ ...base, displayName: base.displayName || name, shippingAddress: address }).catch((e) =>
+            console.warn('Could not save address to profile:', e)
+          );
+        }}
+      />
+
+      <AuthModal
+        isOpen={authPrompt.open}
+        reason={authPrompt.reason}
+        onClose={() => {
+          setAuthPrompt({ open: false });
+          setResumeCheckout(false);
         }}
       />
 
