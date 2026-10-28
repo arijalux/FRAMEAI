@@ -62,7 +62,8 @@ export default function App() {
   // Catalog & Frame State
   const [frames, setFrames] = useState<OpticalFrame[]>(INITIAL_FRAMES);
   const [selectedFrame, setSelectedFrame] = useState<OpticalFrame>(INITIAL_FRAMES[0]);
-  const [comparedFrames, setComparedFrames] = useState<OpticalFrame[]>([INITIAL_FRAMES[0], INITIAL_FRAMES[1], INITIAL_FRAMES[2]]);
+  // Starts empty: comparing begins from a frame the visitor picks in Koleksi
+  const [comparedFrames, setComparedFrames] = useState<OpticalFrame[]>([]);
 
   // Filter State
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -214,7 +215,6 @@ export default function App() {
     { view: 'catalog', label: 'Koleksi' },
     { view: 'ar_tryon', label: 'Coba AR' },
     { view: '3d_studio', label: 'Inspeksi 3D' },
-    { view: 'compare', label: `Bandingkan (${comparedFrames.length})` },
     { view: 'quiz', label: 'Cari Frame-ku' },
     ...(isAdmin ? [{ view: 'seller' as const, label: 'Portal Toko' }] : []),
   ];
@@ -621,6 +621,19 @@ export default function App() {
           </div>
         )}
 
+        {/* Shortcut back to the comparison once frames have been added from Koleksi */}
+        {activeView === 'catalog' && comparedFrames.length > 0 && (
+          <button
+            onClick={() => setActiveView('compare')}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 h-12 pl-5 pr-2 rounded-full bg-ink text-white text-sm font-medium shadow-float flex items-center gap-3"
+          >
+            Bandingkan {comparedFrames.length} frame
+            <span className="w-8 h-8 rounded-full bg-white text-ink flex items-center justify-center">
+              <ArrowUpRight className="w-4 h-4" />
+            </span>
+          </button>
+        )}
+
         {/* VIEW 2: Real-time Live AR Try-On */}
         {activeView === 'ar_tryon' && (
           <div className="space-y-6">
@@ -738,7 +751,8 @@ export default function App() {
           <FrameComparisonBench
             allFrames={frames}
             comparedFrames={comparedFrames}
-            onAddFrame={(f) => setComparedFrames([...comparedFrames, f])}
+            onAddFrame={(f) => setComparedFrames((prev) => (prev.some((p) => p.id === f.id) ? prev : [...prev, f]))}
+            onBrowseCatalog={() => setActiveView('catalog')}
             onRemoveFrame={handleRemoveFromCompare}
             onSelectFrameForTryOn={(f) => {
               setSelectedFrame(f);

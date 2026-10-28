@@ -11,6 +11,7 @@ interface FrameComparisonBenchProps {
   onRemoveFrame: (frameId: string) => void;
   onSelectFrameForTryOn: (frame: OpticalFrame) => void;
   onConfigureLenses: (frame: OpticalFrame) => void;
+  onBrowseCatalog: () => void;
   userFaceShape?: FaceShape;
 }
 
@@ -21,6 +22,7 @@ export const FrameComparisonBench: React.FC<FrameComparisonBenchProps> = ({
   onRemoveFrame,
   onSelectFrameForTryOn,
   onConfigureLenses,
+  onBrowseCatalog,
   userFaceShape,
 }) => {
   const maxSlots = 4;
@@ -70,14 +72,14 @@ export const FrameComparisonBench: React.FC<FrameComparisonBenchProps> = ({
 
       {comparedFrames.length === 0 ? (
         <div className="p-12 text-center rounded-3xl bg-white/50 border border-line">
-          <p className="text-sm text-muted mb-4">Belum ada frame untuk dibandingkan.</p>
+          <p className="text-sm text-muted mb-4">
+            Belum ada frame untuk dibandingkan. Tekan + pada kartu frame di Koleksi.
+          </p>
           <button
-            onClick={() => {
-              allFrames.slice(0, 3).forEach((f) => onAddFrame(f));
-            }}
-            className="px-5 py-2.5 rounded-full bg-ink text-white font-medium text-xs shadow-card hover:bg-ink-soft transition-colors"
+            onClick={onBrowseCatalog}
+            className="h-11 px-5 rounded-full bg-ink text-white font-medium text-sm hover:bg-ink-soft transition-colors"
           >
-            Muat 3 Frame Rekomendasi
+            Pilih frame di Koleksi
           </button>
         </div>
       ) : (
