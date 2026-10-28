@@ -319,12 +319,6 @@ export default function App() {
             {/* Hero */}
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center pt-4 lg:pt-10">
               <div className="space-y-7">
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-soft text-xs text-body">
-                  <Eye className="w-3.5 h-3.5" />
-                  Coba kacamata dari rumah
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                </span>
-
                 <h1 className="text-[2.4rem] md:text-6xl font-normal tracking-[-0.045em] leading-[1.04] text-ink">
                   Coba. Bandingkan. Pilih.
                   <br />
