@@ -201,20 +201,20 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
     : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-ink/40 backdrop-blur-md animate-in fade-in overflow-y-auto">
       {/* my-auto (not items-center) centers short content without clipping the top of tall content */}
-      <div className="relative w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl my-auto">
+      <div className="relative w-full max-w-4xl bg-white border border-line rounded-3xl overflow-hidden shadow-float my-auto">
         {/* Top Header */}
-        <div className="p-6 border-b border-neutral-800/80 flex items-center justify-between bg-neutral-950/60">
+        <div className="p-6 border-b border-line flex items-center justify-between bg-white/60">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <div className="w-10 h-10 rounded-2xl bg-sage-tint border border-sage-line flex items-center justify-center text-sage">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold font-serif text-white tracking-wide">
+              <h2 className="text-xl font-medium font-display text-ink tracking-wide">
                 Analisis Bentuk Wajah dengan AI
               </h2>
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs text-muted">
                 Didukung Gemini 3.8 Flash
               </p>
             </div>
@@ -222,7 +222,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
           <button
             onClick={handleClose}
             aria-label="Tutup Analisis"
-            className="p-2 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+            className="p-2 rounded-full hover:bg-soft-strong text-muted hover:text-ink transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -231,7 +231,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
         {/* Modal Body */}
         <div className="p-6">
           {analysisError && !isScanning && (
-            <div ref={errorRef} role="alert" className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+            <div ref={errorRef} role="alert" className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-xs text-red-700">
               {analysisError}
             </div>
           )}
@@ -240,22 +240,22 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
             <div className="space-y-6">
               {/* Scan Mode Switcher */}
               <div className="flex justify-center">
-                <div className="flex items-center gap-2 p-1.5 bg-neutral-950 rounded-2xl border border-neutral-800">
+                <div className="flex items-center gap-2 p-1.5 bg-soft rounded-2xl border border-line">
                   <button
                     onClick={() => {
                       handleStopCamera();
                       setMode('presets');
                     }}
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                      mode === 'presets' ? 'bg-amber-500 text-neutral-950' : 'text-neutral-400 hover:text-white'
+                    className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
+                      mode === 'presets' ? 'bg-ink text-white' : 'text-muted hover:text-ink'
                     }`}
                   >
                     Contoh Bentuk Wajah
                   </button>
                   <button
                     onClick={handleStartCamera}
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                      mode === 'camera' ? 'bg-amber-500 text-neutral-950' : 'text-neutral-400 hover:text-white'
+                    className={`px-4 py-2 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all ${
+                      mode === 'camera' ? 'bg-ink text-white' : 'text-muted hover:text-ink'
                     }`}
                   >
                     <Camera className="w-3.5 h-3.5" />
@@ -267,8 +267,8 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                       setMode('upload');
                       fileInputRef.current?.click();
                     }}
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                      mode === 'upload' ? 'bg-amber-500 text-neutral-950' : 'text-neutral-400 hover:text-white'
+                    className={`px-4 py-2 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all ${
+                      mode === 'upload' ? 'bg-ink text-white' : 'text-muted hover:text-ink'
                     }`}
                   >
                     <Upload className="w-3.5 h-3.5" />
@@ -287,16 +287,16 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
 
               {/* Mode: Camera Viewfinder */}
               {mode === 'camera' && (
-                <div className="relative max-w-md mx-auto aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-950 border border-neutral-800 flex items-center justify-center">
+                <div className="relative max-w-md mx-auto aspect-[4/3] rounded-2xl overflow-hidden bg-soft border border-line flex items-center justify-center">
                   <video ref={videoRef} playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
-                  <div className="absolute inset-0 border-2 border-dashed border-amber-500/50 m-6 rounded-3xl pointer-events-none flex items-center justify-center">
-                    <span className="text-xs text-amber-300 font-mono bg-black/60 px-2 py-1 rounded">
+                  <div className="absolute inset-0 border-2 border-dashed border-sage-line m-6 rounded-3xl pointer-events-none flex items-center justify-center">
+                    <span className="text-xs text-sage tabular-nums bg-ink/30 px-2 py-1 rounded">
                       Posisikan Wajah di Dalam Bingkai
                     </span>
                   </div>
                   <button
                     onClick={handleCaptureFromCamera}
-                    className="absolute bottom-4 py-2.5 px-6 rounded-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm shadow-xl transition-all"
+                    className="absolute bottom-4 py-2.5 px-6 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-sm shadow-card transition-all"
                   >
                     Analisis Foto
                   </button>
@@ -310,23 +310,23 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                     <button
                       key={p.label}
                       onClick={() => handleSelectPreset(p)}
-                      className="group p-3 rounded-2xl bg-neutral-950 border border-neutral-800/80 hover:border-amber-500/60 transition-all text-left flex flex-col gap-2.5"
+                      className="group p-3 rounded-2xl bg-soft border border-line hover:border-sage-line transition-all text-left flex flex-col gap-2.5"
                     >
-                      <div className="relative aspect-square rounded-xl overflow-hidden bg-neutral-900">
+                      <div className="relative aspect-square rounded-xl overflow-hidden bg-white">
                         <img
                           src={p.img}
                           alt={p.label}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
-                        <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-950/80 text-amber-400 border border-amber-500/30">
+                        <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/80 text-sage border border-sage-line">
                           {faceShapeLabel(p.shape)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-white group-hover:text-amber-400 transition-colors">
+                        <div className="text-xs font-medium text-ink group-hover:text-sage transition-colors">
                           {p.label}
                         </div>
-                        <div className="text-[11px] text-neutral-400 line-clamp-2 mt-0.5">
+                        <div className="text-[11px] text-muted line-clamp-2 mt-0.5">
                           {p.desc}
                         </div>
                       </div>
@@ -341,17 +341,17 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
           {isScanning && (
             <div className="py-16 flex flex-col items-center justify-center text-center space-y-6">
               <div className="relative w-24 h-24">
-                <div className="absolute inset-0 rounded-full border-4 border-amber-500/20 border-t-amber-400 animate-spin" />
-                <div className="absolute inset-2 rounded-full border-4 border-neutral-800 border-b-amber-500 animate-spin [animation-direction:reverse]" />
+                <div className="absolute inset-0 rounded-full border-4 border-sage-line border-t-amber-400 animate-spin" />
+                <div className="absolute inset-2 rounded-full border-4 border-line border-b-amber-500 animate-spin [animation-direction:reverse]" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Scan className="w-8 h-8 text-amber-400 animate-pulse" />
+                  <Scan className="w-8 h-8 text-sage animate-pulse" />
                 </div>
               </div>
               <div className="space-y-2 max-w-md">
-                <h3 className="text-lg font-serif font-bold text-white tracking-wide">
+                <h3 className="text-lg font-normal tracking-[-0.03em] text-ink tracking-wide">
                   Memetakan Wajah
                 </h3>
-                <p className="text-xs font-mono text-amber-400 animate-pulse">{scanStepText}</p>
+                <p className="text-xs tabular-nums text-sage animate-pulse">{scanStepText}</p>
               </div>
             </div>
           )}
@@ -361,68 +361,68 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
             <div className="space-y-6 animate-in fade-in">
               {/* Top Summary Metric Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800">
-                  <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
+                <div className="p-4 rounded-2xl bg-soft border border-line">
+                  <span className="text-[10px] font-medium text-muted">
                     Bentuk Wajah
                   </span>
-                  <div className="text-xl font-bold font-serif text-amber-400 mt-1">
+                  <div className="text-xl font-medium font-display text-sage mt-1">
                     {faceShapeLabel(analysisResult.faceShape)}
                   </div>
-                  <div className="text-xs text-neutral-400 mt-0.5">
+                  <div className="text-xs text-muted mt-0.5">
                     Keyakinan {analysisResult.confidenceScore}%
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800">
-                  <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
+                <div className="p-4 rounded-2xl bg-soft border border-line">
+                  <span className="text-[10px] font-medium text-muted">
                     Undertone Kulit
                   </span>
-                  <div className="text-xl font-bold font-serif text-white mt-1">
+                  <div className="text-xl font-medium font-display text-ink mt-1">
                     {skinUndertoneLabel(analysisResult.skinUndertone)}
                   </div>
-                  <div className="text-xs text-neutral-400 mt-0.5">
+                  <div className="text-xs text-muted mt-0.5">
                     Menentukan warna frame yang cocok
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800">
-                  <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
+                <div className="p-4 rounded-2xl bg-soft border border-line">
+                  <span className="text-[10px] font-medium text-muted">
                     Perkiraan Jarak Pupil (PD)
                   </span>
-                  <div className="text-xl font-bold font-mono text-amber-400 mt-1">
+                  <div className="text-xl font-medium tabular-nums text-sage mt-1">
                     {analysisResult.estimatedPd} mm
                   </div>
-                  <div className="text-xs text-neutral-400 mt-0.5">
+                  <div className="text-xs text-muted mt-0.5">
                     Untuk titik tengah lensa
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800">
-                  <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
+                <div className="p-4 rounded-2xl bg-soft border border-line">
+                  <span className="text-[10px] font-medium text-muted">
                     Garis Rahang
                   </span>
-                  <div className="text-base font-bold text-white mt-1 truncate">
+                  <div className="text-base font-medium text-ink mt-1 truncate">
                     {jawlineLabel(analysisResult.jawline)}
                   </div>
-                  <div className="text-xs text-neutral-400 mt-0.5">
+                  <div className="text-xs text-muted mt-0.5">
                     Tulang pipi: {cheekboneLabel(analysisResult.cheekboneProminence)}
                   </div>
                 </div>
               </div>
 
               {/* Personalized Optician Reasoning Card */}
-              <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3">
-                <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold uppercase tracking-wider">
+              <div className="p-5 rounded-2xl bg-sage-tint border border-sage-line space-y-3">
+                <div className="flex items-center gap-2 text-sage text-xs font-medium">
                   <Cpu className="w-4 h-4" />
                   Penjelasan dari Gemini
                 </div>
-                <p className="text-sm text-neutral-200 leading-relaxed font-sans">
+                <p className="text-sm text-ink leading-relaxed font-sans">
                   {analysisResult.reasoning}
                 </p>
-                <div className="pt-2 border-t border-amber-500/10 grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div className="pt-2 border-t border-sage-line grid grid-cols-1 md:grid-cols-3 gap-2">
                   {analysisResult.stylingTips.map((tip, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs text-neutral-300">
-                      <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div key={idx} className="flex items-start gap-2 text-xs text-body">
+                      <CheckCircle2 className="w-4 h-4 text-sage shrink-0 mt-0.5" />
                       <span>{tip}</span>
                     </div>
                   ))}
@@ -432,35 +432,35 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
               {/* Top Curated Recommended Frames */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-white tracking-wide uppercase">
+                  <h4 className="text-sm font-medium text-ink tracking-wide">
                     Rekomendasi Frame untuk Wajah {faceShapeLabel(analysisResult.faceShape)}
                   </h4>
-                  <span className="text-xs text-neutral-400">Diurutkan berdasarkan kecocokan</span>
+                  <span className="text-xs text-muted">Diurutkan berdasarkan kecocokan</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {matchedFrames.slice(0, 3).map(({ frame, match }) => (
                     <div
                       key={frame.id}
-                      className="group p-3 rounded-2xl bg-neutral-950 border border-neutral-800 hover:border-amber-500/60 transition-all flex flex-col justify-between"
+                      className="group p-3 rounded-2xl bg-soft border border-line hover:border-sage-line transition-all flex flex-col justify-between"
                     >
                       <div>
-                        <div className="relative aspect-video rounded-xl overflow-hidden bg-neutral-900 mb-2.5">
+                        <div className="relative aspect-video rounded-xl overflow-hidden bg-white mb-2.5">
                           <img
                             src={frame.imageUrl}
                             alt={frame.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                           />
-                          <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500 text-neutral-950 shadow-md">
+                          <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-xs font-medium bg-ink text-white shadow-md">
                             Cocok {match.score}%
                           </div>
                         </div>
 
-                        <div className="text-sm font-bold text-white">{frame.name}</div>
-                        <div className="text-xs text-neutral-400 mb-1">
+                        <div className="text-sm font-medium text-ink">{frame.name}</div>
+                        <div className="text-xs text-muted mb-1">
                           {frameShapeLabel(frame.shape)} · {materialLabel(frame.material)}
                         </div>
-                        <p className="text-xs text-amber-300/90 font-medium">
+                        <p className="text-xs text-sage font-medium">
                           {match.verdict}
                         </p>
                       </div>
@@ -470,7 +470,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                           onSelectFrameForTryOn(frame);
                           handleClose();
                         }}
-                        className="mt-3 w-full py-2 px-3 rounded-xl bg-neutral-800 hover:bg-amber-500 hover:text-neutral-950 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                        className="mt-3 w-full py-2 px-3 rounded-full bg-soft-strong hover:bg-ink hover:text-white text-ink text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
                       >
                         <Camera className="w-3.5 h-3.5" />
                         Coba dengan AR
@@ -481,19 +481,19 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
               </div>
 
               {/* Actions Footer */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-800">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-line">
                 <button
                   onClick={() => {
                     setAnalysisResult(null);
                     setSelectedImage(null);
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white"
+                  className="px-4 py-2 rounded-full text-xs font-medium text-muted hover:text-ink"
                 >
                   Scan Ulang
                 </button>
                 <button
                   onClick={handleClose}
-                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs shadow-lg transition-all"
+                  className="px-6 py-2.5 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-xs shadow-card transition-all"
                 >
                   Lihat Frame Rekomendasi
                 </button>

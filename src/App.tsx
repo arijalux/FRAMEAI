@@ -48,6 +48,8 @@ import {
   HelpCircle,
   Layers,
   ArrowRight,
+  ArrowUpRight,
+  Plus,
   Shield,
   Sun,
   Flame,
@@ -69,6 +71,7 @@ export default function App() {
   const [materialFilter, setMaterialFilter] = useState<string>('All');
   const [polarizedOnly, setPolarizedOnly] = useState<boolean>(false);
   const [userFaceShape, setUserFaceShape] = useState<FaceShape>('Oval');
+  const [heroIndex, setHeroIndex] = useState<number>(0);
 
   // AI & Modals
   const [faceAnalysis, setFaceAnalysis] = useState<FaceAnalysisResult | null>(null);
@@ -205,270 +208,273 @@ export default function App() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans selection:bg-amber-500/20 selection:text-amber-300">
-      {/* Top Notification Bar */}
-      <div className="bg-gradient-to-r from-neutral-950 via-amber-950/40 to-neutral-950 border-b border-neutral-800/60 py-2 px-4 text-center text-xs tracking-wider font-medium text-neutral-300 flex items-center justify-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-        <span>Gratis Ongkir Berasuransi ke Seluruh Indonesia · Garansi Pas 30 Hari</span>
-      </div>
+  const navItems: { view: typeof activeView; label: string }[] = [
+    { view: 'catalog', label: 'Koleksi' },
+    { view: 'ar_tryon', label: 'Coba AR' },
+    { view: '3d_studio', label: 'Inspeksi 3D' },
+    { view: 'compare', label: `Bandingkan (${comparedFrames.length})` },
+    { view: 'quiz', label: 'Cari Frame-ku' },
+    ...(isAdmin ? [{ view: 'seller' as const, label: 'Portal Toko' }] : []),
+  ];
 
+  // Hero showcases the top catalog frames; the dots switch between them
+  const heroFrames = frames.slice(0, 3);
+  const heroFrame = heroFrames[heroIndex % Math.max(1, heroFrames.length)] ?? selectedFrame;
+  const heroMatch = calculateFaceFrameMatchScore(userFaceShape, heroFrame.shape);
+
+  return (
+    <div className="min-h-screen bg-canvas text-ink flex flex-col font-sans">
       {/* Main Navigation Header */}
-      <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur-xl border-b border-neutral-800/80 px-4 lg:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          {/* Brand Identity */}
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => setActiveView('catalog')}
-              className="flex items-center gap-2.5 text-left group focus:outline-none"
-            >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
-                <Eye className="w-5 h-5 text-neutral-950 stroke-[2.5]" />
-              </div>
-              <div>
-                <span className="font-serif font-bold text-xl tracking-wider text-white flex items-center gap-1">
-                  Frame<span className="text-amber-400 font-sans font-black">AI</span>
-                </span>
-                <span className="text-[10px] tracking-widest uppercase text-neutral-400 block -mt-1 font-mono">
-                  Studio Optik
-                </span>
-              </div>
+      <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-line">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-8">
+            <button onClick={() => setActiveView('catalog')} className="flex items-center gap-2 text-left">
+              <span className="w-8 h-8 rounded-full border-[1.5px] border-ink flex items-center justify-center">
+                <Eye className="w-4 h-4 text-ink" />
+              </span>
+              <span className="text-xl font-medium tracking-[-0.04em] text-ink">frameai</span>
             </button>
 
-            {/* Navigation Links */}
-            <nav className="hidden md:flex items-center gap-1 bg-neutral-900/60 p-1 rounded-2xl border border-neutral-800/80 text-xs font-semibold">
-              <button
-                onClick={() => setActiveView('catalog')}
-                className={`px-3.5 py-1.5 rounded-xl transition-all ${
-                  activeView === 'catalog' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                Koleksi
-              </button>
-              <button
-                onClick={() => setActiveView('ar_tryon')}
-                className={`px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${
-                  activeView === 'ar_tryon' ? 'bg-amber-500 text-neutral-950 shadow' : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                <Camera className="w-3.5 h-3.5" />
-                Studio AR Live
-              </button>
-              <button
-                onClick={() => setActiveView('3d_studio')}
-                className={`px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${
-                  activeView === '3d_studio' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                Inspeksi 3D
-              </button>
-              <button
-                onClick={() => setActiveView('compare')}
-                className={`px-3.5 py-1.5 rounded-xl transition-all ${
-                  activeView === 'compare' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                Bandingkan ({comparedFrames.length})
-              </button>
-              <button
-                onClick={() => setActiveView('quiz')}
-                className={`px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${
-                  activeView === 'quiz' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                <HelpCircle className="w-3.5 h-3.5" />
-                Cari Frame-ku
-              </button>
-              {isAdmin && (
+            <nav className="hidden lg:flex items-center gap-5 text-sm whitespace-nowrap">
+              {navItems.map((item) => (
                 <button
-                  onClick={() => setActiveView('seller')}
-                  className={`px-3.5 py-1.5 rounded-xl transition-all ${
-                    activeView === 'seller' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-white'
+                  key={item.view}
+                  onClick={() => setActiveView(item.view)}
+                  className={`py-1 border-b transition-colors ${
+                    activeView === item.view
+                      ? 'text-ink border-ink'
+                      : 'text-muted border-transparent hover:text-ink'
                   }`}
                 >
-                  Portal Toko
+                  {item.label}
                 </button>
-              )}
+              ))}
             </nav>
           </div>
 
-          {/* Right Action Icons */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* AI Face Scan Trigger Button */}
-            <button
-              onClick={() => setIsFaceAnalyzerOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-2 shadow-sm transition-all"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Scan Wajah AI</span>
-              {faceAnalysis && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              )}
-            </button>
-
-            {/* Saved Looks Vault */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setIsVaultOpen(true)}
               title="Koleksi Look & Pesanan"
               aria-label="Koleksi Look Tersimpan"
-              className="p-2 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-neutral-300 transition-colors"
+              className="w-9 h-9 rounded-full border border-line hover:bg-soft text-body flex items-center justify-center transition-colors"
             >
               <Award className="w-4 h-4" />
             </button>
 
-            {/* Shopping Bag Button */}
             <button
               onClick={() => setIsBagOpen(true)}
               aria-label="Buka Keranjang Belanja"
-              className="relative p-2 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-white transition-colors"
+              className="relative w-9 h-9 rounded-full border border-line hover:bg-soft text-ink flex items-center justify-center transition-colors"
             >
-              <ShoppingBag className="w-4 h-4 text-amber-400" />
+              <ShoppingBag className="w-4 h-4" />
               {cartItems.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-amber-500 text-neutral-950 font-bold text-[10px] flex items-center justify-center font-mono shadow-md">
+                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-ink text-white text-[10px] font-medium flex items-center justify-center tabular-nums">
                   {cartItems.reduce((a, b) => a + b.quantity, 0)}
                 </span>
               )}
             </button>
 
-            {/* User Profile / Auth Button */}
             <button
               onClick={handleAuthAction}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 hover:text-white transition-colors"
+              className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-full text-sm text-muted hover:text-ink whitespace-nowrap transition-colors"
             >
-              <UserIcon className="w-3.5 h-3.5 text-neutral-400" />
+              <UserIcon className="w-4 h-4" />
               <span>{currentUser ? currentUser.displayName || 'Akun' : 'Masuk'}</span>
+            </button>
+
+            <button
+              onClick={() => setIsFaceAnalyzerOpen(true)}
+              className="h-9 px-4 rounded-full border border-line hover:border-ink text-sm font-medium text-ink flex items-center gap-2 whitespace-nowrap transition-colors"
+            >
+              <span className="hidden sm:inline">Scan Wajah AI</span>
+              <Sparkles className="w-4 h-4 sm:hidden" />
+              {faceAnalysis && <span className="w-1.5 h-1.5 rounded-full bg-sage" />}
             </button>
           </div>
         </div>
 
         {/* Mobile View Subnav */}
-        <div className="flex md:hidden items-center gap-1 overflow-x-auto pt-3 border-t border-neutral-800/80 mt-2 text-xs">
-          <button
-            onClick={() => setActiveView('catalog')}
-            className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'catalog' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
-          >
-            Koleksi
-          </button>
-          <button
-            onClick={() => setActiveView('ar_tryon')}
-            className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'ar_tryon' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
-          >
-            Coba AR
-          </button>
-          <button
-            onClick={() => setActiveView('3d_studio')}
-            className={`px-3 py-1 rounded-lg shrink-0 ${activeView === '3d_studio' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
-          >
-            Studio 3D
-          </button>
-          <button
-            onClick={() => setActiveView('compare')}
-            className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'compare' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
-          >
-            Bandingkan
-          </button>
-          <button
-            onClick={() => setActiveView('quiz')}
-            className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'quiz' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
-          >
-            Kuis
-          </button>
-          {isAdmin && (
+        <div className="flex lg:hidden items-center gap-5 overflow-x-auto px-4 pb-2 text-sm whitespace-nowrap">
+          {navItems.map((item) => (
             <button
-              onClick={() => setActiveView('seller')}
-              className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'seller' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
+              key={item.view}
+              onClick={() => setActiveView(item.view)}
+              className={`shrink-0 py-1 border-b ${
+                activeView === item.view ? 'text-ink border-ink' : 'text-muted border-transparent'
+              }`}
             >
-              Portal Toko
+              {item.label}
             </button>
-          )}
+          ))}
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-8 space-y-12">
-        <Suspense fallback={<div className="py-24 text-center text-xs text-neutral-500">Memuat...</div>}>
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-10 space-y-12">
+        <Suspense fallback={<div className="py-24 text-center text-sm text-faint">Memuat...</div>}>
         {/* VIEW 1: Catalog View */}
         {activeView === 'catalog' && (
-          <div className="space-y-10">
-            {/* Hero Section */}
-            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-900/90 to-amber-950/20 border border-neutral-800/80 p-8 md:p-14 shadow-2xl">
-              <div className="relative z-10 max-w-2xl space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Temukan Kacamata Cerdas & Coba Virtual
-                </div>
+          <div className="space-y-24">
+            {/* Hero */}
+            <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center pt-4 lg:pt-10">
+              <div className="space-y-7">
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-soft text-xs text-body">
+                  <Eye className="w-3.5 h-3.5" />
+                  Coba kacamata dari rumah
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </span>
 
-                <h1 className="font-serif text-3xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
-                  Kacamata Premium, Dikalibrasi oleh AI.
+                <h1 className="text-[2.4rem] md:text-6xl font-normal tracking-[-0.045em] leading-[1.04] text-ink">
+                  Coba. Bandingkan. Pilih.
+                  <br />
+                  Kacamata yang pas, dibantu AI.
                 </h1>
 
-                <p className="text-sm md:text-base text-neutral-300 leading-relaxed font-light">
-                  Coba kacamata secara real-time dengan AR, analisis bentuk wajah oleh Gemini, dan material kelas
-                  aerospace yang dirancang selaras dengan kontur wajah Anda.
+                <p className="text-lg text-muted leading-relaxed max-w-lg">
+                  Scan bentuk wajah dengan Gemini, coba frame langsung lewat kamera, lalu atur lensa sesuai resep.
+                  Semua di satu tempat.
                 </p>
 
-                <div className="flex flex-wrap items-center gap-3 pt-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     onClick={() => setIsFaceAnalyzerOpen(true)}
-                    className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-2 shadow-xl shadow-amber-500/15 transition-all hover:scale-105"
+                    className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center gap-2 transition-colors"
                   >
-                    <Sparkles className="w-4 h-4" />
-                    Scan Bentuk Wajah
+                    Scan bentuk wajah
+                    <ArrowUpRight className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setActiveView('ar_tryon')}
-                    className="px-6 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white font-semibold text-xs flex items-center gap-2 border border-neutral-700 transition-colors"
+                    className="h-12 px-6 rounded-full border border-line hover:border-ink text-ink text-sm font-medium flex items-center gap-2 transition-colors"
                   >
-                    <Camera className="w-4 h-4 text-amber-400" />
-                    Buka Cermin AR
+                    <Camera className="w-4 h-4" />
+                    Buka cermin AR
                   </button>
+                </div>
+
+                <p className="text-xs text-muted">Gratis ongkir ke seluruh Indonesia. Garansi pas 30 hari.</p>
+
+                {/* Face shape selector */}
+                <div className="space-y-2.5 pt-2">
+                  <span className="text-xs text-muted">Tampilkan kecocokan untuk wajah:</span>
+                  <div className="flex gap-1 p-1 rounded-full bg-soft w-fit max-w-full overflow-x-auto">
+                    {(['Oval', 'Square', 'Round', 'Heart', 'Diamond'] as FaceShape[]).map((shape) => (
+                      <button
+                        key={shape}
+                        onClick={() => setUserFaceShape(shape)}
+                        className={`shrink-0 px-4 py-1.5 rounded-full text-sm transition-all ${
+                          userFaceShape === shape ? 'bg-white text-ink shadow-card' : 'text-muted hover:text-ink'
+                        }`}
+                      >
+                        {faceShapeLabel(shape)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Face Shape Preset Quick Selectors */}
-              <div className="mt-8 pt-6 border-t border-neutral-800/80 flex flex-wrap items-center gap-3">
-                <span className="text-xs text-neutral-400 font-medium">Sesuaikan untuk Bentuk Wajah:</span>
-                {(['Oval', 'Square', 'Round', 'Heart', 'Diamond'] as FaceShape[]).map((shape) => (
+              {/* Showcase card with floating UI */}
+              <div className="space-y-4">
+                <div className="relative aspect-[4/5] sm:aspect-[5/5] rounded-[32px] overflow-hidden bg-sand shadow-float">
+                  <img src={heroFrame.imageUrl} alt={heroFrame.name} className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/10" />
+
+                  <div className="absolute top-5 left-5 right-5 space-y-3">
+                    <span className="inline-block px-3 py-1.5 rounded-full bg-white/90 text-xs text-ink">
+                      {frameShapeLabel(heroFrame.shape)} / {materialLabel(heroFrame.material)}
+                    </span>
+                    <p className="text-2xl md:text-3xl font-normal tracking-[-0.03em] text-white">{heroFrame.name}</p>
+                  </div>
+
+                  {/* Floating "AI note" card */}
+                  <div className="absolute left-4 sm:left-[-8px] bottom-24 w-[min(260px,80%)] rounded-2xl bg-white p-4 shadow-float space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-sm text-ink">
+                        <span className="w-6 h-6 rounded-full bg-sage-tint flex items-center justify-center">
+                          <Sparkles className="w-3.5 h-3.5 text-sage" />
+                        </span>
+                        Gemini
+                        <span className="text-xs text-faint">baru saja</span>
+                      </span>
+                    </div>
+                    <p className="text-sm text-body leading-snug">{heroMatch.guidance}</p>
+                    <div className="pt-2 border-t border-line flex items-center gap-1.5 text-xs text-muted">
+                      <Check className="w-3.5 h-3.5 text-sage" />
+                      Cocok {heroMatch.score}% untuk wajah {faceShapeLabel(userFaceShape).toLowerCase()}
+                    </div>
+                  </div>
+
+                  {/* Floating price chip */}
                   <button
-                    key={shape}
-                    onClick={() => setUserFaceShape(shape)}
-                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
-                      userFaceShape === shape
-                        ? 'bg-amber-500 text-neutral-950 font-bold shadow'
-                        : 'bg-neutral-950/80 text-neutral-400 hover:text-white border border-neutral-800'
-                    }`}
+                    onClick={() => {
+                      setSelectedFrame(heroFrame);
+                      setIsLensConfiguratorOpen(true);
+                    }}
+                    className="absolute right-4 bottom-4 flex items-center gap-2 pl-4 pr-1.5 py-1.5 rounded-full bg-white shadow-float text-sm text-ink"
                   >
-                    {faceShapeLabel(shape)}
+                    <span className="tabular-nums">{formatRupiah(heroFrame.price)}</span>
+                    <span className="w-8 h-8 rounded-full bg-ink text-white flex items-center justify-center">
+                      <ArrowUpRight className="w-4 h-4" />
+                    </span>
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Filter & Search Bar */}
-            <div className="p-4 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                {/* Search */}
-                <div className="relative flex-1 max-w-md">
-                  <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Cari berdasarkan bentuk, material, atau kata kunci..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-amber-500"
-                  />
                 </div>
 
-                {/* Filters */}
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex justify-center gap-2">
+                  {heroFrames.map((f, i) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setHeroIndex(i)}
+                      aria-label={`Tampilkan ${f.name}`}
+                      className={`h-1.5 rounded-full transition-all ${heroIndex === i ? 'w-5 bg-ink' : 'w-1.5 bg-line-strong'}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Editorial statement */}
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end border-t border-line pt-16">
+              <h2 className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.08] text-ink">
+                Lebih sedikit menebak.
+                <br />
+                Lebih banyak yang pas.
+              </h2>
+              <p className="text-lg text-muted leading-relaxed max-w-md md:justify-self-end">
+                Setiap frame diberi skor kecocokan dengan bentuk wajahmu, diukur dalam milimeter, dan bisa dicoba
+                langsung sebelum dipesan.
+              </p>
+            </section>
+
+            {/* Catalog */}
+            <section className="space-y-8">
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div className="space-y-2">
+                  <h2 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">Koleksi</h2>
+                  <p className="text-muted">
+                    {filteredFrames.length} frame, diurutkan dari yang paling cocok untuk wajah{' '}
+                    {faceShapeLabel(userFaceShape).toLowerCase()}.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Cari frame..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-10 w-56 pl-10 pr-4 rounded-full bg-soft text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-1 focus:ring-ink"
+                    />
+                  </div>
                   <select
                     aria-label="Filter frame berdasarkan bentuk"
                     value={shapeFilter}
                     onChange={(e) => setShapeFilter(e.target.value)}
-                    className="px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-200"
+                    className="h-10 px-4 rounded-full bg-soft text-sm text-ink focus:outline-none"
                   >
-                    <option value="All">Semua Bentuk</option>
+                    <option value="All">Semua bentuk</option>
                     <option value="Geometric">Geometris</option>
                     <option value="Square">Kotak</option>
                     <option value="Round">Bulat</option>
@@ -476,155 +482,135 @@ export default function App() {
                     <option value="Cat-Eye">Cat-Eye</option>
                     <option value="Oval">Oval</option>
                   </select>
-
                   <select
                     aria-label="Filter frame berdasarkan material"
                     value={materialFilter}
                     onChange={(e) => setMaterialFilter(e.target.value)}
-                    className="px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-200"
+                    className="h-10 px-4 rounded-full bg-soft text-sm text-ink focus:outline-none"
                   >
-                    <option value="All">Semua Material</option>
+                    <option value="All">Semua material</option>
                     <option value="Aerospace Titanium">Titanium Aerospace</option>
                     <option value="Italian Acetate">Asetat Italia</option>
                     <option value="Eco-Polymer">Eko-Polimer</option>
                     <option value="Mixed Titanium Acetate">Kombinasi Titanium & Asetat</option>
                   </select>
-
                   <button
                     onClick={() => setPolarizedOnly((p) => !p)}
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                      polarizedOnly ? 'bg-amber-500 text-neutral-950' : 'bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-white'
+                    className={`h-10 px-4 rounded-full text-sm flex items-center gap-1.5 transition-colors ${
+                      polarizedOnly ? 'bg-ink text-white' : 'bg-soft text-ink hover:bg-soft-strong'
                     }`}
                   >
-                    <Sun className="w-3.5 h-3.5" />
-                    Hanya Sun Polarized
+                    <Sun className="w-4 h-4" />
+                    Sun polarized
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Optical Product Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredFrames.map((frame) => {
-                const match = calculateFaceFrameMatchScore(userFaceShape, frame.shape);
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredFrames.map((frame, idx) => {
+                  const match = calculateFaceFrameMatchScore(userFaceShape, frame.shape);
+                  // Rotate through the soft panel tints like an editorial grid
+                  const tint = ['bg-sand', 'bg-mist', 'bg-sage-tint', 'bg-stone'][idx % 4];
 
-                return (
-                  <div
-                    key={frame.id}
-                    className="group rounded-3xl bg-neutral-900 border border-neutral-800/80 hover:border-amber-500/50 p-4 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/5"
-                  >
-                    <div>
-                      {/* Image Preview with Floating Badges */}
-                      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-950 mb-4">
-                        <img
-                          src={frame.imageUrl}
-                          alt={frame.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
+                  return (
+                    <article
+                      key={frame.id}
+                      className="group rounded-3xl border border-line bg-white overflow-hidden flex flex-col transition-shadow hover:shadow-float"
+                    >
+                      <div className={`relative ${tint} p-5 pb-0`}>
+                        <div className="flex items-start justify-between gap-2 mb-4">
+                          <span className="px-2.5 py-1 rounded-full bg-white/90 text-xs text-ink">
+                            Cocok {match.score}%
+                          </span>
+                          <div className="flex gap-1">
+                            {frame.isBestseller && (
+                              <span className="px-2.5 py-1 rounded-full bg-ink text-white text-xs">Terlaris</span>
+                            )}
+                            {frame.isNew && (
+                              <span className="px-2.5 py-1 rounded-full bg-white/90 text-sage text-xs">Baru</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="aspect-[4/3] rounded-t-2xl overflow-hidden shadow-card">
+                          <img
+                            src={frame.imageUrl}
+                            alt={frame.name}
+                            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                          />
+                        </div>
+                      </div>
 
-                        {/* Top Left Match Score Badge */}
-                        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold bg-neutral-950/80 backdrop-blur-md text-amber-400 border border-amber-500/30">
-                          Cocok {match.score}% · {faceShapeLabel(userFaceShape)}
+                      <div className="p-5 flex-1 flex flex-col gap-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <span className="text-xs text-muted">{materialLabel(frame.material)}</span>
+                            <h3 className="text-xl font-normal tracking-[-0.03em] text-ink">{frame.name}</h3>
+                            <p className="text-sm text-muted">
+                              {frameShapeLabel(frame.shape)} · {frame.dimensions.lensWidth}□{frame.dimensions.bridgeWidth} ·{' '}
+                              {frame.weightGrams}g
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedFrame(frame);
+                              setIsLensConfiguratorOpen(true);
+                            }}
+                            aria-label={`Atur lensa untuk ${frame.name}`}
+                            className="shrink-0 w-10 h-10 rounded-full border border-line group-hover:bg-ink group-hover:text-white group-hover:border-ink text-ink flex items-center justify-center transition-colors"
+                          >
+                            <ArrowUpRight className="w-4 h-4" />
+                          </button>
                         </div>
 
-                        {/* Top Right Badges */}
-                        <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
-                          {frame.isBestseller && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-neutral-950 uppercase tracking-wider">
-                              Terlaris
-                            </span>
-                          )}
-                          {frame.isNew && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-neutral-950 uppercase tracking-wider">
-                              Baru
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Color Swatch Dots */}
-                        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 p-1 rounded-full bg-neutral-950/70 backdrop-blur-sm border border-neutral-800">
+                        <div className="flex items-center gap-1.5">
                           {frame.colors.map((c) => (
                             <span
                               key={c.name}
                               title={c.name}
-                              className="w-3.5 h-3.5 rounded-full border border-white/20"
+                              className="w-4 h-4 rounded-full ring-1 ring-black/10"
                               style={{ backgroundColor: c.hex }}
                             />
                           ))}
+                          <span className="ml-auto text-base tabular-nums text-ink">{formatRupiah(frame.price)}</span>
+                        </div>
+
+                        <div className="mt-auto pt-4 border-t border-line flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedFrame(frame);
+                              setActiveView('ar_tryon');
+                            }}
+                            className="flex-1 h-10 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
+                          >
+                            <Camera className="w-4 h-4" />
+                            Coba AR
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedFrame(frame);
+                              setActiveView('3d_studio');
+                            }}
+                            title="Lihat 3D"
+                            aria-label={`Lihat ${frame.name} dalam 3D`}
+                            className="w-10 h-10 rounded-full border border-line hover:border-ink text-ink flex items-center justify-center transition-colors"
+                          >
+                            <Layers className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleAddToCompare(frame)}
+                            title="Bandingkan"
+                            aria-label={`Bandingkan ${frame.name}`}
+                            className="w-10 h-10 rounded-full border border-line hover:border-ink text-ink flex items-center justify-center transition-colors"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
-
-                      {/* Frame Identity */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-serif font-bold text-white text-lg group-hover:text-amber-400 transition-colors">
-                            {frame.name}
-                          </h3>
-                          <p className="text-xs text-neutral-400">{materialLabel(frame.material)}</p>
-                        </div>
-                        <span className="font-mono font-bold text-sm text-amber-400 whitespace-nowrap">{formatRupiah(frame.price)}</span>
-                      </div>
-
-                      {/* Technical Dimension Pills */}
-                      <div className="flex items-center gap-2 mt-3 text-[11px] font-mono text-neutral-400">
-                        <span className="px-2 py-0.5 rounded-md bg-neutral-950 border border-neutral-800">
-                          {frame.dimensions.lensWidth}□{frame.dimensions.bridgeWidth}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md bg-neutral-950 border border-neutral-800">
-                          {frame.weightGrams}g
-                        </span>
-                        <span className="text-neutral-500">{frameShapeLabel(frame.shape)}</span>
-                      </div>
-                    </div>
-
-                    {/* Actions Toolbar */}
-                    <div className="mt-5 pt-3 border-t border-neutral-800/80 space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedFrame(frame);
-                            setActiveView('ar_tryon');
-                          }}
-                          className="py-2 px-3 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-800 transition-colors"
-                        >
-                          <Camera className="w-3.5 h-3.5 text-amber-400" />
-                          Coba AR
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedFrame(frame);
-                            setActiveView('3d_studio');
-                          }}
-                          className="py-2 px-3 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-800 transition-colors"
-                        >
-                          <Layers className="w-3.5 h-3.5 text-neutral-400" />
-                          Lihat 3D
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedFrame(frame);
-                            setIsLensConfiguratorOpen(true);
-                          }}
-                          className="py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-bold flex items-center justify-center gap-1.5 shadow transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          Lensa
-                        </button>
-                        <button
-                          onClick={() => handleAddToCompare(frame)}
-                          className="py-2 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
-                        >
-                          Bandingkan +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
           </div>
         )}
 
@@ -633,14 +619,14 @@ export default function App() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-serif font-bold text-white">Cermin Fitting Augmented Reality</h2>
-                <p className="text-xs text-neutral-400">
+                <h2 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">Cermin Fitting Augmented Reality</h2>
+                <p className="text-xs text-muted">
                   Pelacakan titik wajah terkalibrasi lewat kamera live atau foto model.
                 </p>
               </div>
               <button
                 onClick={() => setActiveView('catalog')}
-                className="px-4 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 hover:text-white"
+                className="px-4 py-2 rounded-full bg-white border border-line text-xs text-body hover:text-ink"
               >
                 Kembali ke Katalog
               </button>
@@ -660,14 +646,14 @@ export default function App() {
           <div className="space-y-8">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-serif font-bold text-white">Inspeksi Optik 3D Presisi</h2>
-                <p className="text-xs text-neutral-400">
+                <h2 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">Inspeksi Optik 3D Presisi</h2>
+                <p className="text-xs text-muted">
                   Putar 360°, periksa engsel titanium, ganti lapisan lensa, dan lihat dimensi dalam milimeter.
                 </p>
               </div>
               <button
                 onClick={() => setActiveView('catalog')}
-                className="px-4 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 hover:text-white"
+                className="px-4 py-2 rounded-full bg-white border border-line text-xs text-body hover:text-ink"
               >
                 Kembali ke Katalog
               </button>
@@ -682,46 +668,46 @@ export default function App() {
                 />
               </div>
 
-              <div className="lg:col-span-4 rounded-3xl bg-neutral-900 border border-neutral-800 p-6 space-y-6">
+              <div className="lg:col-span-4 rounded-3xl bg-white border border-line p-6 space-y-6">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
+                  <span className="text-[10px] font-medium text-sage">
                     Spesifikasi Optik
                   </span>
-                  <h3 className="font-serif font-bold text-2xl text-white mt-1">{selectedFrame.name}</h3>
-                  <p className="text-xs text-neutral-400 mt-1">{selectedFrame.description}</p>
+                  <h3 className="font-normal tracking-[-0.03em] text-2xl text-ink mt-1">{selectedFrame.name}</h3>
+                  <p className="text-xs text-muted mt-1">{selectedFrame.description}</p>
                 </div>
 
-                <div className="space-y-2 text-xs border-y border-neutral-800 py-4 font-mono">
-                  <div className="flex justify-between text-neutral-300">
+                <div className="space-y-2 text-xs border-y border-line py-4 tabular-nums">
+                  <div className="flex justify-between text-body">
                     <span>Bentuk:</span>
-                    <span className="text-white font-sans">{frameShapeLabel(selectedFrame.shape)}</span>
+                    <span className="text-ink font-sans">{frameShapeLabel(selectedFrame.shape)}</span>
                   </div>
-                  <div className="flex justify-between text-neutral-300">
+                  <div className="flex justify-between text-body">
                     <span>Material:</span>
-                    <span className="text-white font-sans">{materialLabel(selectedFrame.material)}</span>
+                    <span className="text-ink font-sans">{materialLabel(selectedFrame.material)}</span>
                   </div>
-                  <div className="flex justify-between text-neutral-300">
+                  <div className="flex justify-between text-body">
                     <span>Berat:</span>
-                    <span className="text-white">{selectedFrame.weightGrams} gram</span>
+                    <span className="text-ink">{selectedFrame.weightGrams} gram</span>
                   </div>
-                  <div className="flex justify-between text-neutral-300">
+                  <div className="flex justify-between text-body">
                     <span>Lebar Lensa:</span>
-                    <span className="text-white">{selectedFrame.dimensions.lensWidth} mm</span>
+                    <span className="text-ink">{selectedFrame.dimensions.lensWidth} mm</span>
                   </div>
-                  <div className="flex justify-between text-neutral-300">
+                  <div className="flex justify-between text-body">
                     <span>Lebar Bridge:</span>
-                    <span className="text-white">{selectedFrame.dimensions.bridgeWidth} mm</span>
+                    <span className="text-ink">{selectedFrame.dimensions.bridgeWidth} mm</span>
                   </div>
-                  <div className="flex justify-between text-neutral-300">
+                  <div className="flex justify-between text-body">
                     <span>Lebar Total:</span>
-                    <span className="text-white">{selectedFrame.dimensions.totalWidth} mm</span>
+                    <span className="text-ink">{selectedFrame.dimensions.totalWidth} mm</span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <button
                     onClick={() => setIsLensConfiguratorOpen(true)}
-                    className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-colors"
+                    className="w-full py-3 px-4 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-xs flex items-center justify-center gap-2 shadow-card transition-colors"
                   >
                     <Eye className="w-4 h-4" />
                     Atur Lensa Resep ({formatRupiah(selectedFrame.price)})
@@ -729,9 +715,9 @@ export default function App() {
 
                   <button
                     onClick={() => setActiveView('ar_tryon')}
-                    className="w-full py-3 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
+                    className="w-full py-3 px-4 rounded-full bg-soft-strong hover:bg-line-strong text-ink font-medium text-xs flex items-center justify-center gap-2 transition-colors"
                   >
-                    <Camera className="w-4 h-4 text-amber-400" />
+                    <Camera className="w-4 h-4 text-sage" />
                     Coba dengan AR Live
                   </button>
                 </div>
@@ -792,31 +778,22 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-neutral-800 bg-neutral-950 py-10 px-4 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-neutral-400">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <Eye className="w-4 h-4" />
-            </div>
-            <span className="font-serif font-bold text-white tracking-wider">FrameAI Atelier</span>
-            <span>© 2026 FrameAI.</span>
+      <footer className="mt-auto border-t border-line">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-sm text-muted">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-full border-[1.5px] border-ink flex items-center justify-center">
+              <Eye className="w-3.5 h-3.5 text-ink" />
+            </span>
+            <span className="text-lg font-medium tracking-[-0.04em] text-ink">frameai</span>
+            <span className="ml-2">Kacamata yang pas, dibantu AI. © 2026</span>
           </div>
 
-          <div className="flex items-center gap-6">
-            <button onClick={() => setActiveView('catalog')} className="hover:text-white transition-colors">
-              Koleksi
-            </button>
-            <button onClick={() => setActiveView('ar_tryon')} className="hover:text-white transition-colors">
-              Coba Virtual AR
-            </button>
-            <button onClick={() => setActiveView('compare')} className="hover:text-white transition-colors">
-              Bandingkan Frame
-            </button>
-            {isAdmin && (
-              <button onClick={() => setActiveView('seller')} className="hover:text-white transition-colors">
-                Portal Toko
+          <div className="flex flex-wrap items-center gap-6">
+            {navItems.map((item) => (
+              <button key={item.view} onClick={() => setActiveView(item.view)} className="hover:text-ink transition-colors">
+                {item.label}
               </button>
-            )}
+            ))}
           </div>
         </div>
       </footer>

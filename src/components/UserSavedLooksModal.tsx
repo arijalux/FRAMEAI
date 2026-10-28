@@ -38,46 +38,46 @@ export const UserSavedLooksModal: React.FC<UserSavedLooksModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-md animate-in fade-in overflow-y-auto">
+      <div className="relative w-full max-w-4xl bg-white border border-line rounded-3xl overflow-hidden shadow-float my-8">
         {/* Header */}
-        <div className="p-6 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/70">
+        <div className="p-6 border-b border-line flex items-center justify-between bg-white/70">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <div className="w-10 h-10 rounded-2xl bg-sage-tint border border-sage-line flex items-center justify-center text-sage">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-xl text-white">Koleksi Saya</h3>
-              <p className="text-xs text-neutral-400">Look AR Tersimpan & Pesanan Lensa</p>
+              <h3 className="font-normal tracking-[-0.03em] text-xl text-ink">Koleksi Saya</h3>
+              <p className="text-xs text-muted">Look AR Tersimpan & Pesanan Lensa</p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Tutup"
-            className="p-2 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white"
+            className="p-2 rounded-full hover:bg-soft-strong text-muted hover:text-ink"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Switcher */}
-        <div className="p-4 bg-neutral-950/40 border-b border-neutral-800 flex gap-2">
+        <div className="p-4 bg-white/40 border-b border-line flex gap-2">
           <button
             onClick={() => setActiveTab('looks')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
               activeTab === 'looks'
-                ? 'bg-amber-500 text-neutral-950 shadow-md'
-                : 'text-neutral-400 hover:text-white'
+                ? 'bg-ink text-white shadow-md'
+                : 'text-muted hover:text-ink'
             }`}
           >
             Look AR Tersimpan ({savedLooks.length})
           </button>
           <button
             onClick={() => setActiveTab('orders')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
               activeTab === 'orders'
-                ? 'bg-amber-500 text-neutral-950 shadow-md'
-                : 'text-neutral-400 hover:text-white'
+                ? 'bg-ink text-white shadow-md'
+                : 'text-muted hover:text-ink'
             }`}
           >
             Pesanan & Pelacakan ({orders.length})
@@ -89,14 +89,14 @@ export const UserSavedLooksModal: React.FC<UserSavedLooksModalProps> = ({
           {activeTab === 'looks' && (
             <div>
               {isLoading ? (
-                <div className="py-16 text-center text-xs text-neutral-400">Memuat look tersimpan...</div>
+                <div className="py-16 text-center text-xs text-muted">Memuat look tersimpan...</div>
               ) : savedLooks.length === 0 ? (
                 <div className="py-16 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center mx-auto text-neutral-500">
+                  <div className="w-12 h-12 rounded-full bg-soft border border-line flex items-center justify-center mx-auto text-faint">
                     <Camera className="w-6 h-6" />
                   </div>
-                  <h4 className="text-sm font-semibold text-white">Belum ada look tersimpan</h4>
-                  <p className="text-xs text-neutral-400 max-w-sm mx-auto">
+                  <h4 className="text-sm font-medium text-ink">Belum ada look tersimpan</h4>
+                  <p className="text-xs text-muted max-w-sm mx-auto">
                     Coba frame apa saja di studio AR, ketuk tombol foto, lalu simpan look Anda.
                   </p>
                 </div>
@@ -105,25 +105,25 @@ export const UserSavedLooksModal: React.FC<UserSavedLooksModalProps> = ({
                   {savedLooks.map((look) => (
                     <div
                       key={look.id}
-                      className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2 group"
+                      className="p-3 rounded-2xl bg-soft border border-line space-y-2 group"
                     >
-                      <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-neutral-900">
+                      <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-white">
                         <img src={look.snapshotData} alt={look.frameName} className="w-full h-full object-cover" />
-                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-neutral-950 shadow">
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-medium bg-ink text-white shadow">
                           Cocok {look.matchScore}%
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-xs font-bold text-white">{look.frameName}</div>
-                          <div className="text-[10px] text-neutral-400">
+                          <div className="text-xs font-medium text-ink">{look.frameName}</div>
+                          <div className="text-[10px] text-muted">
                             {new Date(look.createdAt).toLocaleDateString('id-ID')}
                           </div>
                         </div>
                         <a
                           href={look.snapshotData}
                           download={`frameai-${look.frameName}.jpg`}
-                          className="p-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-300"
+                          className="p-1.5 rounded-lg bg-white hover:bg-soft-strong text-body"
                           title="Unduh Gambar"
                         >
                           <Download className="w-3.5 h-3.5" />
@@ -140,31 +140,31 @@ export const UserSavedLooksModal: React.FC<UserSavedLooksModalProps> = ({
             <div className="space-y-4">
               {orders.length === 0 ? (
                 <div className="py-16 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center mx-auto text-neutral-500">
+                  <div className="w-12 h-12 rounded-full bg-soft border border-line flex items-center justify-center mx-auto text-faint">
                     <Package className="w-6 h-6" />
                   </div>
-                  <h4 className="text-sm font-semibold text-white">Belum ada pesanan</h4>
-                  <p className="text-xs text-neutral-400">Atur lensa pada frame pilihan dan checkout untuk melacak proses pembuatannya.</p>
+                  <h4 className="text-sm font-medium text-ink">Belum ada pesanan</h4>
+                  <p className="text-xs text-muted">Atur lensa pada frame pilihan dan checkout untuk melacak proses pembuatannya.</p>
                 </div>
               ) : (
                 orders.map((ord) => (
                   <div
                     key={ord.id}
-                    className="p-5 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3 text-xs"
+                    className="p-5 rounded-2xl bg-soft border border-line space-y-3 text-xs"
                   >
-                    <div className="flex justify-between items-center border-b border-neutral-800/80 pb-2">
+                    <div className="flex justify-between items-center border-b border-line pb-2">
                       <div>
-                        <span className="font-mono font-bold text-amber-400">{ord.id}</span>
-                        <div className="text-[11px] text-neutral-400">Dipesan {new Date(ord.createdAt).toLocaleDateString('id-ID')}</div>
+                        <span className="tabular-nums font-medium text-sage">{ord.id}</span>
+                        <div className="text-[11px] text-muted">Dipesan {new Date(ord.createdAt).toLocaleDateString('id-ID')}</div>
                       </div>
-                      <span className="font-mono font-bold text-white text-sm">{formatRupiah(ord.totalAmount)}</span>
+                      <span className="tabular-nums font-medium text-ink text-sm">{formatRupiah(ord.totalAmount)}</span>
                     </div>
 
                     {/* Progress tracking line */}
                     <div className="py-2">
-                      <div className="text-[11px] text-neutral-400 mb-2 font-semibold">
+                      <div className="text-[11px] text-muted mb-2 font-medium">
                         Status Pesanan:{' '}
-                        <span className="text-amber-400 uppercase font-mono">{orderStatusLabel(ord.status)}</span>
+                        <span className="text-sage tabular-nums">{orderStatusLabel(ord.status)}</span>
                       </div>
                       <div className="grid grid-cols-4 gap-1 text-center">
                         {[
@@ -179,10 +179,10 @@ export const UserSavedLooksModal: React.FC<UserSavedLooksModalProps> = ({
                             <div key={s.key} className="space-y-1">
                               <div
                                 className={`h-1.5 rounded-full ${
-                                  isDone ? 'bg-amber-400 shadow-sm' : 'bg-neutral-800'
+                                  isDone ? 'bg-ink-soft shadow-sm' : 'bg-soft-strong'
                                 }`}
                               />
-                              <span className={`text-[10px] ${isDone ? 'text-white font-medium' : 'text-neutral-500'}`}>
+                              <span className={`text-[10px] ${isDone ? 'text-ink font-medium' : 'text-faint'}`}>
                                 {s.label}
                               </span>
                             </div>
