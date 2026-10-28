@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { OpticalFrame, CartItem, Order, OrderStatus, FaceAnalysisResult, FrameShape, FrameMaterial, FaceShape } from './types';
 import { INITIAL_FRAMES } from './data/initialFrames';
 import {
@@ -16,15 +16,21 @@ import {
 import { calculateFaceFrameMatchScore } from './utils/opticalMath';
 
 // Components
-import { ThreeFrameCanvas, LensTint } from './components/ThreeFrameCanvas';
-import { ARFaceTryOn } from './components/ARFaceTryOn';
+import { LazyThreeFrameCanvas } from './components/LazyThreeFrameCanvas';
 import { AIFaceAnalyzerModal } from './components/AIFaceAnalyzerModal';
 import { LensConfiguratorModal } from './components/LensConfiguratorModal';
-import { FrameComparisonBench } from './components/FrameComparisonBench';
-import { FindMyFrameQuiz } from './components/FindMyFrameQuiz';
 import { ShoppingBagDrawer } from './components/ShoppingBagDrawer';
-import { SellerOperationsPortal } from './components/SellerOperationsPortal';
 import { UserSavedLooksModal } from './components/UserSavedLooksModal';
+
+// Secondary views are code-split so the catalog loads fast
+const ARFaceTryOn = lazy(() => import('./components/ARFaceTryOn').then((m) => ({ default: m.ARFaceTryOn })));
+const FrameComparisonBench = lazy(() =>
+  import('./components/FrameComparisonBench').then((m) => ({ default: m.FrameComparisonBench }))
+);
+const FindMyFrameQuiz = lazy(() => import('./components/FindMyFrameQuiz').then((m) => ({ default: m.FindMyFrameQuiz })));
+const SellerOperationsPortal = lazy(() =>
+  import('./components/SellerOperationsPortal').then((m) => ({ default: m.SellerOperationsPortal }))
+);
 
 // Icons
 import {
@@ -380,6 +386,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-8 space-y-12">
+        <Suspense fallback={<div className="py-24 text-center text-xs text-neutral-500">Loading...</div>}>
         {/* VIEW 1: Catalog View */}
         {activeView === 'catalog' && (
           <div className="space-y-10">
@@ -667,7 +674,7 @@ export default function App() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-8">
-                <ThreeFrameCanvas
+                <LazyThreeFrameCanvas
                   frame={selectedFrame}
                   selectedColor={selectedFrame.colors[0]}
                   lensTint="clear"
@@ -780,6 +787,7 @@ export default function App() {
             onUpdateOrderStatus={handleUpdateOrderStatus}
           />
         )}
+        </Suspense>
       </main>
 
       {/* Footer */}

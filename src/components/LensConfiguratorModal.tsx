@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { OpticalFrame, FrameColorOption, LensConfiguration, PrescriptionInput, LensType, LensIndex } from '../types';
-import { ThreeFrameCanvas, LensTint } from './ThreeFrameCanvas';
+import type { LensTint } from './ThreeFrameCanvas';
+import { LazyThreeFrameCanvas } from './LazyThreeFrameCanvas';
 import { calculateLensPricing, validatePrescription } from '../utils/opticalMath';
 import { X, Check, ShoppingBag, Eye, Shield, Sun, Sparkles, AlertCircle } from 'lucide-react';
 
@@ -119,7 +120,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
           {/* Left Column: 3D Frame Inspection View */}
           <div className="lg:col-span-5 space-y-4">
             <div className="rounded-2xl overflow-hidden border border-neutral-800">
-              <ThreeFrameCanvas
+              <LazyThreeFrameCanvas
                 frame={frame}
                 selectedColor={selectedColor}
                 lensTint={photochromic ? 'photochromic' : blueLightFilter ? 'blue_light' : lensTint}

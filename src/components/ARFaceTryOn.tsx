@@ -18,6 +18,7 @@ import {
   Move,
   Lock,
   Unlock,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { saveTryOnLookToFirestore } from '../lib/firebase';
 import { OpticalFaceTracker, TrackedLandmarks } from '../utils/faceTracker';
@@ -82,6 +83,8 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   const [manualOffset, setManualOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [scaleMultiplier, setScaleMultiplier] = useState<number>(1.0);
   const [showPdGuides, setShowPdGuides] = useState<boolean>(true);
+  // On phones the viewport is too short for every overlay, so calibration starts collapsed there
+  const [showCalibrationMobile, setShowCalibrationMobile] = useState<boolean>(false);
   const isDragging = useRef<boolean>(false);
   const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -605,7 +608,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                 : 'bg-neutral-500'
             }`}
           />
-          <span className="text-sm font-semibold tracking-wider uppercase text-neutral-200">
+          <span className="hidden sm:inline text-sm font-semibold tracking-wider uppercase text-neutral-200">
             AR Real-Time Try-On
           </span>
           <span className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-mono">
@@ -682,7 +685,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         {/* Camera Activation Bar if camera is inactive */}
         {!cameraActive && (
           <div className="absolute top-16 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 bg-neutral-950/85 backdrop-blur-md border border-neutral-800/80 p-3 rounded-2xl shadow-xl">
-            <div className="flex items-center gap-2.5 text-xs text-neutral-300">
+            <div className={`${cameraError ? 'flex' : 'hidden sm:flex'} items-center gap-2.5 text-xs text-neutral-300`}>
               <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
               <span>
                 {cameraLoading
@@ -722,8 +725,16 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         )}
 
         {/* Calibration Controls */}
-        <div className="absolute left-4 bottom-28 z-20 flex flex-col gap-2">
-          <div className="bg-neutral-950/85 backdrop-blur-md border border-neutral-800/80 p-2.5 rounded-2xl text-xs flex flex-col gap-2 shadow-2xl">
+        <div className="absolute left-4 bottom-4 md:bottom-28 z-20 flex flex-col gap-2">
+          <button
+            onClick={() => setShowCalibrationMobile((p) => !p)}
+            aria-expanded={showCalibrationMobile}
+            className="md:hidden order-last self-start px-3 py-1.5 rounded-xl bg-neutral-950/85 backdrop-blur-md border border-neutral-800/80 text-[11px] font-semibold text-amber-400 flex items-center gap-1.5"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            {showCalibrationMobile ? 'Tutup' : 'Kalibrasi'}
+          </button>
+          <div className={`${showCalibrationMobile ? 'flex' : 'hidden'} md:flex bg-neutral-950/85 backdrop-blur-md border border-neutral-800/80 p-2.5 rounded-2xl text-xs flex-col gap-2 shadow-2xl`}>
             <div className="flex items-center justify-between gap-2 border-b border-neutral-800 pb-1.5">
               <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
                 Kalibrasi Fit
@@ -801,17 +812,17 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         </div>
 
         {/* Snapshot Shutter Button */}
-        <div className="absolute right-4 bottom-28 z-20 flex flex-col items-center gap-2">
+        <div className="absolute right-4 bottom-4 md:bottom-28 z-20 flex flex-col items-center gap-2">
           <button
             onClick={handleTakeSnapshot}
             aria-label="Ambil Foto Snapshot Try-On"
-            className="w-14 h-14 rounded-full bg-white text-neutral-950 p-1 flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all group"
+            className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white text-neutral-950 p-1 flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all group"
           >
-            <div className="w-11 h-11 rounded-full border-2 border-neutral-950 flex items-center justify-center group-hover:bg-amber-400 transition-colors">
+            <div className="w-10 h-10 md:w-11 md:h-11 rounded-full border-2 border-neutral-950 flex items-center justify-center group-hover:bg-amber-400 transition-colors">
               <Camera className="w-5 h-5 text-neutral-950" />
             </div>
           </button>
-          <span className="text-[11px] font-semibold text-white drop-shadow">Foto</span>
+          <span className="hidden md:inline text-[11px] font-semibold text-white drop-shadow">Foto</span>
         </div>
       </div>
 
