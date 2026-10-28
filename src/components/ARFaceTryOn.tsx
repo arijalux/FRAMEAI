@@ -22,7 +22,35 @@ import {
 } from 'lucide-react';
 import { saveTryOnLookToFirestore } from '../lib/firebase';
 import { OpticalFaceTracker, TrackedLandmarks, landmarksFromEyes, coverTransform } from '../utils/faceTracker';
-import { formatRupiah, frameShapeLabel, materialLabel } from '../utils/format';
+import { formatRupiah, frameShapeLabel, materialLabel, faceShapeLabel } from '../utils/format';
+
+/** Line illustration: a face in a viewfinder wearing glasses, with a camera badge */
+const CameraPermissionIllustration: React.FC = () => (
+  <svg viewBox="0 0 200 150" className="w-48 h-auto mx-auto" aria-hidden="true">
+    <rect x="30" y="12" width="140" height="112" rx="22" fill="#FFFFFF" stroke="#D6D6D2" strokeWidth="1.5" />
+    {/* Viewfinder corners */}
+    <g stroke="#5F7846" strokeWidth="2.5" strokeLinecap="round" fill="none">
+      <path d="M46 34v-8h8" />
+      <path d="M154 34v-8h-8" />
+      <path d="M46 102v8h8" />
+      <path d="M154 102v8h-8" />
+    </g>
+    {/* Head and shoulders */}
+    <ellipse cx="100" cy="64" rx="24" ry="29" fill="#E6EBDF" />
+    <path d="M62 124c4-20 20-30 38-30s34 10 38 30" fill="#E6EBDF" />
+    {/* Glasses */}
+    <g stroke="#111111" strokeWidth="2.2" fill="#FFFFFF" fillOpacity="0.6">
+      <rect x="77" y="56" width="19" height="14" rx="6" />
+      <rect x="104" y="56" width="19" height="14" rx="6" />
+    </g>
+    <path d="M96 62c2.5-2 5.5-2 8 0" stroke="#111111" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+    {/* Camera badge */}
+    <circle cx="160" cy="118" r="20" fill="#111111" />
+    <rect x="150" y="111" width="20" height="14" rx="3.5" fill="none" stroke="#FFFFFF" strokeWidth="2" />
+    <circle cx="160" cy="118" r="3.8" fill="none" stroke="#FFFFFF" strokeWidth="2" />
+    <path d="M155 111l2-3h6l2 3" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinejoin="round" />
+  </svg>
+);
 
 interface ARFaceTryOnProps {
   frames: OpticalFrame[];
@@ -75,7 +103,9 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   // Camera states
   const [cameraActive, setCameraActive] = useState<boolean>(false);
   const [cameraLoading, setCameraLoading] = useState<boolean>(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState<'denied' | 'notfound' | 'busy' | 'unsupported' | 'other' | null>(null);
+  // The visitor explicitly chose to try frames on model photos instead of the camera
+  const [demoMode, setDemoMode] = useState<boolean>(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [isFaceDetected, setIsFaceDetected] = useState<boolean>(false);
   const [trackerStatus, setTrackerStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -145,6 +175,12 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
       streamRef.current = null;
     }
 
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError('unsupported');
+      setCameraLoading(false);
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -163,12 +199,20 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
           videoRef.current?.play().catch((err) => console.warn('Video play caught:', err));
           setCameraActive(true);
           setCameraLoading(false);
+          setDemoMode(false);
         };
       }
     } catch (err: any) {
       console.warn('Camera request error:', err);
+      const name = err?.name;
       setCameraError(
-        'Kamera tidak dapat diakses atau izin ditolak. Menggunakan mode simulasi model presisi.'
+        name === 'NotAllowedError' || name === 'SecurityError'
+          ? 'denied'
+          : name === 'NotFoundError' || name === 'OverconstrainedError'
+          ? 'notfound'
+          : name === 'NotReadableError'
+          ? 'busy'
+          : 'other'
       );
       setCameraActive(false);
       setCameraLoading(false);
@@ -232,7 +276,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
       if (autoTracking && tracker) {
         if (cameraActive && video && video.readyState >= 2) {
           tracked = tracker.track(video, width, height, facingMode === 'user');
-        } else if (!cameraActive && demoImage?.complete && demoImage.naturalWidth) {
+        } else if (!cameraActive && demoMode && demoImage?.complete && demoImage.naturalWidth) {
           tracked = tracker.track(demoImage, width, height, false);
         }
       }
@@ -251,7 +295,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
 
       let landmarks: TrackedLandmarks | null = tracked ?? held;
 
-      if (!landmarks && !cameraActive && (!tracker || !autoTracking)) {
+      if (!landmarks && !cameraActive && demoMode && (!tracker || !autoTracking)) {
         // Tracker unavailable on a demo photo: fall back to the preset eye positions
         const demo = DEMO_MODELS[selectedDemoIndex];
         landmarks = landmarksFromEyes(
@@ -531,6 +575,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
     };
   }, [
     cameraActive,
+    demoMode,
     facingMode,
     autoTracking,
     manualOffset,
@@ -687,12 +732,14 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
             Coba AR Real-Time
           </span>
           <span className="text-xs text-sage bg-sage-tint border border-sage-line px-2 py-0.5 rounded-full tabular-nums">
-            {trackerStatus === 'loading'
+            {!cameraActive && !demoMode
+              ? 'Kamera belum aktif'
+              : trackerStatus === 'loading'
               ? 'Memuat pelacak wajah...'
               : trackerStatus === 'error'
               ? 'Pelacak gagal dimuat · geser manual'
               : !cameraActive
-              ? 'Mode Simulasi Model'
+              ? 'Mode foto model'
               : isFaceDetected
               ? 'Wajah Terdeteksi'
               : 'Mencari Wajah...'}
@@ -737,7 +784,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         />
 
         {/* Fallback Demo Model Portrait */}
-        {!cameraActive && (
+        {!cameraActive && demoMode && (
           <img
             ref={demoImageRef}
             crossOrigin="anonymous"
@@ -761,41 +808,69 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         {/* Shutter Animation */}
         {isCapturing && <div className="absolute inset-0 bg-white z-40 animate-out fade-out duration-300" />}
 
-        {/* Camera Activation Bar if camera is inactive */}
-        {!cameraActive && (
-          <div className="absolute top-16 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 bg-white/85 backdrop-blur-md border border-line p-3 rounded-2xl shadow-card">
-            <div className={`${cameraError ? 'flex' : 'hidden sm:flex'} items-center gap-2.5 text-xs text-body`}>
-              <AlertCircle className="w-4 h-4 text-sage shrink-0" />
-              <span>
-                {cameraLoading
-                  ? 'Menghubungkan webcam...'
-                  : cameraError || 'Gunakan kamera live untuk mencoba kacamata secara real-time.'}
-              </span>
+        {/* No camera yet: explain why we need it instead of showing a stand-in */}
+        {!cameraActive && !demoMode && (
+          <div className="absolute inset-0 z-30 bg-soft flex items-center justify-center p-6">
+            <div className="max-w-sm text-center space-y-5">
+              <CameraPermissionIllustration />
+              <div className="space-y-2">
+                <h3 className="text-2xl font-normal tracking-[-0.03em] text-ink">
+                  {cameraLoading ? 'Menunggu izin kamera...' : 'Aktifkan kamera untuk mencoba kacamata'}
+                </h3>
+                <p className="text-sm text-muted leading-relaxed">
+                  {cameraLoading
+                    ? 'Pilih "Izinkan" pada pop-up browser untuk melanjutkan.'
+                    : cameraError === 'denied'
+                    ? 'Akses kamera diblokir. Klik ikon kamera atau gembok di address bar browser, pilih Izinkan, lalu coba lagi.'
+                    : cameraError === 'notfound'
+                    ? 'Kamera tidak ditemukan di perangkat ini. Sambungkan kamera, atau coba dengan foto model.'
+                    : cameraError === 'busy'
+                    ? 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi tersebut, lalu coba lagi.'
+                    : cameraError === 'unsupported'
+                    ? 'Browser ini tidak mendukung akses kamera. Coba dengan browser lain, atau gunakan foto model.'
+                    : 'Fitur ini butuh akses kamera untuk menampilkan kacamata langsung di wajahmu. Video diproses di perangkatmu dan tidak diunggah.'}
+                </p>
+              </div>
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={startCamera}
+                  disabled={cameraLoading || cameraError === 'unsupported'}
+                  className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+                >
+                  <Camera className="w-4 h-4" />
+                  {cameraError ? 'Coba lagi' : 'Izinkan akses kamera'}
+                </button>
+                <button onClick={() => setDemoMode(true)} className="text-sm text-muted hover:text-ink underline-offset-4 hover:underline">
+                  Coba dengan foto model
+                </button>
+              </div>
             </div>
+          </div>
+        )}
 
+        {/* Model-photo mode: switch models or go back to the live camera */}
+        {!cameraActive && demoMode && (
+          <div className="absolute top-16 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 bg-white/85 backdrop-blur-md border border-line p-3 rounded-2xl shadow-card">
+            <span className="hidden sm:inline text-xs text-body">Kamu mencoba dengan foto model.</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={startCamera}
                 disabled={cameraLoading}
-                className="px-3.5 py-1.5 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-xs flex items-center gap-1.5 shadow transition-all disabled:opacity-50"
+                className="px-3.5 py-1.5 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
               >
                 <Camera className="w-3.5 h-3.5" />
-                {cameraLoading ? 'Memuat...' : 'Aktifkan Kamera Live'}
+                {cameraLoading ? 'Memuat...' : 'Pakai kamera'}
               </button>
-
-              {/* Model Switcher */}
-              <div className="flex gap-1 bg-white p-1 rounded-xl border border-line">
+              <div className="flex gap-1 bg-white p-1 rounded-full border border-line">
                 {DEMO_MODELS.map((m, idx) => (
                   <button
                     key={m.name}
                     onClick={() => setSelectedDemoIndex(idx)}
-                    className={`px-2 py-0.5 text-[11px] rounded-full transition-all ${
-                      selectedDemoIndex === idx
-                        ? 'bg-ink text-white font-medium'
-                        : 'text-muted hover:text-ink'
+                    className={`px-2.5 py-0.5 text-xs rounded-full transition-colors ${
+                      selectedDemoIndex === idx ? 'bg-ink text-white' : 'text-muted hover:text-ink'
                     }`}
                   >
-                    {m.shape}
+                    {faceShapeLabel(m.shape)}
                   </button>
                 ))}
               </div>
@@ -895,13 +970,13 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
           <button
             onClick={handleTakeSnapshot}
             aria-label="Ambil Foto Snapshot Try-On"
-            className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white text-white p-1 flex items-center justify-center shadow-float hover:scale-105 active:scale-95 transition-all group"
+            className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white p-1 flex items-center justify-center shadow-float hover:scale-105 active:scale-95 transition-all group"
           >
-            <div className="w-10 h-10 md:w-11 md:h-11 rounded-full border-2 border-white flex items-center justify-center group-hover:bg-ink-soft transition-colors">
-              <Camera className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 md:w-11 md:h-11 rounded-full border-2 border-ink flex items-center justify-center group-hover:bg-ink transition-colors">
+              <Camera className="w-5 h-5 text-ink group-hover:text-white" />
             </div>
           </button>
-          <span className="hidden md:inline text-[11px] font-medium text-ink drop-shadow">Foto</span>
+          <span className="hidden md:inline px-2 py-0.5 rounded-full bg-white/85 text-xs text-ink">Foto</span>
         </div>
       </div>
 
