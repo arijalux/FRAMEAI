@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { apiRouter } from './src/server/geminiRouter';
 
@@ -7,6 +8,12 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Cloud Run sits behind a proxy; trust it so req.ip is the real client IP (used by the API rate limiter)
+app.set('trust proxy', 1);
+
+// ESM has no __dirname; derive it from the module URL
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Body parsing with 10MB limit for camera snapshots and base64 imagery
 app.use(express.json({ limit: '10mb' }));

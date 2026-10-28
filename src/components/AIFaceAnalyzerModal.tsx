@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FaceAnalysisResult, OpticalFrame, FaceShape } from '../types';
 import { Camera, Upload, Sparkles, X, CheckCircle2, ChevronRight, Scan, ShieldAlert, Cpu } from 'lucide-react';
 import { calculateFaceFrameMatchScore } from '../utils/opticalMath';
@@ -56,10 +56,20 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [analysisResult, setAnalysisResult] = useState<FaceAnalysisResult | null>(null);
   const [scanStepText, setScanStepText] = useState<string>('Initializing facial landmark mesh...');
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  // The error banner sits at the top of a long modal; bring it into view when it appears
+  useEffect(() => {
+    if (!analysisError) return;
+    // Wait a frame so the scanning view has been swapped out before measuring
+    const raf = requestAnimationFrame(() => errorRef.current?.scrollIntoView({ block: 'center' }));
+    return () => cancelAnimationFrame(raf);
+  }, [analysisError]);
 
   if (!isOpen) return null;
 
@@ -121,6 +131,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
   const analyzeFaceWithGemini = async (imageBase64?: string, mockDescriptor?: string) => {
     setIsScanning(true);
     setAnalysisResult(null);
+    setAnalysisError(null);
 
     // Cinematic optical scanning steps
     const steps = [
@@ -145,36 +156,20 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
         body: JSON.stringify({ imageBase64, mockDescriptor }),
       });
 
-      const data = await response.json();
-      clearInterval(interval);
+      const data = await response.json().catch(() => null);
 
-      if (data.analysis) {
+      if (response.ok && data?.analysis) {
         setAnalysisResult(data.analysis);
         onApplyAnalysis(data.analysis);
+      } else {
+        setAnalysisError(data?.error || 'Face analysis failed. Please try again.');
       }
     } catch (err) {
       console.error(err);
-      clearInterval(interval);
-      // Fallback
-      const fallbackResult: FaceAnalysisResult = {
-        faceShape: 'Oval',
-        skinUndertone: 'Warm',
-        jawline: 'Angular defined',
-        estimatedPd: 63,
-        faceWidthToHeightRatio: 1.34,
-        cheekboneProminence: 'High',
-        confidenceScore: 96,
-        stylingTips: [
-          'Choose a frame width matching your cheekbones to preserve balanced symmetry.',
-          'A keyhole or slim titanium bridge keeps optical center aligned with pupils.',
-          'Contrasting rim geometry will balance your natural facial curves.',
-        ],
-        reasoning: 'Your oval facial architecture possesses balanced vertical-to-horizontal proportions. Geometric and aviator silhouettes add defined structure without overpowering your soft natural curves.',
-        recommendedShapes: ['Geometric', 'Aviator', 'Square'],
-      };
-      setAnalysisResult(fallbackResult);
-      onApplyAnalysis(fallbackResult);
+      // Never show a made-up face shape: tell the user the scan did not complete
+      setAnalysisError('Could not reach the analysis service. Check your connection and try again.');
     } finally {
+      clearInterval(interval);
       setIsScanning(false);
     }
   };
@@ -198,8 +193,9 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
     : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl my-8">
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in overflow-y-auto">
+      {/* my-auto (not items-center) centers short content without clipping the top of tall content */}
+      <div className="relative w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl my-auto">
         {/* Top Header */}
         <div className="p-6 border-b border-neutral-800/80 flex items-center justify-between bg-neutral-950/60">
           <div className="flex items-center gap-3">
@@ -226,6 +222,12 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6">
+          {analysisError && !isScanning && (
+            <div ref={errorRef} role="alert" className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+              {analysisError}
+            </div>
+          )}
+
           {!analysisResult && !isScanning && (
             <div className="space-y-6">
               {/* Scan Mode Switcher */}

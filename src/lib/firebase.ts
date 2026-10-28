@@ -122,9 +122,10 @@ export async function fetchCatalogFrames(): Promise<OpticalFrame[]> {
 
 export async function saveTryOnLookToFirestore(look: Omit<TryOnLook, 'id'>): Promise<string> {
   const path = 'tryOnLooks';
-  const guestId = 'guest-' + (localStorage.getItem('frameai_guest_id') || Math.random().toString(36).substring(2, 9));
+  const guestId = localStorage.getItem('frameai_guest_id') || 'guest-' + Math.random().toString(36).substring(2, 9);
   localStorage.setItem('frameai_guest_id', guestId);
-  const effectiveUserId = auth.currentUser?.uid || guestId;
+  const uid = auth.currentUser?.uid;
+  const effectiveUserId = uid || guestId;
 
   const newLook: TryOnLook = {
     ...look,
@@ -140,6 +141,9 @@ export async function saveTryOnLookToFirestore(look: Omit<TryOnLook, 'id'>): Pro
   } catch (e) {
     console.warn(e);
   }
+
+  // Guests are local-only: Firestore rules only accept looks owned by a signed-in user
+  if (!uid) return newLook.id;
 
   try {
     const docRef = await addDoc(collection(db, path), {
@@ -159,9 +163,10 @@ export async function fetchUserTryOnLooks(): Promise<TryOnLook[]> {
   const uid = auth.currentUser?.uid;
   const path = 'tryOnLooks';
 
+  if (!uid) return local;
+
   try {
-    const q = uid ? query(collection(db, path), where('userId', '==', uid)) : query(collection(db, path));
-    const snap = await getDocs(q);
+    const snap = await getDocs(query(collection(db, path), where('userId', '==', uid)));
     const looks: TryOnLook[] = [];
     snap.forEach((d) => looks.push({ id: d.id, ...d.data() } as TryOnLook));
     return looks.length > 0 ? looks : local;

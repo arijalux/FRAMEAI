@@ -32,17 +32,24 @@ service cloud.firestore {
     }
 
     // User Saved Virtual Try-On Looks
+    // Only signed-in owners may read or write their own looks; guests keep looks in localStorage.
     match /tryOnLooks/{lookId} {
-      allow get, list: if true;
-      allow create: if isValidId(lookId) && request.resource.data.userId is string;
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get, list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isValidId(lookId) && isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid;
       allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     // Orders with custom lenses
+    // Orders contain customer PII (name, email, address): never publicly readable.
     match /orders/{orderId} {
-      allow get, list: if true;
-      allow create: if isValidId(orderId) && request.resource.data.customerEmail is string;
+      allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin();
+      allow create: if isValidId(orderId)
+                    && request.resource.data.customerEmail is string
+                    && ((isSignedIn() && request.resource.data.userId == request.auth.uid)
+                        || (!isSignedIn() && request.resource.data.userId == 'guest-checkout'));
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
