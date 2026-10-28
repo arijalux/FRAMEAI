@@ -553,13 +553,6 @@ export default function App() {
                           <div className="space-y-1">
                             <span className="text-xs text-muted">{materialLabel(frame.material)}</span>
                             <h3 className="text-xl font-normal tracking-[-0.03em] text-ink">{frame.name}</h3>
-                            <p
-                              className="text-sm text-muted"
-                              title={`Lebar lensa ${frame.dimensions.lensWidth} mm, lebar bridge ${frame.dimensions.bridgeWidth} mm`}
-                            >
-                              {frameShapeLabel(frame.shape)} · Lensa {frame.dimensions.lensWidth} mm ·{' '}
-                              {frame.weightGrams.toLocaleString('id-ID')} g
-                            </p>
                           </div>
                           <button
                             onClick={() => {
