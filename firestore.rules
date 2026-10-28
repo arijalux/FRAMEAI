@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'arijalibnujati@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Optical Catalog
+    match /frames/{frameId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin() && isValidId(frameId);
+    }
+
+    // User Saved Virtual Try-On Looks
+    match /tryOnLooks/{lookId} {
+      allow get, list: if true;
+      allow create: if isValidId(lookId) && request.resource.data.userId is string;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Orders with custom lenses
+    match /orders/{orderId} {
+      allow get, list: if true;
+      allow create: if isValidId(orderId) && request.resource.data.customerEmail is string;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

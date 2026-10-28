@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "Frame": {
+      "title": "Frame",
+      "description": "Optical or sunglass eyewear frame in catalog",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "brand": { "type": "string", "maxLength": 80 },
+        "shape": { "type": "string", "enum": ["Oval", "Square", "Round", "Geometric", "Aviator", "Cat-Eye"] },
+        "material": { "type": "string", "enum": ["Italian Acetate", "Aerospace Titanium", "Eco-Polymer", "Mixed Titanium Acetate"] },
+        "price": { "type": "number" },
+        "colors": { "type": "array" },
+        "dimensions": { "type": "object" },
+        "weightGrams": { "type": "number" },
+        "fitFaceShapes": { "type": "array" },
+        "description": { "type": "string", "maxLength": 1000 },
+        "isPolarized": { "type": "boolean" },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "model3dPreset": { "type": "string", "maxLength": 100 },
+        "stock": { "type": "number" }
+      },
+      "required": ["id", "name", "shape", "material", "price"]
+    },
+    "TryOnLook": {
+      "title": "TryOnLook",
+      "description": "Saved virtual AR try-on snapshot and analysis",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "frameId": { "type": "string", "maxLength": 128 },
+        "frameName": { "type": "string", "maxLength": 100 },
+        "snapshotData": { "type": "string", "maxLength": 500000 },
+        "faceShape": { "type": "string", "maxLength": 50 },
+        "matchScore": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "frameId", "frameName", "createdAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer eyewear order with custom lenses and prescription",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 120 },
+        "customerEmail": { "type": "string", "maxLength": 120 },
+        "items": { "type": "array" },
+        "prescription": { "type": "object" },
+        "lensPackage": { "type": "object" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["received", "crafting_lenses", "optical_qc", "shipped", "delivered"] },
+        "shippingAddress": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "customerName", "customerEmail", "totalAmount", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/frames/{frameId}": {
+      "schema": "Frame",
+      "description": "Global public catalog of optical and sunglass frames"
+    },
+    "/tryOnLooks/{lookId}": {
+      "schema": "TryOnLook",
+      "description": "User saved virtual try-on looks"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Eyewear purchases with custom lens options"
+    }
+  }
+}

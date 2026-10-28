@@ -1,0 +1,6 @@
+{
+  "name": "FrameAI - Intelligent Eyewear Discovery & Virtual Fitting",
+  "description": "Modern AI & Augmented Reality eyewear platform with real-time AR try-on, Gemini face shape analysis, 3D frame inspection, and custom lens configuration.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
