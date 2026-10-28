@@ -60,14 +60,23 @@ function sendAiUnavailable(res: Response): void {
 }
 
 // Initialize GoogleGenAI SDK with required telemetry User-Agent header
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    },
-  },
-});
+// Created on first use, not at import time: this module is imported before dotenv.config()
+// runs (in server.ts and vite.config.ts), so GEMINI_API_KEY from .env isn't set yet at load.
+// Without a key the SDK falls back to Google Cloud default credentials and fails.
+let aiClient: GoogleGenAI | null = null;
+function getAi(): GoogleGenAI {
+  if (!aiClient) {
+    aiClient = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    });
+  }
+  return aiClient;
+}
 
 /**
  * POST /api/analyze-face
@@ -112,7 +121,7 @@ Language: keep every enum value above exactly as listed in English, but write st
 
     parts.push({ text: promptText });
 
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
       model: 'gemini-3.8-flash',
       contents: { parts },
       config: {
@@ -201,7 +210,7 @@ Highlight how the bridge, rim shape, and proportions complement their features.
 Write the answer in natural Bahasa Indonesia.
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
       model: 'gemini-3.8-flash',
       contents: prompt,
       config: {
@@ -243,7 +252,7 @@ Generate strategic merchant store intelligence including:
 Language: write all descriptive text in natural Bahasa Indonesia. Keep "shape" as one of Oval, Square, Round, Heart, Diamond and "urgency" as one of High, Medium, Low, in English.
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
       model: 'gemini-3.8-flash',
       contents: prompt,
       config: {
