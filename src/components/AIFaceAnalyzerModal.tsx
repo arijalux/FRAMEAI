@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaceAnalysisResult, OpticalFrame, FaceShape } from '../types';
 import { Camera, Upload, Sparkles, X, CheckCircle2, ChevronRight, Scan, ShieldAlert, Cpu } from 'lucide-react';
+import {
+  faceShapeLabel,
+  frameShapeLabel,
+  materialLabel,
+  skinUndertoneLabel,
+  jawlineLabel,
+  cheekboneLabel,
+} from '../utils/format';
 import { calculateFaceFrameMatchScore } from '../utils/opticalMath';
 
 interface AIFaceAnalyzerModalProps {
@@ -13,33 +21,33 @@ interface AIFaceAnalyzerModalProps {
 
 const PRESET_ARCHETYPES = [
   {
-    label: 'Oval Archetype',
+    label: 'Wajah Oval',
     shape: 'Oval' as FaceShape,
-    desc: 'Evenly balanced proportions with gently rounded jawline',
+    desc: 'Proporsi seimbang dengan garis rahang membulat lembut',
     img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
   },
   {
-    label: 'Square Archetype',
+    label: 'Wajah Kotak',
     shape: 'Square' as FaceShape,
-    desc: 'Strong horizontal jawline and broad forehead symmetry',
+    desc: 'Garis rahang tegas dan dahi lebar yang simetris',
     img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
   },
   {
-    label: 'Round Archetype',
+    label: 'Wajah Bulat',
     shape: 'Round' as FaceShape,
-    desc: 'Soft curvature with equal facial width and length',
+    desc: 'Lengkung lembut dengan lebar dan panjang wajah yang sama',
     img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
   },
   {
-    label: 'Heart Archetype',
+    label: 'Wajah Hati',
     shape: 'Heart' as FaceShape,
-    desc: 'Broad forehead tapering to an elegant delicate chin',
+    desc: 'Dahi lebar yang meruncing ke dagu kecil',
     img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
   },
   {
-    label: 'Diamond Archetype',
+    label: 'Wajah Diamond',
     shape: 'Diamond' as FaceShape,
-    desc: 'Dramatic high cheekbones with narrower forehead and jaw',
+    desc: 'Tulang pipi tinggi dengan dahi dan rahang lebih sempit',
     img: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80',
   },
 ];
@@ -55,7 +63,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [analysisResult, setAnalysisResult] = useState<FaceAnalysisResult | null>(null);
-  const [scanStepText, setScanStepText] = useState<string>('Initializing facial landmark mesh...');
+  const [scanStepText, setScanStepText] = useState<string>('Menyiapkan pemetaan titik wajah...');
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -135,10 +143,10 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
 
     // Cinematic optical scanning steps
     const steps = [
-      'Mapping 468 facial landmark coordinates...',
-      'Computing Zygomatic arch to mandibular jaw ratio...',
-      'Calibrating corneal reflections & Pupillary Distance (PD)...',
-      'Executing Gemini 3.8 Flash optical harmony engine...',
+      'Memetakan titik-titik wajah...',
+      'Menghitung rasio tulang pipi dan rahang...',
+      'Memperkirakan jarak pupil (PD)...',
+      'Menganalisis dengan Gemini 3.8 Flash...',
     ];
 
     let stepIndex = 0;
@@ -162,12 +170,12 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
         setAnalysisResult(data.analysis);
         onApplyAnalysis(data.analysis);
       } else {
-        setAnalysisError(data?.error || 'Face analysis failed. Please try again.');
+        setAnalysisError(data?.error || 'Analisis wajah gagal. Silakan coba lagi.');
       }
     } catch (err) {
       console.error(err);
       // Never show a made-up face shape: tell the user the scan did not complete
-      setAnalysisError('Could not reach the analysis service. Check your connection and try again.');
+      setAnalysisError('Layanan analisis tidak dapat dihubungi. Periksa koneksi Anda lalu coba lagi.');
     } finally {
       clearInterval(interval);
       setIsScanning(false);
@@ -204,16 +212,16 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-bold font-serif text-white tracking-wide">
-                AI Facial Geometry & Optical Analysis
+                Analisis Bentuk Wajah dengan AI
               </h2>
               <p className="text-xs text-neutral-400">
-                Powered by Gemini 3.8 Flash · Millimeter Face-Shape Fitting
+                Didukung Gemini 3.8 Flash
               </p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            aria-label="Close Analysis Modal"
+            aria-label="Tutup Analisis"
             className="p-2 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
@@ -242,7 +250,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                       mode === 'presets' ? 'bg-amber-500 text-neutral-950' : 'text-neutral-400 hover:text-white'
                     }`}
                   >
-                    Preset Facial Archetypes
+                    Contoh Bentuk Wajah
                   </button>
                   <button
                     onClick={handleStartCamera}
@@ -251,7 +259,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                     }`}
                   >
                     <Camera className="w-3.5 h-3.5" />
-                    Webcam Live Scan
+                    Scan Webcam
                   </button>
                   <button
                     onClick={() => {
@@ -264,7 +272,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                     }`}
                   >
                     <Upload className="w-3.5 h-3.5" />
-                    Upload Photo
+                    Unggah Foto
                   </button>
                 </div>
               </div>
@@ -283,19 +291,19 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                   <video ref={videoRef} playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
                   <div className="absolute inset-0 border-2 border-dashed border-amber-500/50 m-6 rounded-3xl pointer-events-none flex items-center justify-center">
                     <span className="text-xs text-amber-300 font-mono bg-black/60 px-2 py-1 rounded">
-                      Align Face Within Reticle
+                      Posisikan Wajah di Dalam Bingkai
                     </span>
                   </div>
                   <button
                     onClick={handleCaptureFromCamera}
                     className="absolute bottom-4 py-2.5 px-6 rounded-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm shadow-xl transition-all"
                   >
-                    Analyze Portrait
+                    Analisis Foto
                   </button>
                 </div>
               )}
 
-              {/* Mode: Preset Facial Archetypes */}
+              {/* Mode: Contoh Bentuk Wajah */}
               {mode === 'presets' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
                   {PRESET_ARCHETYPES.map((p) => (
@@ -311,7 +319,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                         <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-950/80 text-amber-400 border border-amber-500/30">
-                          {p.shape}
+                          {faceShapeLabel(p.shape)}
                         </div>
                       </div>
                       <div>
@@ -341,7 +349,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
               </div>
               <div className="space-y-2 max-w-md">
                 <h3 className="text-lg font-serif font-bold text-white tracking-wide">
-                  Optical Biometric Mapping
+                  Memetakan Wajah
                 </h3>
                 <p className="text-xs font-mono text-amber-400 animate-pulse">{scanStepText}</p>
               </div>
@@ -355,49 +363,49 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800">
                   <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
-                    Identified Face Shape
+                    Bentuk Wajah
                   </span>
                   <div className="text-xl font-bold font-serif text-amber-400 mt-1">
-                    {analysisResult.faceShape}
+                    {faceShapeLabel(analysisResult.faceShape)}
                   </div>
                   <div className="text-xs text-neutral-400 mt-0.5">
-                    {analysisResult.confidenceScore}% Detection Confidence
+                    Keyakinan {analysisResult.confidenceScore}%
                   </div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800">
                   <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
-                    Skin Undertone
+                    Undertone Kulit
                   </span>
                   <div className="text-xl font-bold font-serif text-white mt-1">
-                    {analysisResult.skinUndertone}
+                    {skinUndertoneLabel(analysisResult.skinUndertone)}
                   </div>
                   <div className="text-xs text-neutral-400 mt-0.5">
-                    Optimum frame metal resonance
+                    Menentukan warna frame yang cocok
                   </div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800">
                   <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
-                    Estimated PD (Pupillary)
+                    Perkiraan Jarak Pupil (PD)
                   </span>
                   <div className="text-xl font-bold font-mono text-amber-400 mt-1">
                     {analysisResult.estimatedPd} mm
                   </div>
                   <div className="text-xs text-neutral-400 mt-0.5">
-                    Optical center calibration
+                    Untuk titik tengah lensa
                   </div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800">
                   <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
-                    Jawline Structure
+                    Garis Rahang
                   </span>
                   <div className="text-base font-bold text-white mt-1 truncate">
-                    {analysisResult.jawline}
+                    {jawlineLabel(analysisResult.jawline)}
                   </div>
                   <div className="text-xs text-neutral-400 mt-0.5">
-                    Cheekbones: {analysisResult.cheekboneProminence}
+                    Tulang pipi: {cheekboneLabel(analysisResult.cheekboneProminence)}
                   </div>
                 </div>
               </div>
@@ -406,7 +414,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
               <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3">
                 <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold uppercase tracking-wider">
                   <Cpu className="w-4 h-4" />
-                  Gemini Optical Stylist Reasoning
+                  Penjelasan dari Gemini
                 </div>
                 <p className="text-sm text-neutral-200 leading-relaxed font-sans">
                   {analysisResult.reasoning}
@@ -425,9 +433,9 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-sm font-semibold text-white tracking-wide uppercase">
-                    Curated Optical Recommendations ({analysisResult.faceShape} Match)
+                    Rekomendasi Frame untuk Wajah {faceShapeLabel(analysisResult.faceShape)}
                   </h4>
-                  <span className="text-xs text-neutral-400">Ranked by geometric harmony</span>
+                  <span className="text-xs text-neutral-400">Diurutkan berdasarkan kecocokan</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -444,13 +452,13 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                           />
                           <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500 text-neutral-950 shadow-md">
-                            {match.score}% Match
+                            Cocok {match.score}%
                           </div>
                         </div>
 
                         <div className="text-sm font-bold text-white">{frame.name}</div>
                         <div className="text-xs text-neutral-400 mb-1">
-                          {frame.shape} · {frame.material}
+                          {frameShapeLabel(frame.shape)} · {materialLabel(frame.material)}
                         </div>
                         <p className="text-xs text-amber-300/90 font-medium">
                           {match.verdict}
@@ -465,7 +473,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                         className="mt-3 w-full py-2 px-3 rounded-xl bg-neutral-800 hover:bg-amber-500 hover:text-neutral-950 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                       >
                         <Camera className="w-3.5 h-3.5" />
-                        Virtual AR Try-On
+                        Coba dengan AR
                       </button>
                     </div>
                   ))}
@@ -481,13 +489,13 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                   }}
                   className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white"
                 >
-                  Rescan Face
+                  Scan Ulang
                 </button>
                 <button
                   onClick={handleClose}
                   className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs shadow-lg transition-all"
                 >
-                  Explore Recommended Frames
+                  Lihat Frame Rekomendasi
                 </button>
               </div>
             </div>

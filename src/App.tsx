@@ -14,6 +14,7 @@ import {
   User,
 } from './lib/firebase';
 import { calculateFaceFrameMatchScore } from './utils/opticalMath';
+import { formatRupiah, faceShapeLabel, frameShapeLabel, materialLabel } from './utils/format';
 
 // Components
 import { LazyThreeFrameCanvas } from './components/LazyThreeFrameCanvas';
@@ -175,7 +176,7 @@ export default function App() {
     } catch (e) {
       console.error(e);
       setFrames(previous);
-      alert('Could not save the frame. Check your admin access and try again.');
+      alert('Frame gagal disimpan. Periksa akses admin Anda lalu coba lagi.');
     }
   };
 
@@ -187,7 +188,7 @@ export default function App() {
     } catch (e) {
       console.error(e);
       setAllOrders(previous);
-      alert('Could not update the order status. Please try again.');
+      alert('Status pesanan gagal diperbarui. Silakan coba lagi.');
     }
   };
 
@@ -209,7 +210,7 @@ export default function App() {
       {/* Top Notification Bar */}
       <div className="bg-gradient-to-r from-neutral-950 via-amber-950/40 to-neutral-950 border-b border-neutral-800/60 py-2 px-4 text-center text-xs tracking-wider font-medium text-neutral-300 flex items-center justify-center gap-2">
         <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-        <span>Complimentary Worldwide Insured Delivery · 30-Day Flawless Optical Fit Guarantee</span>
+        <span>Gratis Ongkir Berasuransi ke Seluruh Indonesia · Garansi Pas 30 Hari</span>
       </div>
 
       {/* Main Navigation Header */}
@@ -229,7 +230,7 @@ export default function App() {
                   Frame<span className="text-amber-400 font-sans font-black">AI</span>
                 </span>
                 <span className="text-[10px] tracking-widest uppercase text-neutral-400 block -mt-1 font-mono">
-                  Optical Studio
+                  Studio Optik
                 </span>
               </div>
             </button>
@@ -242,7 +243,7 @@ export default function App() {
                   activeView === 'catalog' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-white'
                 }`}
               >
-                Collection
+                Koleksi
               </button>
               <button
                 onClick={() => setActiveView('ar_tryon')}
@@ -251,7 +252,7 @@ export default function App() {
                 }`}
               >
                 <Camera className="w-3.5 h-3.5" />
-                Live AR Studio
+                Studio AR Live
               </button>
               <button
                 onClick={() => setActiveView('3d_studio')}
@@ -260,7 +261,7 @@ export default function App() {
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                3D Inspector
+                Inspeksi 3D
               </button>
               <button
                 onClick={() => setActiveView('compare')}
@@ -268,7 +269,7 @@ export default function App() {
                   activeView === 'compare' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-white'
                 }`}
               >
-                Compare ({comparedFrames.length})
+                Bandingkan ({comparedFrames.length})
               </button>
               <button
                 onClick={() => setActiveView('quiz')}
@@ -277,7 +278,7 @@ export default function App() {
                 }`}
               >
                 <HelpCircle className="w-3.5 h-3.5" />
-                Find My Frame
+                Cari Frame-ku
               </button>
               {isAdmin && (
                 <button
@@ -286,7 +287,7 @@ export default function App() {
                     activeView === 'seller' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-white'
                   }`}
                 >
-                  Store Portal
+                  Portal Toko
                 </button>
               )}
             </nav>
@@ -300,7 +301,7 @@ export default function App() {
               className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-2 shadow-sm transition-all"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">AI Face Scan</span>
+              <span className="hidden sm:inline">Scan Wajah AI</span>
               {faceAnalysis && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               )}
@@ -309,8 +310,8 @@ export default function App() {
             {/* Saved Looks Vault */}
             <button
               onClick={() => setIsVaultOpen(true)}
-              title="Saved Looks & Orders Vault"
-              aria-label="Saved Looks Vault"
+              title="Koleksi Look & Pesanan"
+              aria-label="Koleksi Look Tersimpan"
               className="p-2 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
               <Award className="w-4 h-4" />
@@ -319,7 +320,7 @@ export default function App() {
             {/* Shopping Bag Button */}
             <button
               onClick={() => setIsBagOpen(true)}
-              aria-label="Open Shopping Bag"
+              aria-label="Buka Keranjang Belanja"
               className="relative p-2 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-white transition-colors"
             >
               <ShoppingBag className="w-4 h-4 text-amber-400" />
@@ -336,7 +337,7 @@ export default function App() {
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 hover:text-white transition-colors"
             >
               <UserIcon className="w-3.5 h-3.5 text-neutral-400" />
-              <span>{currentUser ? currentUser.displayName || 'Account' : 'Sign In'}</span>
+              <span>{currentUser ? currentUser.displayName || 'Akun' : 'Masuk'}</span>
             </button>
           </div>
         </div>
@@ -347,38 +348,38 @@ export default function App() {
             onClick={() => setActiveView('catalog')}
             className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'catalog' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
           >
-            Collection
+            Koleksi
           </button>
           <button
             onClick={() => setActiveView('ar_tryon')}
             className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'ar_tryon' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
           >
-            AR Try-On
+            Coba AR
           </button>
           <button
             onClick={() => setActiveView('3d_studio')}
             className={`px-3 py-1 rounded-lg shrink-0 ${activeView === '3d_studio' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
           >
-            3D Studio
+            Studio 3D
           </button>
           <button
             onClick={() => setActiveView('compare')}
             className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'compare' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
           >
-            Compare
+            Bandingkan
           </button>
           <button
             onClick={() => setActiveView('quiz')}
             className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'quiz' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
           >
-            Quiz
+            Kuis
           </button>
           {isAdmin && (
             <button
               onClick={() => setActiveView('seller')}
               className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'seller' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
             >
-              Seller Portal
+              Portal Toko
             </button>
           )}
         </div>
@@ -386,7 +387,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-8 space-y-12">
-        <Suspense fallback={<div className="py-24 text-center text-xs text-neutral-500">Loading...</div>}>
+        <Suspense fallback={<div className="py-24 text-center text-xs text-neutral-500">Memuat...</div>}>
         {/* VIEW 1: Catalog View */}
         {activeView === 'catalog' && (
           <div className="space-y-10">
@@ -395,16 +396,16 @@ export default function App() {
               <div className="relative z-10 max-w-2xl space-y-4">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   <Sparkles className="w-3.5 h-3.5" />
-                  Intelligent Eyewear Discovery & Virtual Fitting
+                  Temukan Kacamata Cerdas & Coba Virtual
                 </div>
 
                 <h1 className="font-serif text-3xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
-                  Haute Optique, Calibrated by AI.
+                  Kacamata Premium, Dikalibrasi oleh AI.
                 </h1>
 
                 <p className="text-sm md:text-base text-neutral-300 leading-relaxed font-light">
-                  Experience real-time AR try-on, Gemini facial geometry analysis, and aerospace-grade materials
-                  engineered to harmonize with your distinctive facial contours.
+                  Coba kacamata secara real-time dengan AR, analisis bentuk wajah oleh Gemini, dan material kelas
+                  aerospace yang dirancang selaras dengan kontur wajah Anda.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3 pt-3">
@@ -413,21 +414,21 @@ export default function App() {
                     className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-2 shadow-xl shadow-amber-500/15 transition-all hover:scale-105"
                   >
                     <Sparkles className="w-4 h-4" />
-                    Instant Face Shape Scan
+                    Scan Bentuk Wajah
                   </button>
                   <button
                     onClick={() => setActiveView('ar_tryon')}
                     className="px-6 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white font-semibold text-xs flex items-center gap-2 border border-neutral-700 transition-colors"
                   >
                     <Camera className="w-4 h-4 text-amber-400" />
-                    Launch AR Mirror
+                    Buka Cermin AR
                   </button>
                 </div>
               </div>
 
               {/* Face Shape Preset Quick Selectors */}
               <div className="mt-8 pt-6 border-t border-neutral-800/80 flex flex-wrap items-center gap-3">
-                <span className="text-xs text-neutral-400 font-medium">Harmonize for Face Shape:</span>
+                <span className="text-xs text-neutral-400 font-medium">Sesuaikan untuk Bentuk Wajah:</span>
                 {(['Oval', 'Square', 'Round', 'Heart', 'Diamond'] as FaceShape[]).map((shape) => (
                   <button
                     key={shape}
@@ -438,7 +439,7 @@ export default function App() {
                         : 'bg-neutral-950/80 text-neutral-400 hover:text-white border border-neutral-800'
                     }`}
                   >
-                    {shape}
+                    {faceShapeLabel(shape)}
                   </button>
                 ))}
               </div>
@@ -452,7 +453,7 @@ export default function App() {
                   <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Search by silhouette, material, or keyword..."
+                    placeholder="Cari berdasarkan bentuk, material, atau kata kunci..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-amber-500"
@@ -462,31 +463,31 @@ export default function App() {
                 {/* Filters */}
                 <div className="flex flex-wrap items-center gap-3">
                   <select
-                    aria-label="Filter frames by shape"
+                    aria-label="Filter frame berdasarkan bentuk"
                     value={shapeFilter}
                     onChange={(e) => setShapeFilter(e.target.value)}
                     className="px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-200"
                   >
-                    <option value="All">All Silhouettes</option>
-                    <option value="Geometric">Geometric</option>
-                    <option value="Square">Square</option>
-                    <option value="Round">Round</option>
+                    <option value="All">Semua Bentuk</option>
+                    <option value="Geometric">Geometris</option>
+                    <option value="Square">Kotak</option>
+                    <option value="Round">Bulat</option>
                     <option value="Aviator">Aviator</option>
                     <option value="Cat-Eye">Cat-Eye</option>
                     <option value="Oval">Oval</option>
                   </select>
 
                   <select
-                    aria-label="Filter frames by material"
+                    aria-label="Filter frame berdasarkan material"
                     value={materialFilter}
                     onChange={(e) => setMaterialFilter(e.target.value)}
                     className="px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-200"
                   >
-                    <option value="All">All Materials</option>
-                    <option value="Aerospace Titanium">Aerospace Titanium</option>
-                    <option value="Italian Acetate">Italian Acetate</option>
-                    <option value="Eco-Polymer">Eco-Polymer</option>
-                    <option value="Mixed Titanium Acetate">Mixed Titanium Acetate</option>
+                    <option value="All">Semua Material</option>
+                    <option value="Aerospace Titanium">Titanium Aerospace</option>
+                    <option value="Italian Acetate">Asetat Italia</option>
+                    <option value="Eco-Polymer">Eko-Polimer</option>
+                    <option value="Mixed Titanium Acetate">Kombinasi Titanium & Asetat</option>
                   </select>
 
                   <button
@@ -496,7 +497,7 @@ export default function App() {
                     }`}
                   >
                     <Sun className="w-3.5 h-3.5" />
-                    Polarized Sun Only
+                    Hanya Sun Polarized
                   </button>
                 </div>
               </div>
@@ -523,19 +524,19 @@ export default function App() {
 
                         {/* Top Left Match Score Badge */}
                         <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold bg-neutral-950/80 backdrop-blur-md text-amber-400 border border-amber-500/30">
-                          {match.score}% {userFaceShape} Match
+                          Cocok {match.score}% · {faceShapeLabel(userFaceShape)}
                         </div>
 
                         {/* Top Right Badges */}
                         <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
                           {frame.isBestseller && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-neutral-950 uppercase tracking-wider">
-                              Bestseller
+                              Terlaris
                             </span>
                           )}
                           {frame.isNew && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-neutral-950 uppercase tracking-wider">
-                              New
+                              Baru
                             </span>
                           )}
                         </div>
@@ -559,9 +560,9 @@ export default function App() {
                           <h3 className="font-serif font-bold text-white text-lg group-hover:text-amber-400 transition-colors">
                             {frame.name}
                           </h3>
-                          <p className="text-xs text-neutral-400">{frame.material}</p>
+                          <p className="text-xs text-neutral-400">{materialLabel(frame.material)}</p>
                         </div>
-                        <span className="font-mono font-bold text-base text-amber-400">${frame.price}</span>
+                        <span className="font-mono font-bold text-sm text-amber-400 whitespace-nowrap">{formatRupiah(frame.price)}</span>
                       </div>
 
                       {/* Technical Dimension Pills */}
@@ -572,7 +573,7 @@ export default function App() {
                         <span className="px-2 py-0.5 rounded-md bg-neutral-950 border border-neutral-800">
                           {frame.weightGrams}g
                         </span>
-                        <span className="text-neutral-500">{frame.shape}</span>
+                        <span className="text-neutral-500">{frameShapeLabel(frame.shape)}</span>
                       </div>
                     </div>
 
@@ -587,7 +588,7 @@ export default function App() {
                           className="py-2 px-3 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-800 transition-colors"
                         >
                           <Camera className="w-3.5 h-3.5 text-amber-400" />
-                          AR Try-On
+                          Coba AR
                         </button>
                         <button
                           onClick={() => {
@@ -597,7 +598,7 @@ export default function App() {
                           className="py-2 px-3 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-800 transition-colors"
                         >
                           <Layers className="w-3.5 h-3.5 text-neutral-400" />
-                          3D Inspect
+                          Lihat 3D
                         </button>
                       </div>
 
@@ -610,13 +611,13 @@ export default function App() {
                           className="py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-bold flex items-center justify-center gap-1.5 shadow transition-colors"
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          Lenses
+                          Lensa
                         </button>
                         <button
                           onClick={() => handleAddToCompare(frame)}
                           className="py-2 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
                         >
-                          Compare +
+                          Bandingkan +
                         </button>
                       </div>
                     </div>
@@ -632,16 +633,16 @@ export default function App() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-serif font-bold text-white">Augmented Reality Fitting Mirror</h2>
+                <h2 className="text-2xl font-serif font-bold text-white">Cermin Fitting Augmented Reality</h2>
                 <p className="text-xs text-neutral-400">
-                  Calibrated facial landmark tracking over live camera or high-fashion model presets.
+                  Pelacakan titik wajah terkalibrasi lewat kamera live atau foto model.
                 </p>
               </div>
               <button
                 onClick={() => setActiveView('catalog')}
                 className="px-4 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 hover:text-white"
               >
-                Back to Catalog
+                Kembali ke Katalog
               </button>
             </div>
 
@@ -659,16 +660,16 @@ export default function App() {
           <div className="space-y-8">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-serif font-bold text-white">3D Precision Optical Inspector</h2>
+                <h2 className="text-2xl font-serif font-bold text-white">Inspeksi Optik 3D Presisi</h2>
                 <p className="text-xs text-neutral-400">
-                  Rotate 360°, inspect titanium hinges, toggle lens coatings, and calibrate millimeter dimensions.
+                  Putar 360°, periksa engsel titanium, ganti lapisan lensa, dan lihat dimensi dalam milimeter.
                 </p>
               </div>
               <button
                 onClick={() => setActiveView('catalog')}
                 className="px-4 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 hover:text-white"
               >
-                Back to Catalog
+                Kembali ke Katalog
               </button>
             </div>
 
@@ -684,7 +685,7 @@ export default function App() {
               <div className="lg:col-span-4 rounded-3xl bg-neutral-900 border border-neutral-800 p-6 space-y-6">
                 <div>
                   <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
-                    Optical Specifications
+                    Spesifikasi Optik
                   </span>
                   <h3 className="font-serif font-bold text-2xl text-white mt-1">{selectedFrame.name}</h3>
                   <p className="text-xs text-neutral-400 mt-1">{selectedFrame.description}</p>
@@ -692,27 +693,27 @@ export default function App() {
 
                 <div className="space-y-2 text-xs border-y border-neutral-800 py-4 font-mono">
                   <div className="flex justify-between text-neutral-300">
-                    <span>Shape:</span>
-                    <span className="text-white font-sans">{selectedFrame.shape}</span>
+                    <span>Bentuk:</span>
+                    <span className="text-white font-sans">{frameShapeLabel(selectedFrame.shape)}</span>
                   </div>
                   <div className="flex justify-between text-neutral-300">
                     <span>Material:</span>
-                    <span className="text-white font-sans">{selectedFrame.material}</span>
+                    <span className="text-white font-sans">{materialLabel(selectedFrame.material)}</span>
                   </div>
                   <div className="flex justify-between text-neutral-300">
-                    <span>Weight:</span>
-                    <span className="text-white">{selectedFrame.weightGrams} grams</span>
+                    <span>Berat:</span>
+                    <span className="text-white">{selectedFrame.weightGrams} gram</span>
                   </div>
                   <div className="flex justify-between text-neutral-300">
-                    <span>Lens Width:</span>
+                    <span>Lebar Lensa:</span>
                     <span className="text-white">{selectedFrame.dimensions.lensWidth} mm</span>
                   </div>
                   <div className="flex justify-between text-neutral-300">
-                    <span>Bridge Distance:</span>
+                    <span>Lebar Bridge:</span>
                     <span className="text-white">{selectedFrame.dimensions.bridgeWidth} mm</span>
                   </div>
                   <div className="flex justify-between text-neutral-300">
-                    <span>Total Width:</span>
+                    <span>Lebar Total:</span>
                     <span className="text-white">{selectedFrame.dimensions.totalWidth} mm</span>
                   </div>
                 </div>
@@ -723,7 +724,7 @@ export default function App() {
                     className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-colors"
                   >
                     <Eye className="w-4 h-4" />
-                    Configure Prescription Lenses (${selectedFrame.price})
+                    Atur Lensa Resep ({formatRupiah(selectedFrame.price)})
                   </button>
 
                   <button
@@ -731,7 +732,7 @@ export default function App() {
                     className="w-full py-3 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
                   >
                     <Camera className="w-4 h-4 text-amber-400" />
-                    Try On in Live AR
+                    Coba dengan AR Live
                   </button>
                 </div>
               </div>
@@ -798,22 +799,22 @@ export default function App() {
               <Eye className="w-4 h-4" />
             </div>
             <span className="font-serif font-bold text-white tracking-wider">FrameAI Atelier</span>
-            <span>© 2026 FrameAI Inc. All optical algorithms certified.</span>
+            <span>© 2026 FrameAI.</span>
           </div>
 
           <div className="flex items-center gap-6">
             <button onClick={() => setActiveView('catalog')} className="hover:text-white transition-colors">
-              Collection
+              Koleksi
             </button>
             <button onClick={() => setActiveView('ar_tryon')} className="hover:text-white transition-colors">
-              Virtual AR Try-On
+              Coba Virtual AR
             </button>
             <button onClick={() => setActiveView('compare')} className="hover:text-white transition-colors">
-              Geometry Bench
+              Bandingkan Frame
             </button>
             {isAdmin && (
               <button onClick={() => setActiveView('seller')} className="hover:text-white transition-colors">
-                Merchant Portal
+                Portal Toko
               </button>
             )}
           </div>

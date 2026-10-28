@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CartItem, Order } from '../types';
 import { X, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck, Sparkles, CheckCircle2 } from 'lucide-react';
+import { formatRupiah, lensTypeLabel, PPN_RATE } from '../utils/format';
 import { createCustomerOrder } from '../lib/firebase';
 
 interface ShoppingBagDrawerProps {
@@ -30,14 +31,14 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
   const [address, setAddress] = useState<string>('');
   const [city, setCity] = useState<string>('');
   const [postalCode, setPostalCode] = useState<string>('');
-  const [country, setCountry] = useState<string>('');
+  const [country, setCountry] = useState<string>('Indonesia');
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const subtotal = items.reduce((acc, it) => acc + it.calculatedPrice * it.quantity, 0);
-  const tax = Number((subtotal * 0.0825).toFixed(2));
-  const total = Number((subtotal + tax).toFixed(2));
+  const tax = Math.round(subtotal * PPN_RATE);
+  const total = subtotal + tax;
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +72,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
     } catch (err) {
       // Never show a success screen for an order that was not saved
       console.error(err);
-      setCheckoutError('We could not place your order. Nothing was charged — please try again.');
+      setCheckoutError('Pesanan gagal dibuat dan tidak ada biaya yang ditagihkan. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
     }
@@ -86,15 +87,15 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
             <ShoppingBag className="w-5 h-5 text-amber-400" />
             <h3 className="font-serif font-bold text-lg text-white">
               {checkoutStep === 'cart'
-                ? `Shopping Bag (${items.reduce((a, b) => a + b.quantity, 0)})`
+                ? `Keranjang (${items.reduce((a, b) => a + b.quantity, 0)})`
                 : checkoutStep === 'checkout'
-                ? 'Luxury Optical Checkout'
-                : 'Order Confirmed'}
+                ? 'Checkout'
+                : 'Pesanan Dikonfirmasi'}
             </h3>
           </div>
           <button
             onClick={onClose}
-            aria-label="Close Shopping Bag"
+            aria-label="Tutup Keranjang"
             className="p-2 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white"
           >
             <X className="w-5 h-5" />
@@ -110,9 +111,9 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                   <div className="w-16 h-16 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center mx-auto text-neutral-500">
                     <ShoppingBag className="w-7 h-7" />
                   </div>
-                  <h4 className="font-serif text-lg text-white font-medium">Your shopping bag is empty</h4>
+                  <h4 className="font-serif text-lg text-white font-medium">Keranjang Anda masih kosong</h4>
                   <p className="text-xs text-neutral-400 max-w-xs mx-auto">
-                    Explore our luxury optical frames or use AI Face Scan to find your perfect bespoke fit.
+                    Lihat koleksi frame kami atau gunakan Scan Wajah AI untuk menemukan frame yang paling pas.
                   </p>
                 </div>
               ) : (
@@ -131,14 +132,14 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                       <div className="flex-1 min-w-0 pr-6">
                         <h4 className="font-serif font-bold text-white text-sm truncate">{it.frame.name}</h4>
                         <div className="text-xs text-neutral-400 mt-0.5">
-                          Finish: <span className="text-neutral-200">{it.selectedColor.name}</span>
+                          Warna: <span className="text-neutral-200">{it.selectedColor.name}</span>
                         </div>
                         <div className="text-[11px] text-amber-400/90 font-medium mt-1">
-                          {it.lensConfig.type.replace('_', ' ').toUpperCase()} ·{' '}
-                          {it.lensConfig.index.split('_')[0]} Index
+                          {lensTypeLabel(it.lensConfig.type)} ·{' '}
+                          Indeks {it.lensConfig.index.split('_')[0]}
                         </div>
                         {it.lensConfig.blueLightFilter && (
-                          <div className="text-[10px] text-neutral-400">Blue Light Shield Included</div>
+                          <div className="text-[10px] text-neutral-400">Termasuk Filter Blue Light</div>
                         )}
 
                         <div className="flex items-center justify-between mt-3">
@@ -158,14 +159,14 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                             </button>
                           </div>
                           <span className="font-mono font-bold text-sm text-white">
-                            ${it.calculatedPrice * it.quantity}
+                            {formatRupiah(it.calculatedPrice * it.quantity)}
                           </span>
                         </div>
                       </div>
 
                       <button
                         onClick={() => onRemoveItem(it.id)}
-                        aria-label={`Remove ${it.frame.name} from bag`}
+                        aria-label={`Hapus ${it.frame.name} dari keranjang`}
                         className="absolute top-4 right-4 text-neutral-500 hover:text-red-400 p-1"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -187,11 +188,11 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
 
               <div className="space-y-1">
                 <span className="text-xs font-bold text-neutral-300 uppercase tracking-wider">
-                  Contact Information
+                  Informasi Kontak
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   <div>
-                    <label className="text-[11px] text-neutral-400 block mb-1">Full Name</label>
+                    <label className="text-[11px] text-neutral-400 block mb-1">Nama Lengkap</label>
                     <input
                       type="text"
                       required
@@ -201,7 +202,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] text-neutral-400 block mb-1">Email for Optical Tracking</label>
+                    <label className="text-[11px] text-neutral-400 block mb-1">Email untuk Pelacakan Pesanan</label>
                     <input
                       type="email"
                       required
@@ -215,11 +216,11 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
 
               <div className="space-y-1 pt-2">
                 <span className="text-xs font-bold text-neutral-300 uppercase tracking-wider">
-                  Delivery Destination
+                  Alamat Pengiriman
                 </span>
                 <div className="space-y-2 pt-1">
                   <div>
-                    <label className="text-[11px] text-neutral-400 block mb-1">Street Address</label>
+                    <label className="text-[11px] text-neutral-400 block mb-1">Alamat</label>
                     <input
                       type="text"
                       required
@@ -230,7 +231,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[11px] text-neutral-400 block mb-1">City</label>
+                      <label className="text-[11px] text-neutral-400 block mb-1">Kota</label>
                       <input
                         type="text"
                         required
@@ -240,7 +241,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] text-neutral-400 block mb-1">Postal Code</label>
+                      <label className="text-[11px] text-neutral-400 block mb-1">Kode Pos</label>
                       <input
                         type="text"
                         required
@@ -256,12 +257,12 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
               <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800/80 space-y-2 text-xs">
                 <div className="flex items-center gap-2 text-emerald-400 font-semibold">
                   <ShieldCheck className="w-4 h-4" />
-                  FrameAI Optical Warranty & Guarantees
+                  Garansi FrameAI
                 </div>
                 <ul className="text-neutral-400 space-y-1 pl-6 list-disc">
-                  <li>30-Day Flawless Vision & Fit Guarantee with free lens remake</li>
-                  <li>Handcrafted hardcase & micro-denier cleaning cloth included</li>
-                  <li>Complimentary laser-aligned temple adjustment service</li>
+                  <li>Garansi pas & penglihatan 30 hari, termasuk pembuatan ulang lensa gratis</li>
+                  <li>Termasuk hardcase dan kain pembersih microfiber</li>
+                  <li>Gratis layanan penyetelan gagang</li>
                 </ul>
               </div>
             </form>
@@ -273,27 +274,27 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div>
-                <h4 className="font-serif text-2xl font-bold text-white">Order Successfully Placed</h4>
+                <h4 className="font-serif text-2xl font-bold text-white">Pesanan Berhasil Dibuat</h4>
                 <p className="text-xs text-neutral-400 mt-1 max-w-sm mx-auto">
-                  Your customized prescription eyewear is queued for precision surfacing in our optical lab.
+                  Kacamata Anda sudah masuk antrean pembuatan di lab optik kami.
                 </p>
               </div>
               <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 text-left text-xs space-y-1.5 font-mono">
                 <div className="flex items-center justify-between text-amber-400 font-sans font-bold text-[11px] mb-1">
-                  <span>OPTICAL LAB ORDER RECEIPT</span>
+                  <span>BUKTI PESANAN</span>
                   <span className="font-mono text-neutral-400">{placedOrder?.id}</span>
                 </div>
                 <div className="flex justify-between text-neutral-300">
-                  <span>Customer:</span>
+                  <span>Pelanggan:</span>
                   <span className="text-white">{customerName}</span>
                 </div>
                 <div className="flex justify-between text-neutral-300">
-                  <span>Destination:</span>
+                  <span>Tujuan:</span>
                   <span className="text-white">{city}, {country}</span>
                 </div>
                 <div className="flex justify-between text-neutral-300">
-                  <span>Total Investment:</span>
-                  <span className="text-amber-400 font-bold">${placedOrder?.totalAmount ?? total}</span>
+                  <span>Total:</span>
+                  <span className="text-amber-400 font-bold">{formatRupiah(placedOrder?.totalAmount ?? total)}</span>
                 </div>
               </div>
             </div>
@@ -305,24 +306,24 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
           <div className="p-6 border-t border-neutral-800 bg-neutral-950 space-y-4">
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between text-neutral-400">
-                <span>Subtotal ({items.length} items):</span>
-                <span className="text-white font-mono">${subtotal.toFixed(2)}</span>
+                <span>Subtotal ({items.length} item):</span>
+                <span className="text-white font-mono">{formatRupiah(subtotal)}</span>
               </div>
               <div className="flex justify-between text-neutral-400">
-                <span>Hardcase & Optical Care Kit:</span>
-                <span className="text-emerald-400 font-semibold font-mono">COMPLIMENTARY</span>
+                <span>Hardcase & Perlengkapan Perawatan:</span>
+                <span className="text-emerald-400 font-semibold font-mono">GRATIS</span>
               </div>
               <div className="flex justify-between text-neutral-400">
-                <span>Insured Express Courier:</span>
-                <span className="text-emerald-400 font-semibold font-mono">FREE</span>
+                <span>Kurir Ekspres Berasuransi:</span>
+                <span className="text-emerald-400 font-semibold font-mono">GRATIS</span>
               </div>
               <div className="flex justify-between text-neutral-400">
-                <span>Estimated Sales Tax:</span>
-                <span className="text-white font-mono">${tax.toFixed(2)}</span>
+                <span>PPN 11%:</span>
+                <span className="text-white font-mono">{formatRupiah(tax)}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-white pt-2 border-t border-neutral-800">
                 <span>Total:</span>
-                <span className="text-amber-400 font-serif text-lg font-bold">${total.toFixed(2)}</span>
+                <span className="text-amber-400 font-serif text-lg font-bold">{formatRupiah(total)}</span>
               </div>
             </div>
 
@@ -331,7 +332,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                 onClick={() => setCheckoutStep('checkout')}
                 className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-all"
               >
-                Proceed to Checkout
+                Lanjut ke Checkout
                 <ArrowRight className="w-4 h-4" />
               </button>
             ) : (
@@ -341,7 +342,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                   onClick={() => setCheckoutStep('cart')}
                   className="px-4 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-white transition-colors"
                 >
-                  Back
+                  Kembali
                 </button>
                 <button
                   type="submit"
@@ -349,8 +350,8 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                   disabled={isSubmitting}
                   className="flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                 >
-                  {/* No payment is taken yet, so don't label this "Pay" */}
-                  {isSubmitting ? 'Placing Order...' : `Place Order · $${total.toFixed(2)}`}
+                  {/* No payment is taken yet, so don't label this "Bayar" */}
+                  {isSubmitting ? 'Membuat Pesanan...' : `Buat Pesanan · ${formatRupiah(total)}`}
                 </button>
               </div>
             )}
@@ -366,7 +367,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
               }}
               className="w-full py-3 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm transition-colors"
             >
-              Continue Exploring FrameAI
+              Lanjut Belanja
             </button>
           </div>
         )}

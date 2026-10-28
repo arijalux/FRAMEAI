@@ -11,17 +11,17 @@ test('calculateFaceFrameMatchScore pairs face shapes with high synergy frames', 
   // Oval faces harmonize top-tier with Geometric and Aviator
   const ovalRes = calculateFaceFrameMatchScore('Oval', 'Geometric');
   assert.equal(ovalRes.score >= 95, true);
-  assert.equal(ovalRes.verdict, 'Optimal Geometric Harmonizer');
+  assert.equal(ovalRes.verdict, 'Paling Serasi');
 
   // Square faces harmonize with Round to soften jawline
   const squareRound = calculateFaceFrameMatchScore('Square', 'Round');
   assert.equal(squareRound.score, 98);
-  assert.equal(squareRound.verdict, 'Optimal Geometric Harmonizer');
+  assert.equal(squareRound.verdict, 'Paling Serasi');
 
   // Square faces with Square frames have lower score to avoid overly angular look
   const squareSquare = calculateFaceFrameMatchScore('Square', 'Square');
   assert.equal(squareSquare.score, 75);
-  assert.equal(squareSquare.verdict, 'Bold Statement Choice');
+  assert.equal(squareSquare.verdict, 'Pilihan Berani');
 });
 
 test('validatePrescription checks normal and invalid values correctly', () => {
@@ -43,16 +43,16 @@ test('validatePrescription checks normal and invalid values correctly', () => {
   const invalidPd = validatePrescription({ pd: 45 });
   assert.equal(invalidPd.isValid, false);
   assert.equal(invalidPd.errors.length, 1);
-  assert.match(invalidPd.errors[0], /Pupillary distance/);
+  assert.match(invalidPd.errors[0], /Jarak pupil/);
 
   // Missing Axis when Cylinder is specified
   const missingAxis = validatePrescription({ odCyl: -1.25 });
   assert.equal(missingAxis.isValid, false);
-  assert.match(missingAxis.errors[0], /Axis must be an integer/);
+  assert.match(missingAxis.errors[0], /Axis harus bilangan bulat/);
 });
 
 test('calculateLensPricing computes correct total and breakdown', () => {
-  const frameBase = 220;
+  const frameBase = 3_500_000;
   const config = {
     type: 'single_vision' as const,
     index: '1.67_ultrathin' as const,
@@ -62,11 +62,11 @@ test('calculateLensPricing computes correct total and breakdown', () => {
   };
 
   const pricing = calculateLensPricing(frameBase, config);
-  assert.equal(pricing.framePrice, 220);
-  assert.equal(pricing.lensTypePrice, 50); // single vision
-  assert.equal(pricing.indexUpgradePrice, 85); // 1.67
-  assert.equal(pricing.treatmentsPrice, 35 + 25); // blue light (35) + anti-reflective (25) = 60
-  assert.equal(pricing.total, 220 + 50 + 85 + 60); // 415
+  assert.equal(pricing.framePrice, 3_500_000);
+  assert.equal(pricing.lensTypePrice, 800_000); // single vision
+  assert.equal(pricing.indexUpgradePrice, 1_350_000); // 1.67
+  assert.equal(pricing.treatmentsPrice, 550_000 + 400_000); // blue light + anti-reflective
+  assert.equal(pricing.total, 3_500_000 + 800_000 + 1_350_000 + 950_000); // 6.600.000
 });
 
 test('computeDecentration computes accurate optical center distance', () => {

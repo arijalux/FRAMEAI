@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { saveTryOnLookToFirestore } from '../lib/firebase';
 import { OpticalFaceTracker, TrackedLandmarks } from '../utils/faceTracker';
+import { formatRupiah, frameShapeLabel, materialLabel } from '../utils/format';
 
 interface ARFaceTryOnProps {
   frames: OpticalFrame[];
@@ -33,21 +34,21 @@ interface ARFaceTryOnProps {
 
 const DEMO_MODELS = [
   {
-    name: 'Model 01 (Oval Structure)',
+    name: 'Model 01 (Wajah Oval)',
     shape: 'Oval',
     url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
     eyeLeft: { x: 0.41, y: 0.44 },
     eyeRight: { x: 0.58, y: 0.44 },
   },
   {
-    name: 'Model 02 (Square Structure)',
+    name: 'Model 02 (Wajah Kotak)',
     shape: 'Square',
     url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
     eyeLeft: { x: 0.42, y: 0.42 },
     eyeRight: { x: 0.59, y: 0.42 },
   },
   {
-    name: 'Model 03 (Heart Structure)',
+    name: 'Model 03 (Wajah Hati)',
     shape: 'Heart',
     url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
     eyeLeft: { x: 0.42, y: 0.45 },
@@ -258,7 +259,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         ctx.fillStyle = '#D4AF37';
         ctx.font = 'bold 11px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(`PD ${userPd}mm · Calibrated`, centerX, centerY - 34);
+        ctx.fillText(`PD ${userPd}mm · Terkalibrasi`, centerX, centerY - 34);
 
         ctx.restore();
       }
@@ -553,16 +554,16 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
 
     ctx.fillStyle = '#9CA3AF';
     ctx.font = '12px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(`${activeFrame.name} · ${activeColor.name} · Calibrated Fit`, 24, h - 18);
+    ctx.fillText(`${activeFrame.name} · ${activeColor.name}`, 24, h - 18);
 
     ctx.fillStyle = '#D4AF37';
     ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText('VERIFIED AR FIT', w - 24, h - 36);
+    ctx.fillText('COBA VIRTUAL AR', w - 24, h - 36);
 
     ctx.fillStyle = '#9CA3AF';
     ctx.font = '10px monospace';
-    ctx.fillText(new Date().toLocaleDateString(), w - 24, h - 18);
+    ctx.fillText(new Date().toLocaleDateString('id-ID'), w - 24, h - 18);
   };
 
   const handleDownloadSnapshot = () => {
@@ -609,7 +610,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
             }`}
           />
           <span className="hidden sm:inline text-sm font-semibold tracking-wider uppercase text-neutral-200">
-            AR Real-Time Try-On
+            Coba AR Real-Time
           </span>
           <span className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-mono">
             {cameraActive
@@ -625,7 +626,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
             <button
               onClick={toggleFacingMode}
               title="Putar Kamera Depan / Belakang"
-              aria-label="Toggle camera"
+              aria-label="Ganti kamera"
               className="p-2 rounded-full bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
               <SwitchCamera className="w-4 h-4" />
@@ -635,7 +636,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              aria-label="Close AR Studio"
+              aria-label="Tutup Studio AR"
               className="p-2 rounded-full bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
               <X className="w-5 h-5" />
@@ -745,7 +746,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                 className="text-[10px] text-neutral-400 hover:text-white flex items-center gap-1"
               >
                 {autoTracking ? <Unlock className="w-3 h-3 text-emerald-400" /> : <Lock className="w-3 h-3 text-amber-400" />}
-                {autoTracking ? 'Auto-Track' : 'Locked'}
+                {autoTracking ? 'Otomatis' : 'Terkunci'}
               </button>
             </div>
 
@@ -840,7 +841,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                   setCapturedSnapshot(null);
                   setIsSaved(false);
                 }}
-                aria-label="Tutup snapshot modal"
+                aria-label="Tutup hasil foto"
                 className="p-1 rounded-full hover:bg-neutral-800 text-neutral-400"
               >
                 <X className="w-5 h-5" />
@@ -850,7 +851,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
             <div className="p-4">
               <img
                 src={capturedSnapshot}
-                alt="Captured Try-On"
+                alt="Hasil foto try-on"
                 className="w-full rounded-2xl border border-neutral-800 shadow-inner"
               />
             </div>
@@ -876,7 +877,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                 {isSaved ? (
                   <>
                     <Check className="w-4 h-4" />
-                    Tersimpan di Vault
+                    Tersimpan di Koleksi
                   </>
                 ) : isSaving ? (
                   <>
@@ -901,7 +902,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
           <div>
             <h4 className="font-serif text-lg font-bold text-white tracking-wide">{activeFrame.name}</h4>
             <p className="text-xs text-neutral-400">
-              {activeFrame.shape} · {activeFrame.material} · ${activeFrame.price}
+              {frameShapeLabel(activeFrame.shape)} · {materialLabel(activeFrame.material)} · {formatRupiah(activeFrame.price)}
             </p>
           </div>
 
@@ -932,7 +933,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
-                Clear Optical
+                Bening
               </button>
               <button
                 onClick={() => setLensTint('blue_light')}
@@ -941,7 +942,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                 }`}
               >
                 <Shield className="w-3.5 h-3.5" />
-                Blue Filter
+                Filter Biru
               </button>
               <button
                 onClick={() => setLensTint('sun')}
@@ -950,7 +951,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                 }`}
               >
                 <Sun className="w-3.5 h-3.5" />
-                Polarized Sun
+                Sun Polarized
               </button>
             </div>
           </div>
@@ -973,7 +974,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                 <img src={f.imageUrl} alt={f.name} className="w-14 h-10 object-cover rounded-xl bg-neutral-950" />
                 <div className="pr-2">
                   <div className="text-xs font-semibold text-white truncate max-w-[120px]">{f.name}</div>
-                  <div className="text-[11px] text-neutral-400">${f.price}</div>
+                  <div className="text-[11px] text-neutral-400">{formatRupiah(f.price)}</div>
                 </div>
               </button>
             );

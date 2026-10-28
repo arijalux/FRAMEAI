@@ -2,6 +2,8 @@
  * Pure optical calculations and face-frame styling logic for FrameAI
  */
 
+import { faceShapeLabel } from './format';
+
 export type FaceShape = 'Oval' | 'Square' | 'Round' | 'Heart' | 'Diamond';
 export type FrameShape = 'Oval' | 'Square' | 'Round' | 'Geometric' | 'Aviator' | 'Cat-Eye';
 
@@ -91,21 +93,21 @@ export function calculateFaceFrameMatchScore(
     else if (diff > 15) score = Math.max(50, score - 5);
   }
 
-  let verdict = 'Good Match';
-  let guidance = 'Complements your facial balance comfortably.';
+  let verdict = 'Cocok';
+  let guidance = 'Melengkapi keseimbangan wajah Anda dengan nyaman.';
 
   if (score >= 94) {
-    verdict = 'Optimal Geometric Harmonizer';
-    guidance = `Contrasting contours elegantly balance your ${faceShape.toLowerCase()} proportions.`;
+    verdict = 'Paling Serasi';
+    guidance = `Kontur yang kontras menyeimbangkan proporsi wajah ${faceShapeLabel(faceShape).toLowerCase()} Anda dengan elegan.`;
   } else if (score >= 88) {
-    verdict = 'High Aesthetic Synergy';
-    guidance = `Brings flattering symmetry to your jawline and cheekbone profile.`;
+    verdict = 'Sangat Serasi';
+    guidance = `Memberi simetri yang menawan pada garis rahang dan tulang pipi Anda.`;
   } else if (score >= 80) {
-    verdict = 'Balanced Classic';
-    guidance = `A timeless silhouette that works with your structural features.`;
+    verdict = 'Klasik Seimbang';
+    guidance = `Siluet abadi yang selaras dengan struktur wajah Anda.`;
   } else {
-    verdict = 'Bold Statement Choice';
-    guidance = `Provides dramatic contrast against your natural lines.`;
+    verdict = 'Pilihan Berani';
+    guidance = `Memberi kontras dramatis terhadap garis alami wajah Anda.`;
   }
 
   return { score, verdict, guidance };
@@ -118,25 +120,25 @@ export function validatePrescription(rx: Partial<Prescription>): { isValid: bool
   const errors: string[] = [];
 
   if (rx.pd !== undefined && (rx.pd < 50 || rx.pd > 78)) {
-    errors.push('Pupillary distance (PD) must be between 50mm and 78mm.');
+    errors.push('Jarak pupil (PD) harus antara 50mm dan 78mm.');
   }
 
   const checkEye = (name: string, sph?: number, cyl?: number, axis?: number) => {
     if (sph !== undefined && (sph < -14.0 || sph > 10.0)) {
-      errors.push(`${name} Sphere (SPH) must be between -14.00 and +10.00.`);
+      errors.push(`${name}: Sphere (SPH) harus antara -14.00 dan +10.00.`);
     }
     if (cyl !== undefined && (cyl < -8.0 || cyl > 4.0)) {
-      errors.push(`${name} Cylinder (CYL) must be between -8.00 and +4.00.`);
+      errors.push(`${name}: Cylinder (CYL) harus antara -8.00 dan +4.00.`);
     }
     if (cyl !== undefined && cyl !== 0) {
       if (axis === undefined || axis < 1 || axis > 180) {
-        errors.push(`${name} Axis must be an integer between 1° and 180° when Cylinder is specified.`);
+        errors.push(`${name}: Axis harus bilangan bulat antara 1° dan 180° jika Cylinder diisi.`);
       }
     }
   };
 
-  checkEye('Right Eye (OD)', rx.odSph, rx.odCyl, rx.odAxis);
-  checkEye('Left Eye (OS)', rx.osSph, rx.osCyl, rx.osAxis);
+  checkEye('Mata Kanan (OD)', rx.odSph, rx.odCyl, rx.odAxis);
+  checkEye('Mata Kiri (OS)', rx.osSph, rx.osCyl, rx.osAxis);
 
   return {
     isValid: errors.length === 0,
@@ -144,8 +146,29 @@ export function validatePrescription(rx: Partial<Prescription>): { isValid: bool
   };
 }
 
+// Lens add-on prices in rupiah (IDR); shared with the lens configurator UI
+export const LENS_TYPE_PRICES: Record<LensType, number> = {
+  non_prescription: 0,
+  reading: 500_000,
+  single_vision: 800_000,
+  progressive: 2_250_000,
+};
+
+export const INDEX_UPGRADE_PRICES: Record<LensIndex, number> = {
+  '1.50_standard': 0,
+  '1.60_thin': 700_000,
+  '1.67_ultrathin': 1_350_000,
+  '1.74_high_index': 2_150_000,
+};
+
+export const TREATMENT_PRICES = {
+  blueLightFilter: 550_000,
+  photochromic: 1_200_000,
+  antiReflective: 400_000,
+};
+
 /**
- * Calculates optical lens package subtotal and price breakdown
+ * Calculates optical lens package subtotal and price breakdown (IDR)
  */
 export function calculateLensPricing(
   frameBasePrice: number,
@@ -157,27 +180,13 @@ export function calculateLensPricing(
   treatmentsPrice: number;
   total: number;
 } {
-  const lensTypePrices: Record<LensType, number> = {
-    non_prescription: 0,
-    reading: 30,
-    single_vision: 50,
-    progressive: 140,
-  };
-
-  const indexUpgradePrices: Record<LensIndex, number> = {
-    '1.50_standard': 0,
-    '1.60_thin': 45,
-    '1.67_ultrathin': 85,
-    '1.74_high_index': 135,
-  };
-
   let treatmentsPrice = 0;
-  if (lensConfig.blueLightFilter) treatmentsPrice += 35;
-  if (lensConfig.photochromic) treatmentsPrice += 75;
-  if (lensConfig.antiReflective) treatmentsPrice += 25;
+  if (lensConfig.blueLightFilter) treatmentsPrice += TREATMENT_PRICES.blueLightFilter;
+  if (lensConfig.photochromic) treatmentsPrice += TREATMENT_PRICES.photochromic;
+  if (lensConfig.antiReflective) treatmentsPrice += TREATMENT_PRICES.antiReflective;
 
-  const lensTypePrice = lensTypePrices[lensConfig.type] ?? 0;
-  const indexUpgradePrice = indexUpgradePrices[lensConfig.index] ?? 0;
+  const lensTypePrice = LENS_TYPE_PRICES[lensConfig.type] ?? 0;
+  const indexUpgradePrice = INDEX_UPGRADE_PRICES[lensConfig.index] ?? 0;
   const total = frameBasePrice + lensTypePrice + indexUpgradePrice + treatmentsPrice;
 
   return {

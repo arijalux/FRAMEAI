@@ -29,7 +29,7 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
   if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
     const retryAfterSec = Math.ceil((entry.windowStart + RATE_LIMIT_WINDOW_MS - now) / 1000);
     res.setHeader('Retry-After', String(retryAfterSec));
-    res.status(429).json({ success: false, error: 'Too many requests. Please try again shortly.' });
+    res.status(429).json({ success: false, error: 'Terlalu banyak permintaan. Silakan coba lagi sebentar lagi.' });
     return;
   }
 
@@ -43,7 +43,7 @@ apiRouter.use(rateLimit);
 function sendAiUnavailable(res: Response): void {
   res.status(503).json({
     success: false,
-    error: 'AI analysis is temporarily unavailable. Please try again.',
+    error: 'Analisis AI sedang tidak tersedia. Silakan coba lagi.',
   });
 }
 
@@ -94,6 +94,8 @@ Determine:
 10. Recommended frame shapes: array containing 2 to 3 shapes from ["Oval", "Square", "Round", "Geometric", "Aviator", "Cat-Eye"].
 
 ${mockDescriptor ? `Note: User selected preset facial profile archetype: ${mockDescriptor}` : ''}
+
+Language: keep every enum value above exactly as listed in English, but write stylingTips and reasoning in natural Bahasa Indonesia.
 `;
 
     parts.push({ text: promptText });
@@ -184,6 +186,7 @@ apiRouter.post('/why-this-frame', async (req: Request, res: Response): Promise<v
     const prompt = `
 Explain in 2-3 engaging, luxurious optician sentences why the "${frame.name}" frame (${frame.shape} silhouette, made of ${frame.material}, dimensions ${frame.dimensions?.lensWidth ?? 52}mm lens width and ${frame.dimensions?.bridgeWidth ?? 18}mm bridge) is an exceptional fit for a customer with a ${faceShape} face shape and ${skinUndertone || 'neutral'} skin undertone.
 Highlight how the bridge, rim shape, and proportions complement their features.
+Write the answer in natural Bahasa Indonesia.
 `;
 
     const response = await ai.models.generateContent({
@@ -196,7 +199,7 @@ Highlight how the bridge, rim shape, and proportions complement their features.
 
     res.json({
       success: true,
-      reasoning: response.text?.trim() || `The architectural lines of the ${frame.name} provide an exquisite geometric contrast that accentuates your ${faceShape.toLowerCase()} contours with effortless prestige.`,
+      reasoning: response.text?.trim() || `Proporsi ${frame.name} memberi kontras yang menawan dan menonjolkan kontur wajah ${faceShape.toLowerCase()} Anda.`,
     });
   } catch (error) {
     console.error('Error in /api/why-this-frame:', error);
@@ -224,6 +227,8 @@ Generate strategic merchant store intelligence including:
 3. Lens upgrade trends (e.g. Blue Light Filter adoption, High-Index 1.67 transitions).
 4. Restock recommendations for top performing silhouettes.
 5. Projected next quarter demand summary.
+
+Language: write all descriptive text in natural Bahasa Indonesia. Keep "shape" as one of Oval, Square, Round, Heart, Diamond and "urgency" as one of High, Medium, Low, in English.
 `;
 
     const response = await ai.models.generateContent({
