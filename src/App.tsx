@@ -57,12 +57,13 @@ import {
 
 export default function App() {
   // Navigation View
-  const [activeView, setActiveView] = useState<'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'quiz' | 'seller'>('catalog');
+  const [activeView, setActiveView] = useState<'home' | 'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'quiz' | 'seller'>('home');
 
   // Catalog & Frame State
   const [frames, setFrames] = useState<OpticalFrame[]>(INITIAL_FRAMES);
   const [selectedFrame, setSelectedFrame] = useState<OpticalFrame>(INITIAL_FRAMES[0]);
-  const [comparedFrames, setComparedFrames] = useState<OpticalFrame[]>([INITIAL_FRAMES[0], INITIAL_FRAMES[1], INITIAL_FRAMES[2]]);
+  // Starts empty: comparing begins from a frame the visitor picks in Koleksi
+  const [comparedFrames, setComparedFrames] = useState<OpticalFrame[]>([]);
 
   // Filter State
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -214,7 +215,6 @@ export default function App() {
     { view: 'catalog', label: 'Koleksi' },
     { view: 'ar_tryon', label: 'Coba AR' },
     { view: '3d_studio', label: 'Inspeksi 3D' },
-    { view: 'compare', label: `Bandingkan (${comparedFrames.length})` },
     { view: 'quiz', label: 'Cari Frame-ku' },
     ...(isAdmin ? [{ view: 'seller' as const, label: 'Portal Toko' }] : []),
   ];
@@ -230,7 +230,7 @@ export default function App() {
       <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-line">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-8">
-            <button onClick={() => setActiveView('catalog')} className="flex items-center gap-2 text-left">
+            <button onClick={() => setActiveView('home')} aria-label="Beranda frameai" className="flex items-center gap-2 text-left">
               <span className="w-8 h-8 rounded-full border-[1.5px] border-ink flex items-center justify-center">
                 <Eye className="w-4 h-4 text-ink" />
               </span>
@@ -297,8 +297,8 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-10 space-y-12">
         <Suspense fallback={<div className="py-24 text-center text-sm text-faint">Memuat...</div>}>
-        {/* VIEW 1: Catalog View */}
-        {activeView === 'catalog' && (
+        {/* VIEW 0: Landing page */}
+        {activeView === 'home' && (
           <div className="space-y-24">
             {/* Hero */}
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center pt-4 lg:pt-10">
@@ -332,24 +332,6 @@ export default function App() {
                 </div>
 
                 <p className="text-xs text-muted">Gratis ongkir ke seluruh Indonesia. Garansi pas 30 hari.</p>
-
-                {/* Face shape selector */}
-                <div className="space-y-2.5 pt-2">
-                  <span className="text-xs text-muted">Pilih bentuk wajahmu untuk melihat kecocokan:</span>
-                  <div className="flex gap-1 p-1 rounded-full bg-soft w-fit max-w-full overflow-x-auto">
-                    {(['Oval', 'Square', 'Round', 'Heart', 'Diamond'] as FaceShape[]).map((shape) => (
-                      <button
-                        key={shape}
-                        onClick={() => setUserFaceShape(shape)}
-                        className={`shrink-0 px-4 py-1.5 rounded-full text-sm transition-all ${
-                          userFaceShape === shape ? 'bg-white text-ink shadow-card' : 'text-muted hover:text-ink'
-                        }`}
-                      >
-                        {faceShapeLabel(shape)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
 
               {/* Showcase card with floating UI */}
@@ -387,7 +369,7 @@ export default function App() {
                     ) : (
                       <>
                         <p className="text-sm text-body leading-snug">
-                          Pilih bentuk wajahmu untuk melihat seberapa cocok frame ini.
+                          Scan wajahmu dengan AI untuk melihat seberapa cocok frame ini.
                         </p>
                         <button
                           onClick={() => setIsFaceAnalyzerOpen(true)}
@@ -435,12 +417,26 @@ export default function App() {
                 <br />
                 Lebih banyak yang pas.
               </h2>
-              <p className="text-lg text-muted leading-relaxed max-w-md md:justify-self-end">
-                Setiap frame diberi skor kecocokan dengan bentuk wajahmu, diukur dalam milimeter, dan bisa dicoba
-                langsung sebelum dipesan.
-              </p>
+              <div className="space-y-6 max-w-md md:justify-self-end">
+                <p className="text-lg text-muted leading-relaxed">
+                  Setiap frame diberi skor kecocokan dengan bentuk wajahmu, diukur dalam milimeter, dan bisa dicoba
+                  langsung sebelum dipesan.
+                </p>
+                <button
+                  onClick={() => setActiveView('catalog')}
+                  className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center gap-2 transition-colors"
+                >
+                  Lihat koleksi
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
+              </div>
             </section>
+          </div>
+        )}
 
+        {/* VIEW 1: Catalog, focused on choosing frames */}
+        {activeView === 'catalog' && (
+          <div className="space-y-10">
             {/* Catalog */}
             <section className="space-y-8">
               <div className="space-y-6">
@@ -449,8 +445,34 @@ export default function App() {
                   <p className="text-muted">
                     {userFaceShape
                       ? `${filteredFrames.length} frame, diurutkan dari yang paling cocok untuk wajah ${faceShapeLabel(userFaceShape).toLowerCase()}.`
-                      : `${filteredFrames.length} frame. Pilih bentuk wajahmu di atas untuk melihat skor kecocokan.`}
+                      : `${filteredFrames.length} frame. Pilih bentuk wajahmu untuk melihat skor kecocokan.`}
                   </p>
+                </div>
+
+                {/* Face shape: drives match scores and best-match sorting; tap again to clear */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-sm text-muted">Bentuk wajah</span>
+                  <div className="flex gap-1 p-1 rounded-full bg-soft max-w-full overflow-x-auto no-scrollbar">
+                    {(['Oval', 'Square', 'Round', 'Heart', 'Diamond'] as FaceShape[]).map((shape) => (
+                      <button
+                        key={shape}
+                        onClick={() => setUserFaceShape((cur) => (cur === shape ? null : shape))}
+                        aria-pressed={userFaceShape === shape}
+                        className={`shrink-0 px-4 py-1.5 rounded-full text-sm transition-all ${
+                          userFaceShape === shape ? 'bg-white text-ink shadow-card' : 'text-muted hover:text-ink'
+                        }`}
+                      >
+                        {faceShapeLabel(shape)}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setIsFaceAnalyzerOpen(true)}
+                    className="flex items-center gap-1.5 text-sm text-sage hover:text-ink"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Belum tahu? Scan dengan AI
+                  </button>
                 </div>
 
                 {/* One row at every width: search stretches, and on phones the row scrolls sideways */}
@@ -599,6 +621,19 @@ export default function App() {
           </div>
         )}
 
+        {/* Shortcut back to the comparison once frames have been added from Koleksi */}
+        {activeView === 'catalog' && comparedFrames.length > 0 && (
+          <button
+            onClick={() => setActiveView('compare')}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 h-12 pl-5 pr-2 rounded-full bg-ink text-white text-sm font-medium shadow-float flex items-center gap-3"
+          >
+            Bandingkan {comparedFrames.length} frame
+            <span className="w-8 h-8 rounded-full bg-white text-ink flex items-center justify-center">
+              <ArrowUpRight className="w-4 h-4" />
+            </span>
+          </button>
+        )}
+
         {/* VIEW 2: Real-time Live AR Try-On */}
         {activeView === 'ar_tryon' && (
           <div className="space-y-6">
@@ -716,7 +751,8 @@ export default function App() {
           <FrameComparisonBench
             allFrames={frames}
             comparedFrames={comparedFrames}
-            onAddFrame={(f) => setComparedFrames([...comparedFrames, f])}
+            onAddFrame={(f) => setComparedFrames((prev) => (prev.some((p) => p.id === f.id) ? prev : [...prev, f]))}
+            onBrowseCatalog={() => setActiveView('catalog')}
             onRemoveFrame={handleRemoveFromCompare}
             onSelectFrameForTryOn={(f) => {
               setSelectedFrame(f);
@@ -774,6 +810,9 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap items-center gap-6">
+            <button onClick={() => setActiveView('home')} className="hover:text-ink transition-colors">
+              Beranda
+            </button>
             {navItems.map((item) => (
               <button key={item.view} onClick={() => setActiveView(item.view)} className="hover:text-ink transition-colors">
                 {item.label}
