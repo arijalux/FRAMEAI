@@ -53,3 +53,13 @@
     color: var(--color-ink);
   }
 }
+
+@layer utilities {
+  /* Horizontal scrollers that should not show a scrollbar */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

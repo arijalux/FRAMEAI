@@ -497,8 +497,9 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
       {/* Bottom Floating Control Bar */}
       <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-3 bg-white/80 backdrop-blur-lg border border-line p-2.5 rounded-xl shadow-float">
         {/* Lens Tint Selector */}
-        <div className="flex items-center gap-1.5 text-xs">
-          <span className="text-muted mr-1 hidden sm:inline">Lensa:</span>
+        {/* Scrolls sideways on narrow widths instead of wrapping the labels */}
+        <div className="flex-1 min-w-0 flex items-center gap-1.5 pr-4 text-xs overflow-x-auto no-scrollbar [mask-image:linear-gradient(to_right,black_85%,transparent)]">
+          <span className="shrink-0 text-muted mr-1 hidden sm:inline">Lensa:</span>
           {(
             [
               { id: 'clear', label: 'Bening', desc: 'Anti-Refleksi' },
@@ -511,7 +512,7 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
             <button
               key={t.id}
               onClick={() => onLensTintChange?.(t.id)}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+              className={`shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
                 lensTint === t.id
                   ? 'bg-ink text-white shadow-md font-medium'
                   : 'bg-white/80 text-muted hover:text-ink hover:bg-soft-strong'
@@ -523,7 +524,7 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
         </div>
 
         {/* 3D Action Tools */}
-        <div className="flex items-center gap-1">
+        <div className="shrink-0 flex items-center gap-1">
           <button
             onClick={() => setIsRotating((prev) => !prev)}
             title={isRotating ? 'Hentikan putaran 360°' : 'Putar 360°'}
