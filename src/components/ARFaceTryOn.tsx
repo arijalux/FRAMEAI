@@ -286,7 +286,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
       // Draw PD Calibration Guide & Eye Reticles
       if (showPdGuides) {
         ctx.save();
-        ctx.strokeStyle = landmarks.detected ? 'rgba(212, 175, 55, 0.6)' : 'rgba(156, 163, 175, 0.4)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
         ctx.lineWidth = 1.5;
         ctx.setLineDash([4, 4]);
 
@@ -319,8 +319,8 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         ctx.lineTo(rightEyeX, rightEyeY - 26);
         ctx.stroke();
 
-        ctx.fillStyle = '#D4AF37';
-        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '500 11px "Instrument Sans", sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(`PD ${userPd}mm · Terkalibrasi`, centerX, centerY - 34);
 
@@ -612,30 +612,32 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   };
 
   const drawWatermark = (ctx: CanvasRenderingContext2D, w: number, h: number) => {
-    const barHeight = 64;
-    ctx.fillStyle = 'rgba(10, 10, 12, 0.92)';
+    // The snapshot is at device-pixel resolution; scale the caption to match
+    const k = window.devicePixelRatio || 1;
+    const barHeight = 64 * k;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
     ctx.fillRect(0, h - barHeight, w, barHeight);
 
-    ctx.fillStyle = '#D4AF37';
-    ctx.fillRect(0, h - barHeight, w, 2.5);
+    ctx.fillStyle = '#E7E7E7';
+    ctx.fillRect(0, h - barHeight, w, 1 * k);
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = '#111111';
+    ctx.font = `500 ${16 * k}px "Instrument Sans", sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText('FrameAI Optical Studio', 24, h - 36);
+    ctx.fillText('FrameAI', 24 * k, h - 36 * k);
 
-    ctx.fillStyle = '#9CA3AF';
-    ctx.font = '12px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(`${activeFrame.name} · ${activeColor.name}`, 24, h - 18);
+    ctx.fillStyle = '#6E6E6E';
+    ctx.font = `${12 * k}px "Instrument Sans", sans-serif`;
+    ctx.fillText(`${activeFrame.name} · ${activeColor.name}`, 24 * k, h - 18 * k);
 
-    ctx.fillStyle = '#D4AF37';
-    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = '#5F7846';
+    ctx.font = `500 ${12 * k}px "Instrument Sans", sans-serif`;
     ctx.textAlign = 'right';
-    ctx.fillText('COBA VIRTUAL AR', w - 24, h - 36);
+    ctx.fillText('Coba Virtual AR', w - 24 * k, h - 36 * k);
 
-    ctx.fillStyle = '#9CA3AF';
-    ctx.font = '10px monospace';
-    ctx.fillText(new Date().toLocaleDateString('id-ID'), w - 24, h - 18);
+    ctx.fillStyle = '#6E6E6E';
+    ctx.font = `${11 * k}px "Instrument Sans", sans-serif`;
+    ctx.fillText(new Date().toLocaleDateString('id-ID'), w - 24 * k, h - 18 * k);
   };
 
   const handleDownloadSnapshot = () => {
@@ -668,23 +670,23 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   };
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto rounded-3xl overflow-hidden bg-neutral-950 border border-neutral-800 shadow-2xl">
+    <div className="relative w-full max-w-5xl mx-auto rounded-3xl overflow-hidden bg-soft border border-line shadow-float">
       {/* Top Header Bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 bg-gradient-to-b from-neutral-950/90 via-neutral-950/60 to-transparent backdrop-blur-sm">
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 to-transparent backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <div
             className={`w-2.5 h-2.5 rounded-full ${
               cameraActive && isFaceDetected
                 ? 'bg-emerald-500 animate-pulse'
                 : cameraActive
-                ? 'bg-amber-400'
-                : 'bg-neutral-500'
+                ? 'bg-ink-soft'
+                : 'bg-faint'
             }`}
           />
-          <span className="hidden sm:inline text-sm font-semibold tracking-wider uppercase text-neutral-200">
+          <span className="hidden sm:inline text-sm font-medium text-ink">
             Coba AR Real-Time
           </span>
-          <span className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-mono">
+          <span className="text-xs text-sage bg-sage-tint border border-sage-line px-2 py-0.5 rounded-full tabular-nums">
             {trackerStatus === 'loading'
               ? 'Memuat pelacak wajah...'
               : trackerStatus === 'error'
@@ -703,7 +705,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
               onClick={toggleFacingMode}
               title="Putar Kamera Depan / Belakang"
               aria-label="Ganti kamera"
-              className="p-2 rounded-full bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 transition-colors"
+              className="p-2 rounded-full bg-white/80 hover:bg-soft-strong text-body transition-colors"
             >
               <SwitchCamera className="w-4 h-4" />
             </button>
@@ -713,7 +715,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
             <button
               onClick={onClose}
               aria-label="Tutup Studio AR"
-              className="p-2 rounded-full bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 transition-colors"
+              className="p-2 rounded-full bg-white/80 hover:bg-soft-strong text-body transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -722,7 +724,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
       </div>
 
       {/* Main Viewport Container */}
-      <div className="relative w-full aspect-[4/3] md:aspect-[16/10] bg-neutral-900 flex items-center justify-center overflow-hidden select-none">
+      <div className="relative w-full aspect-[4/3] md:aspect-[16/10] bg-white flex items-center justify-center overflow-hidden select-none">
         {/* Live Camera Video Stream */}
         <video
           ref={videoRef}
@@ -761,9 +763,9 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
 
         {/* Camera Activation Bar if camera is inactive */}
         {!cameraActive && (
-          <div className="absolute top-16 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 bg-neutral-950/85 backdrop-blur-md border border-neutral-800/80 p-3 rounded-2xl shadow-xl">
-            <div className={`${cameraError ? 'flex' : 'hidden sm:flex'} items-center gap-2.5 text-xs text-neutral-300`}>
-              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+          <div className="absolute top-16 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 bg-white/85 backdrop-blur-md border border-line p-3 rounded-2xl shadow-card">
+            <div className={`${cameraError ? 'flex' : 'hidden sm:flex'} items-center gap-2.5 text-xs text-body`}>
+              <AlertCircle className="w-4 h-4 text-sage shrink-0" />
               <span>
                 {cameraLoading
                   ? 'Menghubungkan webcam...'
@@ -775,22 +777,22 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
               <button
                 onClick={startCamera}
                 disabled={cameraLoading}
-                className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 shadow transition-all disabled:opacity-50"
+                className="px-3.5 py-1.5 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-xs flex items-center gap-1.5 shadow transition-all disabled:opacity-50"
               >
                 <Camera className="w-3.5 h-3.5" />
                 {cameraLoading ? 'Memuat...' : 'Aktifkan Kamera Live'}
               </button>
 
               {/* Model Switcher */}
-              <div className="flex gap-1 bg-neutral-900 p-1 rounded-xl border border-neutral-800">
+              <div className="flex gap-1 bg-white p-1 rounded-xl border border-line">
                 {DEMO_MODELS.map((m, idx) => (
                   <button
                     key={m.name}
                     onClick={() => setSelectedDemoIndex(idx)}
-                    className={`px-2 py-0.5 text-[11px] rounded-lg transition-all ${
+                    className={`px-2 py-0.5 text-[11px] rounded-full transition-all ${
                       selectedDemoIndex === idx
-                        ? 'bg-amber-500 text-neutral-950 font-bold'
-                        : 'text-neutral-400 hover:text-white'
+                        ? 'bg-ink text-white font-medium'
+                        : 'text-muted hover:text-ink'
                     }`}
                   >
                     {m.shape}
@@ -806,42 +808,42 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
           <button
             onClick={() => setShowCalibrationMobile((p) => !p)}
             aria-expanded={showCalibrationMobile}
-            className="md:hidden order-last self-start px-3 py-1.5 rounded-xl bg-neutral-950/85 backdrop-blur-md border border-neutral-800/80 text-[11px] font-semibold text-amber-400 flex items-center gap-1.5"
+            className="md:hidden order-last self-start px-3 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-line text-[11px] font-medium text-sage flex items-center gap-1.5"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             {showCalibrationMobile ? 'Tutup' : 'Kalibrasi'}
           </button>
-          <div className={`${showCalibrationMobile ? 'flex' : 'hidden'} md:flex bg-neutral-950/85 backdrop-blur-md border border-neutral-800/80 p-2.5 rounded-2xl text-xs flex-col gap-2 shadow-2xl`}>
-            <div className="flex items-center justify-between gap-2 border-b border-neutral-800 pb-1.5">
-              <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
+          <div className={`${showCalibrationMobile ? 'flex' : 'hidden'} md:flex bg-white/85 backdrop-blur-md border border-line p-2.5 rounded-2xl text-xs flex-col gap-2 shadow-float`}>
+            <div className="flex items-center justify-between gap-2 border-b border-line pb-1.5">
+              <span className="text-[10px] font-medium text-sage">
                 Kalibrasi Fit
               </span>
               <button
                 onClick={() => setAutoTracking((p) => !p)}
                 title={autoTracking ? 'Kunci Posisi Manual' : 'Aktifkan Pelacakan Otomatis'}
-                className="text-[10px] text-neutral-400 hover:text-white flex items-center gap-1"
+                className="text-[10px] text-muted hover:text-ink flex items-center gap-1"
               >
-                {autoTracking ? <Unlock className="w-3 h-3 text-emerald-400" /> : <Lock className="w-3 h-3 text-amber-400" />}
+                {autoTracking ? <Unlock className="w-3 h-3 text-emerald-700" /> : <Lock className="w-3 h-3 text-sage" />}
                 {autoTracking ? 'Otomatis' : 'Terkunci'}
               </button>
             </div>
 
             {/* Scale adjustments */}
-            <div className="flex items-center justify-between gap-3 text-neutral-300">
+            <div className="flex items-center justify-between gap-3 text-body">
               <span>Ukuran:</span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setScaleMultiplier((s) => Math.max(0.75, s - 0.05))}
-                  className="w-6 h-6 rounded bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center font-bold"
+                  className="w-6 h-6 rounded bg-soft-strong hover:bg-line-strong flex items-center justify-center font-medium"
                 >
                   -
                 </button>
-                <span className="text-[11px] font-mono w-8 text-center">
+                <span className="text-[11px] tabular-nums w-8 text-center">
                   {(scaleMultiplier * 100).toFixed(0)}%
                 </span>
                 <button
                   onClick={() => setScaleMultiplier((s) => Math.min(1.3, s + 0.05))}
-                  className="w-6 h-6 rounded bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center font-bold"
+                  className="w-6 h-6 rounded bg-soft-strong hover:bg-line-strong flex items-center justify-center font-medium"
                 >
                   +
                 </button>
@@ -849,18 +851,18 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
             </div>
 
             {/* Height adjustment */}
-            <div className="flex items-center justify-between gap-3 text-neutral-300">
+            <div className="flex items-center justify-between gap-3 text-body">
               <span>Tinggi Hidung:</span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setManualOffset((prev) => ({ ...prev, y: prev.y - 3 }))}
-                  className="w-6 h-6 rounded bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center font-bold"
+                  className="w-6 h-6 rounded bg-soft-strong hover:bg-line-strong flex items-center justify-center font-medium"
                 >
                   ▲
                 </button>
                 <button
                   onClick={() => setManualOffset((prev) => ({ ...prev, y: prev.y + 3 }))}
-                  className="w-6 h-6 rounded bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center font-bold"
+                  className="w-6 h-6 rounded bg-soft-strong hover:bg-line-strong flex items-center justify-center font-medium"
                 >
                   ▼
                 </button>
@@ -871,7 +873,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
             {(manualOffset.x !== 0 || manualOffset.y !== 0) && (
               <button
                 onClick={() => setManualOffset({ x: 0, y: 0 })}
-                className="text-[10px] text-amber-400 hover:underline text-center"
+                className="text-[10px] text-sage hover:underline text-center"
               >
                 Reset Posisi Tengah
               </button>
@@ -879,8 +881,8 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
 
             <button
               onClick={() => setShowPdGuides((p) => !p)}
-              className={`text-[11px] py-1 px-2 rounded-lg text-center transition-colors ${
-                showPdGuides ? 'bg-amber-500/20 text-amber-400 font-semibold' : 'text-neutral-400 hover:bg-neutral-800'
+              className={`text-[11px] py-1 px-2 rounded-full text-center transition-colors ${
+                showPdGuides ? 'bg-sage-tint text-sage font-medium' : 'text-muted hover:bg-soft-strong'
               }`}
             >
               {showPdGuides ? 'Sembunyikan Garis PD' : 'Tampilkan Garis PD'}
@@ -893,24 +895,24 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
           <button
             onClick={handleTakeSnapshot}
             aria-label="Ambil Foto Snapshot Try-On"
-            className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white text-neutral-950 p-1 flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all group"
+            className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white text-white p-1 flex items-center justify-center shadow-float hover:scale-105 active:scale-95 transition-all group"
           >
-            <div className="w-10 h-10 md:w-11 md:h-11 rounded-full border-2 border-neutral-950 flex items-center justify-center group-hover:bg-amber-400 transition-colors">
-              <Camera className="w-5 h-5 text-neutral-950" />
+            <div className="w-10 h-10 md:w-11 md:h-11 rounded-full border-2 border-white flex items-center justify-center group-hover:bg-ink-soft transition-colors">
+              <Camera className="w-5 h-5 text-white" />
             </div>
           </button>
-          <span className="hidden md:inline text-[11px] font-semibold text-white drop-shadow">Foto</span>
+          <span className="hidden md:inline text-[11px] font-medium text-ink drop-shadow">Foto</span>
         </div>
       </div>
 
       {/* Snapshot Preview Modal */}
       {capturedSnapshot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in">
-          <div className="relative w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl">
-            <div className="p-4 flex items-center justify-between border-b border-neutral-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-md animate-in fade-in">
+          <div className="relative w-full max-w-lg bg-white border border-line rounded-3xl overflow-hidden shadow-float">
+            <div className="p-4 flex items-center justify-between border-b border-line">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <h3 className="font-semibold text-white">Hasil Fitting AR Anda</h3>
+                <Sparkles className="w-4 h-4 text-sage" />
+                <h3 className="font-medium text-ink">Hasil Fitting AR Anda</h3>
               </div>
               <button
                 onClick={() => {
@@ -918,7 +920,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                   setIsSaved(false);
                 }}
                 aria-label="Tutup hasil foto"
-                className="p-1 rounded-full hover:bg-neutral-800 text-neutral-400"
+                className="p-1 rounded-full hover:bg-soft-strong text-muted"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -928,14 +930,14 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
               <img
                 src={capturedSnapshot}
                 alt="Hasil foto try-on"
-                className="w-full rounded-2xl border border-neutral-800 shadow-inner"
+                className="w-full rounded-2xl border border-line shadow-inner"
               />
             </div>
 
-            <div className="p-4 bg-neutral-950 flex items-center justify-between gap-3">
+            <div className="p-4 bg-soft flex items-center justify-between gap-3">
               <button
                 onClick={handleDownloadSnapshot}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-medium text-sm transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-soft-strong hover:bg-line-strong text-ink font-medium text-sm transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Unduh Kartu
@@ -944,10 +946,10 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
               <button
                 onClick={handleSaveLook}
                 disabled={isSaving || isSaved}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-medium text-sm transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-medium text-sm transition-all ${
                   isSaved
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-amber-500 hover:bg-amber-400 text-neutral-950 font-semibold'
+                    ? 'bg-emerald-600 text-ink'
+                    : 'bg-ink hover:bg-ink-soft text-white font-medium'
                 }`}
               >
                 {isSaved ? (
@@ -973,11 +975,11 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
       )}
 
       {/* Bottom Frame Switcher & Customization Drawer */}
-      <div className="p-4 bg-neutral-950 border-t border-neutral-800/80">
+      <div className="p-4 bg-soft border-t border-line">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3">
           <div>
-            <h4 className="font-serif text-lg font-bold text-white tracking-wide">{activeFrame.name}</h4>
-            <p className="text-xs text-neutral-400">
+            <h4 className="font-display text-lg font-medium text-ink tracking-wide">{activeFrame.name}</h4>
+            <p className="text-xs text-muted">
               {frameShapeLabel(activeFrame.shape)} · {materialLabel(activeFrame.material)} · {formatRupiah(activeFrame.price)}
             </p>
           </div>
@@ -985,7 +987,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
           {/* Color & Tint Controls */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Color Swatches */}
-            <div className="flex items-center gap-1.5 bg-neutral-900 p-1 rounded-xl border border-neutral-800">
+            <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-line">
               {activeFrame.colors.map((c) => (
                 <button
                   key={c.name}
@@ -993,7 +995,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                   title={c.name}
                   aria-label={`Pilih warna frame ${c.name}`}
                   className={`w-6 h-6 rounded-full transition-all border ${
-                    activeColor.name === c.name ? 'ring-2 ring-amber-400 scale-110' : 'opacity-80 hover:opacity-100'
+                    activeColor.name === c.name ? 'ring-2 ring-ink scale-110' : 'opacity-80 hover:opacity-100'
                   }`}
                   style={{ backgroundColor: c.hex, borderColor: 'rgba(255,255,255,0.2)' }}
                 />
@@ -1001,11 +1003,11 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
             </div>
 
             {/* Lens Tint Toggles */}
-            <div className="flex items-center gap-1 bg-neutral-900 p-1 rounded-xl border border-neutral-800 text-xs">
+            <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-line text-xs">
               <button
                 onClick={() => setLensTint('clear')}
-                className={`px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all ${
-                  lensTint === 'clear' ? 'bg-amber-500 text-neutral-950 font-semibold' : 'text-neutral-400'
+                className={`px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-all ${
+                  lensTint === 'clear' ? 'bg-ink text-white font-medium' : 'text-muted'
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
@@ -1013,8 +1015,8 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
               </button>
               <button
                 onClick={() => setLensTint('blue_light')}
-                className={`px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all ${
-                  lensTint === 'blue_light' ? 'bg-amber-500 text-neutral-950 font-semibold' : 'text-neutral-400'
+                className={`px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-all ${
+                  lensTint === 'blue_light' ? 'bg-ink text-white font-medium' : 'text-muted'
                 }`}
               >
                 <Shield className="w-3.5 h-3.5" />
@@ -1022,8 +1024,8 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
               </button>
               <button
                 onClick={() => setLensTint('sun')}
-                className={`px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all ${
-                  lensTint === 'sun' ? 'bg-amber-500 text-neutral-950 font-semibold' : 'text-neutral-400'
+                className={`px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-all ${
+                  lensTint === 'sun' ? 'bg-ink text-white font-medium' : 'text-muted'
                 }`}
               >
                 <Sun className="w-3.5 h-3.5" />
@@ -1043,14 +1045,14 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
                 onClick={() => onSelectFrame(f)}
                 className={`flex-shrink-0 flex items-center gap-3 p-2 rounded-2xl border transition-all text-left ${
                   isSelected
-                    ? 'bg-amber-500/10 border-amber-500/60 ring-1 ring-amber-500/40'
-                    : 'bg-neutral-900/60 border-neutral-800/80 hover:border-neutral-700'
+                    ? 'bg-sage-tint border-sage-line ring-1 ring-ink/20'
+                    : 'bg-white/60 border-line hover:border-line-strong'
                 }`}
               >
-                <img src={f.imageUrl} alt={f.name} className="w-14 h-10 object-cover rounded-xl bg-neutral-950" />
+                <img src={f.imageUrl} alt={f.name} className="w-14 h-10 object-cover rounded-xl bg-soft" />
                 <div className="pr-2">
-                  <div className="text-xs font-semibold text-white truncate max-w-[120px]">{f.name}</div>
-                  <div className="text-[11px] text-neutral-400">{formatRupiah(f.price)}</div>
+                  <div className="text-xs font-medium text-ink truncate max-w-[120px]">{f.name}</div>
+                  <div className="text-[11px] text-muted">{formatRupiah(f.price)}</div>
                 </div>
               </button>
             );

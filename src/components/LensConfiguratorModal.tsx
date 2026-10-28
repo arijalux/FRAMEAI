@@ -103,22 +103,22 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in overflow-y-auto">
-      <div className="relative w-full max-w-6xl bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-md animate-in fade-in overflow-y-auto">
+      <div className="relative w-full max-w-6xl bg-white border border-line rounded-3xl overflow-hidden shadow-float my-8">
         {/* Header */}
-        <div className="p-6 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
+        <div className="p-6 border-b border-line flex items-center justify-between bg-white/60">
           <div>
-            <h2 className="text-xl md:text-2xl font-serif font-bold text-white tracking-wide">
+            <h2 className="text-xl md:text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink tracking-wide">
               Atur Lensa Kacamata
             </h2>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-muted">
               {frame.name} · {frameShapeLabel(frame.shape)} · {materialLabel(frame.material)}
             </p>
           </div>
           <button
             onClick={onClose}
             aria-label="Tutup Pengaturan Lensa"
-            className="p-2 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+            className="p-2 rounded-full hover:bg-soft-strong text-muted hover:text-ink transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -128,7 +128,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 p-6 md:p-8">
           {/* Left Column: 3D Frame Inspection View */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="rounded-2xl overflow-hidden border border-neutral-800">
+            <div className="rounded-2xl overflow-hidden border border-line">
               <LazyThreeFrameCanvas
                 frame={frame}
                 selectedColor={selectedColor}
@@ -138,8 +138,8 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
             </div>
 
             {/* Color Swatch Options */}
-            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800/80">
-              <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block mb-2">
+            <div className="p-4 rounded-2xl bg-soft border border-line">
+              <span className="text-[11px] font-medium text-muted block mb-2">
                 Warna Frame
               </span>
               <div className="flex flex-wrap items-center gap-2">
@@ -147,10 +147,10 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                   <button
                     key={c.name}
                     onClick={() => setSelectedColor(c)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
                       selectedColor.name === c.name
-                        ? 'bg-neutral-900 border-amber-500/80 text-white'
-                        : 'border-neutral-800 text-neutral-400 hover:text-neutral-200'
+                        ? 'bg-white border-sage-line text-ink'
+                        : 'border-line text-muted hover:text-ink'
                     }`}
                   >
                     <span className="w-3.5 h-3.5 rounded-full border border-white/20" style={{ backgroundColor: c.hex }} />
@@ -165,7 +165,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
           <div className="lg:col-span-7 space-y-6">
             {/* 1. Lens Purpose / Type */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-neutral-300 uppercase tracking-wider block">
+              <label className="text-xs font-medium text-body block">
                 1. Pilih Jenis Lensa
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -180,13 +180,13 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                     onClick={() => setLensType(t.id as LensType)}
                     className={`p-3 rounded-2xl border text-left transition-all ${
                       lensType === t.id
-                        ? 'bg-amber-500/10 border-amber-500 text-white shadow-md'
-                        : 'bg-neutral-950 border-neutral-800/80 text-neutral-400 hover:border-neutral-700'
+                        ? 'bg-sage-tint border-ink text-ink shadow-md'
+                        : 'bg-soft border-line text-muted hover:border-line-strong'
                     }`}
                   >
-                    <div className="text-xs font-bold text-white">{t.name}</div>
-                    <div className="text-[11px] text-amber-400 font-mono mt-0.5">{t.price}</div>
-                    <div className="text-[10px] text-neutral-400 mt-1">{t.desc}</div>
+                    <div className="text-xs font-medium text-ink">{t.name}</div>
+                    <div className="text-[11px] text-sage tabular-nums mt-0.5">{t.price}</div>
+                    <div className="text-[10px] text-muted mt-1">{t.desc}</div>
                   </button>
                 ))}
               </div>
@@ -194,7 +194,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
 
             {/* 2. Lens Index (Thinness) */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-neutral-300 uppercase tracking-wider block">
+              <label className="text-xs font-medium text-body block">
                 2. Ketebalan & Indeks Lensa
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -229,15 +229,15 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                     onClick={() => setLensIndex(idxOpt.id as LensIndex)}
                     className={`p-3 rounded-2xl border text-left transition-all ${
                       lensIndex === idxOpt.id
-                        ? 'bg-amber-500/10 border-amber-500 text-white shadow-md'
-                        : 'bg-neutral-950 border-neutral-800/80 text-neutral-400 hover:border-neutral-700'
+                        ? 'bg-sage-tint border-ink text-ink shadow-md'
+                        : 'bg-soft border-line text-muted hover:border-line-strong'
                     }`}
                   >
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-white">{idxOpt.name}</span>
-                      <span className="text-xs text-amber-400 font-mono font-semibold">{idxOpt.price}</span>
+                      <span className="text-xs font-medium text-ink">{idxOpt.name}</span>
+                      <span className="text-xs text-sage tabular-nums font-medium">{idxOpt.price}</span>
                     </div>
-                    <div className="text-[11px] text-neutral-400 mt-1">{idxOpt.rec}</div>
+                    <div className="text-[11px] text-muted mt-1">{idxOpt.rec}</div>
                   </button>
                 ))}
               </div>
@@ -245,7 +245,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
 
             {/* 3. Optical Coatings & Advanced Filters */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-neutral-300 uppercase tracking-wider block">
+              <label className="text-xs font-medium text-body block">
                 3. Lapisan & Filter Lensa
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -253,55 +253,55 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                   onClick={() => setBlueLightFilter((b) => !b)}
                   className={`p-3 rounded-2xl border text-left transition-all ${
                     blueLightFilter
-                      ? 'bg-amber-500/10 border-amber-500 text-white'
-                      : 'bg-neutral-950 border-neutral-800/80 text-neutral-400'
+                      ? 'bg-sage-tint border-ink text-ink'
+                      : 'bg-soft border-line text-muted'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">Filter Blue Light</span>
-                    <span className="text-xs text-amber-400 font-mono">{addOnPrice(TREATMENT_PRICES.blueLightFilter)}</span>
+                    <span className="text-xs font-medium text-ink">Filter Blue Light</span>
+                    <span className="text-xs text-sage tabular-nums">{addOnPrice(TREATMENT_PRICES.blueLightFilter)}</span>
                   </div>
-                  <div className="text-[10px] text-neutral-400 mt-1">Menyaring cahaya biru HEV 420nm dari layar</div>
+                  <div className="text-[10px] text-muted mt-1">Menyaring cahaya biru HEV 420nm dari layar</div>
                 </button>
 
                 <button
                   onClick={() => setPhotochromic((p) => !p)}
                   className={`p-3 rounded-2xl border text-left transition-all ${
                     photochromic
-                      ? 'bg-amber-500/10 border-amber-500 text-white'
-                      : 'bg-neutral-950 border-neutral-800/80 text-neutral-400'
+                      ? 'bg-sage-tint border-ink text-ink'
+                      : 'bg-soft border-line text-muted'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">Photochromic</span>
-                    <span className="text-xs text-amber-400 font-mono">{addOnPrice(TREATMENT_PRICES.photochromic)}</span>
+                    <span className="text-xs font-medium text-ink">Photochromic</span>
+                    <span className="text-xs text-sage tabular-nums">{addOnPrice(TREATMENT_PRICES.photochromic)}</span>
                   </div>
-                  <div className="text-[10px] text-neutral-400 mt-1">Otomatis menggelap saat terkena sinar UV</div>
+                  <div className="text-[10px] text-muted mt-1">Otomatis menggelap saat terkena sinar UV</div>
                 </button>
 
                 <button
                   onClick={() => setAntiReflective((a) => !a)}
                   className={`p-3 rounded-2xl border text-left transition-all ${
                     antiReflective
-                      ? 'bg-amber-500/10 border-amber-500 text-white'
-                      : 'bg-neutral-950 border-neutral-800/80 text-neutral-400'
+                      ? 'bg-sage-tint border-ink text-ink'
+                      : 'bg-soft border-line text-muted'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">Anti-Refleksi</span>
-                    <span className="text-xs text-amber-400 font-mono">{addOnPrice(TREATMENT_PRICES.antiReflective)}</span>
+                    <span className="text-xs font-medium text-ink">Anti-Refleksi</span>
+                    <span className="text-xs text-sage tabular-nums">{addOnPrice(TREATMENT_PRICES.antiReflective)}</span>
                   </div>
-                  <div className="text-[10px] text-neutral-400 mt-1">Mengurangi silau lampu kendaraan & layar</div>
+                  <div className="text-[10px] text-muted mt-1">Mengurangi silau lampu kendaraan & layar</div>
                 </button>
               </div>
             </div>
 
             {/* 4. Prescription Input Toggle */}
-            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3">
+            <div className="p-4 rounded-2xl bg-soft border border-line space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-white block">Tambahkan Resep Kacamata</span>
-                  <span className="text-[11px] text-neutral-400">
+                  <span className="text-xs font-medium text-ink block">Tambahkan Resep Kacamata</span>
+                  <span className="text-[11px] text-muted">
                     Masukkan nilai Sphere (SPH), Cylinder (CYL), Axis, dan Jarak Pupil (PD).
                   </span>
                 </div>
@@ -314,10 +314,10 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
               </div>
 
               {hasPrescription && (
-                <div className="pt-3 border-t border-neutral-800 space-y-3">
+                <div className="pt-3 border-t border-line space-y-3">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     <div>
-                      <label className="text-[10px] uppercase font-mono text-neutral-400 block mb-1">
+                      <label className="text-[10px] tabular-nums text-muted block mb-1">
                         OD Kanan SPH
                       </label>
                       <input
@@ -325,11 +325,11 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                         step="0.25"
                         value={prescription.odSph}
                         onChange={(e) => handlePrescriptionChange('odSph', parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 rounded-xl bg-neutral-900 border border-neutral-700 text-xs font-mono text-white text-center"
+                        className="w-full px-2 py-1.5 rounded-xl bg-white border border-line-strong text-xs tabular-nums text-ink text-center"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-mono text-neutral-400 block mb-1">
+                      <label className="text-[10px] tabular-nums text-muted block mb-1">
                         OD Kanan CYL
                       </label>
                       <input
@@ -337,11 +337,11 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                         step="0.25"
                         value={prescription.odCyl ?? 0}
                         onChange={(e) => handlePrescriptionChange('odCyl', parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 rounded-xl bg-neutral-900 border border-neutral-700 text-xs font-mono text-white text-center"
+                        className="w-full px-2 py-1.5 rounded-xl bg-white border border-line-strong text-xs tabular-nums text-ink text-center"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-mono text-neutral-400 block mb-1">
+                      <label className="text-[10px] tabular-nums text-muted block mb-1">
                         OS Kiri SPH
                       </label>
                       <input
@@ -349,11 +349,11 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                         step="0.25"
                         value={prescription.osSph}
                         onChange={(e) => handlePrescriptionChange('osSph', parseFloat(e.target.value) || 0)}
-                        className="w-full px-2 py-1.5 rounded-xl bg-neutral-900 border border-neutral-700 text-xs font-mono text-white text-center"
+                        className="w-full px-2 py-1.5 rounded-xl bg-white border border-line-strong text-xs tabular-nums text-ink text-center"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-mono text-neutral-400 block mb-1">
+                      <label className="text-[10px] tabular-nums text-muted block mb-1">
                         Jarak Pupil (PD)
                       </label>
                       <input
@@ -361,13 +361,13 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                         step="1"
                         value={prescription.pd}
                         onChange={(e) => handlePrescriptionChange('pd', parseFloat(e.target.value) || 63)}
-                        className="w-full px-2 py-1.5 rounded-xl bg-neutral-900 border border-neutral-700 text-xs font-mono text-white text-center"
+                        className="w-full px-2 py-1.5 rounded-xl bg-white border border-line-strong text-xs tabular-nums text-ink text-center"
                       />
                     </div>
                   </div>
 
                   {prescriptionErrors.length > 0 && (
-                    <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/30 text-[11px] text-red-300 space-y-1">
+                    <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/30 text-[11px] text-red-700 space-y-1">
                       {prescriptionErrors.map((err, i) => (
                         <div key={i} className="flex items-center gap-1.5">
                           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -381,14 +381,14 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
             </div>
 
             {/* Subtotal & Add to Bag Footer */}
-            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-4 rounded-2xl bg-soft border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
+                <span className="text-[10px] font-medium text-muted">
                   Total (Frame + Lensa)
                 </span>
-                <div className="text-2xl font-serif font-bold text-amber-400 mt-0.5">
+                <div className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-sage mt-0.5">
                   {formatRupiah(pricing.total)}{' '}
-                  <span className="text-xs font-mono font-normal text-neutral-400">
+                  <span className="text-xs tabular-nums font-normal text-muted">
                     ({formatRupiah(pricing.framePrice)} frame + {formatRupiah(pricing.total - pricing.framePrice)} lensa)
                   </span>
                 </div>
@@ -396,7 +396,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
 
               <button
                 onClick={handleAdd}
-                className="py-3 px-8 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
+                className="py-3 px-8 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-sm shadow-card flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
               >
                 <ShoppingBag className="w-4 h-4" />
                 Tambah ke Keranjang

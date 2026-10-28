@@ -66,25 +66,25 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
   }).sort((a, b) => b.finalScore - a.finalScore);
 
   return (
-    <div className="w-full max-w-4xl mx-auto rounded-3xl bg-neutral-900 border border-neutral-800 p-6 md:p-10 shadow-2xl">
+    <div className="w-full max-w-4xl mx-auto rounded-3xl bg-white border border-line p-6 md:p-10 shadow-float">
       {!quizFinished ? (
         <div>
           {/* Progress Bar */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span className="text-xs uppercase tracking-wider font-semibold text-neutral-300">
+              <Sparkles className="w-4 h-4 text-sage" />
+              <span className="text-xs font-medium text-body">
                 Cari Frame-ku · Panduan Memilih
               </span>
             </div>
-            <span className="text-xs font-mono text-neutral-400">
+            <span className="text-xs tabular-nums text-muted">
               Langkah {currentStep} dari {totalSteps}
             </span>
           </div>
 
-          <div className="w-full bg-neutral-950 h-1.5 rounded-full overflow-hidden mb-8">
+          <div className="w-full bg-soft h-1.5 rounded-full overflow-hidden mb-8">
             <div
-              className="bg-amber-500 h-full transition-all duration-300"
+              className="bg-ink h-full transition-all duration-300"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
             />
           </div>
@@ -93,10 +93,10 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
           {currentStep === 1 && (
             <div className="space-y-6">
               <div className="space-y-1">
-                <h3 className="text-xl md:text-2xl font-serif font-bold text-white">
+                <h3 className="text-xl md:text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">
                   Di mana Anda paling sering memakai kacamata?
                 </h3>
-                <p className="text-xs text-neutral-400">
+                <p className="text-xs text-muted">
                   Ini menentukan bobot frame, lapisan filter blue light, dan kelenturan gagang.
                 </p>
               </div>
@@ -127,12 +127,12 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                   <button
                     key={opt.id}
                     onClick={() => handleSelectOption('lifestyle', opt.id)}
-                    className="p-5 rounded-2xl bg-neutral-950 border border-neutral-800 hover:border-amber-500/60 transition-all text-left group"
+                    className="p-5 rounded-2xl bg-soft border border-line hover:border-sage-line transition-all text-left group"
                   >
-                    <div className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                    <div className="text-sm font-medium text-ink group-hover:text-sage transition-colors">
                       {opt.title}
                     </div>
-                    <div className="text-xs text-neutral-400 mt-1">{opt.desc}</div>
+                    <div className="text-xs text-muted mt-1">{opt.desc}</div>
                   </button>
                 ))}
               </div>
@@ -143,10 +143,10 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
           {currentStep === 2 && (
             <div className="space-y-6">
               <div className="space-y-1">
-                <h3 className="text-xl md:text-2xl font-serif font-bold text-white">
+                <h3 className="text-xl md:text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">
                   Gaya desain seperti apa yang paling cocok dengan Anda?
                 </h3>
-                <p className="text-xs text-neutral-400">
+                <p className="text-xs text-muted">
                   Menentukan garis siluet, bentuk bridge, dan profil tepi frame.
                 </p>
               </div>
@@ -177,12 +177,12 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                   <button
                     key={opt.id}
                     onClick={() => handleSelectOption('aesthetic', opt.id)}
-                    className="p-5 rounded-2xl bg-neutral-950 border border-neutral-800 hover:border-amber-500/60 transition-all text-left group"
+                    className="p-5 rounded-2xl bg-soft border border-line hover:border-sage-line transition-all text-left group"
                   >
-                    <div className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                    <div className="text-sm font-medium text-ink group-hover:text-sage transition-colors">
                       {opt.title}
                     </div>
-                    <div className="text-xs text-neutral-400 mt-1">{opt.desc}</div>
+                    <div className="text-xs text-muted mt-1">{opt.desc}</div>
                   </button>
                 ))}
               </div>
@@ -193,10 +193,10 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
           {currentStep === 3 && (
             <div className="space-y-6">
               <div className="space-y-1">
-                <h3 className="text-xl md:text-2xl font-serif font-bold text-white">
+                <h3 className="text-xl md:text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">
                   Material seperti apa yang Anda sukai?
                 </h3>
-                <p className="text-xs text-neutral-400">
+                <p className="text-xs text-muted">
                   Menyeimbangkan bobot, kenyamanan, dan kekokohan frame.
                 </p>
               </div>
@@ -227,12 +227,12 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                   <button
                     key={opt.id}
                     onClick={() => handleSelectOption('materialPref', opt.id)}
-                    className="p-5 rounded-2xl bg-neutral-950 border border-neutral-800 hover:border-amber-500/60 transition-all text-left group"
+                    className="p-5 rounded-2xl bg-soft border border-line hover:border-sage-line transition-all text-left group"
                   >
-                    <div className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                    <div className="text-sm font-medium text-ink group-hover:text-sage transition-colors">
                       {opt.title}
                     </div>
-                    <div className="text-xs text-neutral-400 mt-1">{opt.desc}</div>
+                    <div className="text-xs text-muted mt-1">{opt.desc}</div>
                   </button>
                 ))}
               </div>
@@ -243,10 +243,10 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
           {currentStep === 4 && (
             <div className="space-y-6">
               <div className="space-y-1">
-                <h3 className="text-xl md:text-2xl font-serif font-bold text-white">
+                <h3 className="text-xl md:text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">
                   Bentuk wajah mana yang paling mirip dengan Anda?
                 </h3>
-                <p className="text-xs text-neutral-400">
+                <p className="text-xs text-muted">
                   Dipakai untuk menghitung bentuk frame yang paling menyeimbangkan wajah Anda.
                 </p>
               </div>
@@ -282,12 +282,12 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                   <button
                     key={opt.id}
                     onClick={() => handleSelectOption('faceShape', opt.id as FaceShape)}
-                    className="p-5 rounded-2xl bg-neutral-950 border border-neutral-800 hover:border-amber-500/60 transition-all text-left group"
+                    className="p-5 rounded-2xl bg-soft border border-line hover:border-sage-line transition-all text-left group"
                   >
-                    <div className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                    <div className="text-sm font-medium text-ink group-hover:text-sage transition-colors">
                       {opt.title}
                     </div>
-                    <div className="text-xs text-neutral-400 mt-1">{opt.desc}</div>
+                    <div className="text-xs text-muted mt-1">{opt.desc}</div>
                   </button>
                 ))}
               </div>
@@ -297,23 +297,23 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
       ) : (
         /* Quiz Results Screen */
         <div className="space-y-6 animate-in fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-line">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 mb-2">
                 <Check className="w-3.5 h-3.5" />
                 Profil Selesai Dihitung
               </div>
-              <h3 className="text-2xl font-serif font-bold text-white">
+              <h3 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">
                 Rekomendasi Frame untuk Anda
               </h3>
-              <p className="text-xs text-neutral-400 mt-1">
+              <p className="text-xs text-muted mt-1">
                 Disesuaikan dengan bentuk wajah {faceShapeLabel(answers.faceShape ?? '')} dan gaya hidup Anda.
               </p>
             </div>
 
             <button
               onClick={handleReset}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white bg-neutral-950 border border-neutral-800 flex items-center gap-1.5 self-start"
+              className="px-4 py-2 rounded-full text-xs font-medium text-muted hover:text-ink bg-soft border border-line flex items-center gap-1.5 self-start"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               Ulangi Kuis
@@ -325,40 +325,40 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
             {scoredFrames.slice(0, 3).map(({ frame, finalScore }, idx) => (
               <div
                 key={frame.id}
-                className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800/80 hover:border-amber-500/60 transition-all flex flex-col justify-between"
+                className="p-4 rounded-2xl bg-soft border border-line hover:border-sage-line transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-neutral-900 mb-3">
+                  <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-white mb-3">
                     <img src={frame.imageUrl} alt={frame.name} className="w-full h-full object-cover" />
-                    <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500 text-neutral-950 shadow-md">
+                    <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-xs font-medium bg-ink text-white shadow-md">
                       Cocok {finalScore}%
                     </div>
                     {idx === 0 && (
-                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-950/80 text-amber-400 border border-amber-500/30">
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/80 text-sage border border-sage-line">
                         Pilihan Terbaik
                       </div>
                     )}
                   </div>
 
-                  <h4 className="font-serif font-bold text-white text-base">{frame.name}</h4>
-                  <div className="text-xs text-neutral-400 mb-2">
+                  <h4 className="font-normal tracking-[-0.03em] text-ink text-base">{frame.name}</h4>
+                  <div className="text-xs text-muted mb-2">
                     {formatRupiah(frame.price)} · {frameShapeLabel(frame.shape)} · {materialLabel(frame.material)}
                   </div>
-                  <p className="text-xs text-neutral-300 line-clamp-2">{frame.description}</p>
+                  <p className="text-xs text-body line-clamp-2">{frame.description}</p>
                 </div>
 
                 <div className="mt-4 space-y-2">
                   <button
                     onClick={() => onSelectFrameForTryOn(frame)}
-                    className="w-full py-2 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full py-2 px-3 rounded-full bg-soft-strong hover:bg-line-strong text-ink font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
                   >
-                    <Camera className="w-3.5 h-3.5 text-amber-400" />
+                    <Camera className="w-3.5 h-3.5 text-sage" />
                     Coba dengan AR
                   </button>
 
                   <button
                     onClick={() => onConfigureLenses(frame)}
-                    className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full py-2 px-3 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     Atur Lensa

@@ -79,13 +79,13 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/75 backdrop-blur-sm animate-in fade-in">
-      <div className="w-full max-w-lg bg-neutral-900 border-l border-neutral-800 h-full flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300">
+    <div className="fixed inset-0 z-50 flex justify-end bg-ink/40 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-lg bg-white border-l border-line h-full flex flex-col justify-between shadow-float animate-in slide-in-from-right duration-300">
         {/* Drawer Header */}
-        <div className="p-6 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/70">
+        <div className="p-6 border-b border-line flex items-center justify-between bg-white/70">
           <div className="flex items-center gap-2.5">
-            <ShoppingBag className="w-5 h-5 text-amber-400" />
-            <h3 className="font-serif font-bold text-lg text-white">
+            <ShoppingBag className="w-5 h-5 text-sage" />
+            <h3 className="font-normal tracking-[-0.03em] text-lg text-ink">
               {checkoutStep === 'cart'
                 ? `Keranjang (${items.reduce((a, b) => a + b.quantity, 0)})`
                 : checkoutStep === 'checkout'
@@ -96,7 +96,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
           <button
             onClick={onClose}
             aria-label="Tutup Keranjang"
-            className="p-2 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white"
+            className="p-2 rounded-full hover:bg-soft-strong text-muted hover:text-ink"
           >
             <X className="w-5 h-5" />
           </button>
@@ -108,11 +108,11 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
             <>
               {items.length === 0 ? (
                 <div className="py-20 text-center space-y-3">
-                  <div className="w-16 h-16 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center mx-auto text-neutral-500">
+                  <div className="w-16 h-16 rounded-full bg-soft border border-line flex items-center justify-center mx-auto text-faint">
                     <ShoppingBag className="w-7 h-7" />
                   </div>
-                  <h4 className="font-serif text-lg text-white font-medium">Keranjang Anda masih kosong</h4>
-                  <p className="text-xs text-neutral-400 max-w-xs mx-auto">
+                  <h4 className="font-display text-lg text-ink font-medium">Keranjang Anda masih kosong</h4>
+                  <p className="text-xs text-muted max-w-xs mx-auto">
                     Lihat koleksi frame kami atau gunakan Scan Wajah AI untuk menemukan frame yang paling pas.
                   </p>
                 </div>
@@ -121,44 +121,44 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                   {items.map((it) => (
                     <div
                       key={it.id}
-                      className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex gap-4 relative group"
+                      className="p-4 rounded-2xl bg-soft border border-line flex gap-4 relative group"
                     >
                       <img
                         src={it.frame.imageUrl}
                         alt={it.frame.name}
-                        className="w-20 h-20 object-cover rounded-xl bg-neutral-900 shrink-0"
+                        className="w-20 h-20 object-cover rounded-xl bg-white shrink-0"
                       />
 
                       <div className="flex-1 min-w-0 pr-6">
-                        <h4 className="font-serif font-bold text-white text-sm truncate">{it.frame.name}</h4>
-                        <div className="text-xs text-neutral-400 mt-0.5">
-                          Warna: <span className="text-neutral-200">{it.selectedColor.name}</span>
+                        <h4 className="font-normal tracking-[-0.03em] text-ink text-sm truncate">{it.frame.name}</h4>
+                        <div className="text-xs text-muted mt-0.5">
+                          Warna: <span className="text-ink">{it.selectedColor.name}</span>
                         </div>
-                        <div className="text-[11px] text-amber-400/90 font-medium mt-1">
+                        <div className="text-[11px] text-sage font-medium mt-1">
                           {lensTypeLabel(it.lensConfig.type)} ·{' '}
                           Indeks {it.lensConfig.index.split('_')[0]}
                         </div>
                         {it.lensConfig.blueLightFilter && (
-                          <div className="text-[10px] text-neutral-400">Termasuk Filter Blue Light</div>
+                          <div className="text-[10px] text-muted">Termasuk Filter Blue Light</div>
                         )}
 
                         <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center gap-2 border border-neutral-800 rounded-lg bg-neutral-900 px-2 py-0.5">
+                          <div className="flex items-center gap-2 border border-line rounded-lg bg-white px-2 py-0.5">
                             <button
                               onClick={() => onUpdateQuantity(it.id, Math.max(1, it.quantity - 1))}
-                              className="text-neutral-400 hover:text-white text-xs px-1"
+                              className="text-muted hover:text-ink text-xs px-1"
                             >
                               -
                             </button>
-                            <span className="text-xs font-mono text-white px-1">{it.quantity}</span>
+                            <span className="text-xs tabular-nums text-ink px-1">{it.quantity}</span>
                             <button
                               onClick={() => onUpdateQuantity(it.id, it.quantity + 1)}
-                              className="text-neutral-400 hover:text-white text-xs px-1"
+                              className="text-muted hover:text-ink text-xs px-1"
                             >
                               +
                             </button>
                           </div>
-                          <span className="font-mono font-bold text-sm text-white">
+                          <span className="tabular-nums font-medium text-sm text-ink">
                             {formatRupiah(it.calculatedPrice * it.quantity)}
                           </span>
                         </div>
@@ -167,7 +167,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                       <button
                         onClick={() => onRemoveItem(it.id)}
                         aria-label={`Hapus ${it.frame.name} dari keranjang`}
-                        className="absolute top-4 right-4 text-neutral-500 hover:text-red-400 p-1"
+                        className="absolute top-4 right-4 text-faint hover:text-red-700 p-1"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -181,85 +181,85 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
           {checkoutStep === 'checkout' && (
             <form id="checkout-form" onSubmit={handleCheckoutSubmit} className="space-y-4">
               {checkoutError && (
-                <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+                <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700">
                   {checkoutError}
                 </div>
               )}
 
               <div className="space-y-1">
-                <span className="text-xs font-bold text-neutral-300 uppercase tracking-wider">
+                <span className="text-xs font-medium text-body">
                   Informasi Kontak
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   <div>
-                    <label className="text-[11px] text-neutral-400 block mb-1">Nama Lengkap</label>
+                    <label className="text-[11px] text-muted block mb-1">Nama Lengkap</label>
                     <input
                       type="text"
                       required
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 rounded-xl bg-soft border border-line text-xs text-ink focus:outline-none focus:border-ink"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] text-neutral-400 block mb-1">Email untuk Pelacakan Pesanan</label>
+                    <label className="text-[11px] text-muted block mb-1">Email untuk Pelacakan Pesanan</label>
                     <input
                       type="email"
                       required
                       value={customerEmail}
                       onChange={(e) => setCustomerEmail(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 rounded-xl bg-soft border border-line text-xs text-ink focus:outline-none focus:border-ink"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-1 pt-2">
-                <span className="text-xs font-bold text-neutral-300 uppercase tracking-wider">
+                <span className="text-xs font-medium text-body">
                   Alamat Pengiriman
                 </span>
                 <div className="space-y-2 pt-1">
                   <div>
-                    <label className="text-[11px] text-neutral-400 block mb-1">Alamat</label>
+                    <label className="text-[11px] text-muted block mb-1">Alamat</label>
                     <input
                       type="text"
                       required
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 rounded-xl bg-soft border border-line text-xs text-ink focus:outline-none focus:border-ink"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[11px] text-neutral-400 block mb-1">Kota</label>
+                      <label className="text-[11px] text-muted block mb-1">Kota</label>
                       <input
                         type="text"
                         required
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-amber-500"
+                        className="w-full px-3 py-2 rounded-xl bg-soft border border-line text-xs text-ink focus:outline-none focus:border-ink"
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] text-neutral-400 block mb-1">Kode Pos</label>
+                      <label className="text-[11px] text-muted block mb-1">Kode Pos</label>
                       <input
                         type="text"
                         required
                         value={postalCode}
                         onChange={(e) => setPostalCode(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-amber-500"
+                        className="w-full px-3 py-2 rounded-xl bg-soft border border-line text-xs text-ink focus:outline-none focus:border-ink"
                       />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800/80 space-y-2 text-xs">
-                <div className="flex items-center gap-2 text-emerald-400 font-semibold">
+              <div className="p-4 rounded-2xl bg-soft border border-line space-y-2 text-xs">
+                <div className="flex items-center gap-2 text-emerald-700 font-medium">
                   <ShieldCheck className="w-4 h-4" />
                   Garansi FrameAI
                 </div>
-                <ul className="text-neutral-400 space-y-1 pl-6 list-disc">
+                <ul className="text-muted space-y-1 pl-6 list-disc">
                   <li>Garansi pas & penglihatan 30 hari, termasuk pembuatan ulang lensa gratis</li>
                   <li>Termasuk hardcase dan kain pembersih microfiber</li>
                   <li>Gratis layanan penyetelan gagang</li>
@@ -270,31 +270,31 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
 
           {checkoutStep === 'success' && (
             <div className="py-12 text-center space-y-5 animate-in fade-in">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div>
-                <h4 className="font-serif text-2xl font-bold text-white">Pesanan Berhasil Dibuat</h4>
-                <p className="text-xs text-neutral-400 mt-1 max-w-sm mx-auto">
+                <h4 className="font-display text-2xl font-medium text-ink">Pesanan Berhasil Dibuat</h4>
+                <p className="text-xs text-muted mt-1 max-w-sm mx-auto">
                   Kacamata Anda sudah masuk antrean pembuatan di lab optik kami.
                 </p>
               </div>
-              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 text-left text-xs space-y-1.5 font-mono">
-                <div className="flex items-center justify-between text-amber-400 font-sans font-bold text-[11px] mb-1">
+              <div className="p-4 rounded-2xl bg-soft border border-line text-left text-xs space-y-1.5 tabular-nums">
+                <div className="flex items-center justify-between text-sage font-sans font-medium text-[11px] mb-1">
                   <span>BUKTI PESANAN</span>
-                  <span className="font-mono text-neutral-400">{placedOrder?.id}</span>
+                  <span className="tabular-nums text-muted">{placedOrder?.id}</span>
                 </div>
-                <div className="flex justify-between text-neutral-300">
+                <div className="flex justify-between text-body">
                   <span>Pelanggan:</span>
-                  <span className="text-white">{customerName}</span>
+                  <span className="text-ink">{customerName}</span>
                 </div>
-                <div className="flex justify-between text-neutral-300">
+                <div className="flex justify-between text-body">
                   <span>Tujuan:</span>
-                  <span className="text-white">{city}, {country}</span>
+                  <span className="text-ink">{city}, {country}</span>
                 </div>
-                <div className="flex justify-between text-neutral-300">
+                <div className="flex justify-between text-body">
                   <span>Total:</span>
-                  <span className="text-amber-400 font-bold">{formatRupiah(placedOrder?.totalAmount ?? total)}</span>
+                  <span className="text-sage font-medium">{formatRupiah(placedOrder?.totalAmount ?? total)}</span>
                 </div>
               </div>
             </div>
@@ -303,34 +303,34 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
 
         {/* Drawer Footer */}
         {checkoutStep !== 'success' && items.length > 0 && (
-          <div className="p-6 border-t border-neutral-800 bg-neutral-950 space-y-4">
+          <div className="p-6 border-t border-line bg-soft space-y-4">
             <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between text-neutral-400">
+              <div className="flex justify-between text-muted">
                 <span>Subtotal ({items.length} item):</span>
-                <span className="text-white font-mono">{formatRupiah(subtotal)}</span>
+                <span className="text-ink tabular-nums">{formatRupiah(subtotal)}</span>
               </div>
-              <div className="flex justify-between text-neutral-400">
+              <div className="flex justify-between text-muted">
                 <span>Hardcase & Perlengkapan Perawatan:</span>
-                <span className="text-emerald-400 font-semibold font-mono">GRATIS</span>
+                <span className="text-emerald-700 font-medium tabular-nums">GRATIS</span>
               </div>
-              <div className="flex justify-between text-neutral-400">
+              <div className="flex justify-between text-muted">
                 <span>Kurir Ekspres Berasuransi:</span>
-                <span className="text-emerald-400 font-semibold font-mono">GRATIS</span>
+                <span className="text-emerald-700 font-medium tabular-nums">GRATIS</span>
               </div>
-              <div className="flex justify-between text-neutral-400">
+              <div className="flex justify-between text-muted">
                 <span>PPN 11%:</span>
-                <span className="text-white font-mono">{formatRupiah(tax)}</span>
+                <span className="text-ink tabular-nums">{formatRupiah(tax)}</span>
               </div>
-              <div className="flex justify-between text-sm font-bold text-white pt-2 border-t border-neutral-800">
+              <div className="flex justify-between text-sm font-medium text-ink pt-2 border-t border-line">
                 <span>Total:</span>
-                <span className="text-amber-400 font-serif text-lg font-bold">{formatRupiah(total)}</span>
+                <span className="text-sage font-display text-lg font-medium">{formatRupiah(total)}</span>
               </div>
             </div>
 
             {checkoutStep === 'cart' ? (
               <button
                 onClick={() => setCheckoutStep('checkout')}
-                className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-all"
+                className="w-full py-3 px-4 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-sm shadow-card flex items-center justify-center gap-2 transition-all"
               >
                 Lanjut ke Checkout
                 <ArrowRight className="w-4 h-4" />
@@ -340,7 +340,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => setCheckoutStep('cart')}
-                  className="px-4 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-white transition-colors"
+                  className="px-4 py-3 rounded-full bg-soft-strong hover:bg-line-strong text-xs font-medium text-ink transition-colors"
                 >
                   Kembali
                 </button>
@@ -348,7 +348,7 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                   type="submit"
                   form="checkout-form"
                   disabled={isSubmitting}
-                  className="flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  className="flex-1 py-3 px-4 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-sm shadow-card flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                 >
                   {/* No payment is taken yet, so don't label this "Bayar" */}
                   {isSubmitting ? 'Membuat Pesanan...' : `Buat Pesanan · ${formatRupiah(total)}`}
@@ -359,13 +359,13 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
         )}
 
         {checkoutStep === 'success' && (
-          <div className="p-6 border-t border-neutral-800 bg-neutral-950">
+          <div className="p-6 border-t border-line bg-soft">
             <button
               onClick={() => {
                 setCheckoutStep('cart');
                 onClose();
               }}
-              className="w-full py-3 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm transition-colors"
+              className="w-full py-3 px-4 rounded-full bg-soft-strong hover:bg-line-strong text-ink font-medium text-sm transition-colors"
             >
               Lanjut Belanja
             </button>

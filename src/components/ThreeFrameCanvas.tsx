@@ -100,7 +100,7 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
     keyLight.position.set(5, 6, 8);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xd4af37, 1.0);
+    const fillLight = new THREE.DirectionalLight(0xfff4e6, 1.0);
     fillLight.position.set(-6, -2, 4);
     scene.add(fillLight);
 
@@ -447,7 +447,7 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
   };
 
   return (
-    <div className="relative w-full h-[460px] bg-gradient-to-b from-neutral-900/80 via-neutral-950 to-neutral-900 rounded-2xl border border-neutral-800/80 overflow-hidden select-none shadow-2xl backdrop-blur-md">
+    <div className="relative w-full h-[460px] rounded-2xl border border-line overflow-hidden select-none shadow-float backdrop-blur-md">
       {/* 3D Canvas Mount */}
       <div
         ref={containerRef}
@@ -460,45 +460,45 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
 
       {/* Top Floating Badges */}
       <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2 pointer-events-none">
-        <span className="px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 backdrop-blur-md">
+        <span className="px-3 py-1 rounded-full text-xs font-medium bg-sage-tint text-sage border border-sage-line backdrop-blur-md">
           {materialLabel(frame.material)}
         </span>
-        <span className="px-2.5 py-1 rounded-full text-xs text-neutral-400 bg-neutral-900/80 border border-neutral-800 backdrop-blur-md">
+        <span className="px-2.5 py-1 rounded-full text-xs text-muted bg-white/80 border border-line backdrop-blur-md">
           {frame.weightGrams}g · Ringan
         </span>
       </div>
 
       {/* Optical Millimeter Dimension HUD Overlay */}
       {showDimensions && (
-        <div className="absolute top-4 right-4 bg-neutral-950/85 backdrop-blur-md border border-neutral-800/80 p-3 rounded-xl text-xs space-y-1.5 shadow-xl pointer-events-none font-mono">
-          <div className="text-amber-400 font-semibold tracking-wide text-[11px] mb-1 font-sans flex items-center gap-1.5">
+        <div className="absolute top-4 right-4 bg-white/85 backdrop-blur-md border border-line p-3 rounded-xl text-xs space-y-1.5 shadow-card pointer-events-none tabular-nums">
+          <div className="text-sage font-medium tracking-wide text-[11px] mb-1 font-sans flex items-center gap-1.5">
             <Sliders className="w-3.5 h-3.5" />
             DIMENSI FRAME
           </div>
-          <div className="flex justify-between gap-4 text-neutral-300">
+          <div className="flex justify-between gap-4 text-body">
             <span>Lebar Lensa:</span>
-            <span className="font-bold text-white">{frame.dimensions.lensWidth} mm</span>
+            <span className="font-medium text-ink">{frame.dimensions.lensWidth} mm</span>
           </div>
-          <div className="flex justify-between gap-4 text-neutral-300">
+          <div className="flex justify-between gap-4 text-body">
             <span>Lebar Bridge:</span>
-            <span className="font-bold text-white">{frame.dimensions.bridgeWidth} mm</span>
+            <span className="font-medium text-ink">{frame.dimensions.bridgeWidth} mm</span>
           </div>
-          <div className="flex justify-between gap-4 text-neutral-300">
+          <div className="flex justify-between gap-4 text-body">
             <span>Panjang Gagang:</span>
-            <span className="font-bold text-white">{frame.dimensions.templeLength} mm</span>
+            <span className="font-medium text-ink">{frame.dimensions.templeLength} mm</span>
           </div>
-          <div className="flex justify-between gap-4 text-neutral-300">
+          <div className="flex justify-between gap-4 text-body">
             <span>Tinggi Lensa:</span>
-            <span className="font-bold text-white">{frame.dimensions.lensHeight} mm</span>
+            <span className="font-medium text-ink">{frame.dimensions.lensHeight} mm</span>
           </div>
         </div>
       )}
 
       {/* Bottom Floating Control Bar */}
-      <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-3 bg-neutral-950/80 backdrop-blur-lg border border-neutral-800/80 p-2.5 rounded-xl shadow-2xl">
+      <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-3 bg-white/80 backdrop-blur-lg border border-line p-2.5 rounded-xl shadow-float">
         {/* Lens Tint Selector */}
         <div className="flex items-center gap-1.5 text-xs">
-          <span className="text-neutral-400 mr-1 hidden sm:inline">Lensa:</span>
+          <span className="text-muted mr-1 hidden sm:inline">Lensa:</span>
           {(
             [
               { id: 'clear', label: 'Bening', desc: 'Anti-Refleksi' },
@@ -511,10 +511,10 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
             <button
               key={t.id}
               onClick={() => onLensTintChange?.(t.id)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
                 lensTint === t.id
-                  ? 'bg-amber-500 text-neutral-950 shadow-md font-semibold'
-                  : 'bg-neutral-900/80 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
+                  ? 'bg-ink text-white shadow-md font-medium'
+                  : 'bg-white/80 text-muted hover:text-ink hover:bg-soft-strong'
               }`}
             >
               {t.label}
@@ -528,8 +528,8 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
             onClick={() => setIsRotating((prev) => !prev)}
             title={isRotating ? 'Hentikan putaran 360°' : 'Putar 360°'}
             aria-label="Putar 360 derajat"
-            className={`p-2 rounded-lg transition-colors ${
-              isRotating ? 'bg-amber-500/20 text-amber-400' : 'text-neutral-400 hover:bg-neutral-800'
+            className={`p-2 rounded-full transition-colors ${
+              isRotating ? 'bg-sage-tint text-sage' : 'text-muted hover:bg-soft-strong'
             }`}
           >
             <RotateCw className="w-4 h-4" />
@@ -538,7 +538,7 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
             onClick={() => adjustZoom(-0.8)}
             title="Perbesar"
             aria-label="Perbesar"
-            className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+            className="p-2 rounded-full text-muted hover:text-ink hover:bg-soft-strong transition-colors"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
@@ -546,7 +546,7 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
             onClick={() => adjustZoom(0.8)}
             title="Perkecil"
             aria-label="Perkecil"
-            className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+            className="p-2 rounded-full text-muted hover:text-ink hover:bg-soft-strong transition-colors"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
@@ -554,8 +554,8 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
             onClick={() => setExplodedView((prev) => !prev)}
             title={explodedView ? 'Tampilan Normal' : 'Urai Komponen Engsel'}
             aria-label="Urai komponen"
-            className={`p-2 rounded-lg transition-colors ${
-              explodedView ? 'bg-amber-500/20 text-amber-400' : 'text-neutral-400 hover:bg-neutral-800'
+            className={`p-2 rounded-full transition-colors ${
+              explodedView ? 'bg-sage-tint text-sage' : 'text-muted hover:bg-soft-strong'
             }`}
           >
             <Layers className="w-4 h-4" />
@@ -564,8 +564,8 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
             onClick={() => setShowDimensions((prev) => !prev)}
             title="Tampilkan Dimensi"
             aria-label="Tampilkan dimensi"
-            className={`p-2 rounded-lg transition-colors ${
-              showDimensions ? 'bg-amber-500/20 text-amber-400' : 'text-neutral-400 hover:bg-neutral-800'
+            className={`p-2 rounded-full transition-colors ${
+              showDimensions ? 'bg-sage-tint text-sage' : 'text-muted hover:bg-soft-strong'
             }`}
           >
             <Eye className="w-4 h-4" />
