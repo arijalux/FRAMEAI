@@ -48,6 +48,8 @@ import {
   Layers,
   ArrowRight,
   ArrowUpRight,
+  LayoutGrid,
+  Store,
   Plus,
   Shield,
   Sun,
@@ -225,32 +227,34 @@ export default function App() {
       {/* Main Navigation Header */}
       <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-line">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center">
             <button onClick={() => setActiveView('home')} aria-label="Beranda frameai" className="flex items-center gap-2 text-left">
               <span className="w-8 h-8 rounded-full border-[1.5px] border-ink flex items-center justify-center">
                 <Eye className="w-4 h-4 text-ink" />
               </span>
               <span className="text-xl font-medium tracking-[-0.04em] text-ink">frameai</span>
             </button>
-
-            <nav className="hidden lg:flex items-center gap-5 text-sm whitespace-nowrap">
-              {navItems.map((item) => (
-                <button
-                  key={item.view}
-                  onClick={() => setActiveView(item.view)}
-                  className={`py-1 border-b transition-colors ${
-                    activeView === item.view
-                      ? 'text-ink border-ink'
-                      : 'text-muted border-transparent hover:text-ink'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
           </div>
 
           <div className="flex items-center gap-2">
+            {navItems.map((item) => {
+              const Icon = item.view === 'seller' ? Store : LayoutGrid;
+              return (
+                <button
+                  key={item.view}
+                  onClick={() => setActiveView(item.view)}
+                  aria-label={item.label}
+                  title={item.label}
+                  aria-current={activeView === item.view ? 'page' : undefined}
+                  className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors ${
+                    activeView === item.view ? 'border-ink bg-ink text-white' : 'border-line hover:bg-soft text-ink'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                </button>
+              );
+            })}
+
             <button
               onClick={() => setIsBagOpen(true)}
               aria-label="Buka Keranjang Belanja"
@@ -274,20 +278,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Mobile View Subnav */}
-        <div className="flex lg:hidden items-center gap-5 overflow-x-auto px-4 pb-2 text-sm whitespace-nowrap">
-          {navItems.map((item) => (
-            <button
-              key={item.view}
-              onClick={() => setActiveView(item.view)}
-              className={`shrink-0 py-1 border-b ${
-                activeView === item.view ? 'text-ink border-ink' : 'text-muted border-transparent'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
       </header>
 
       {/* Main Content Area */}
