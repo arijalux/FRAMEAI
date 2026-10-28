@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OpticalFrame, FrameColorOption } from '../types';
 import { RotateCw, ZoomIn, ZoomOut, Eye, Sparkles, Layers, Sliders } from 'lucide-react';
+import { materialLabel } from '../utils/format';
 
 export type LensTint = 'clear' | 'blue_light' | 'dark_sun' | 'gradient_amber' | 'photochromic';
 
@@ -460,10 +461,10 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
       {/* Top Floating Badges */}
       <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2 pointer-events-none">
         <span className="px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 backdrop-blur-md">
-          {frame.material}
+          {materialLabel(frame.material)}
         </span>
         <span className="px-2.5 py-1 rounded-full text-xs text-neutral-400 bg-neutral-900/80 border border-neutral-800 backdrop-blur-md">
-          {frame.weightGrams}g Featherlight
+          {frame.weightGrams}g · Ringan
         </span>
       </div>
 
@@ -472,22 +473,22 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
         <div className="absolute top-4 right-4 bg-neutral-950/85 backdrop-blur-md border border-neutral-800/80 p-3 rounded-xl text-xs space-y-1.5 shadow-xl pointer-events-none font-mono">
           <div className="text-amber-400 font-semibold tracking-wide text-[11px] mb-1 font-sans flex items-center gap-1.5">
             <Sliders className="w-3.5 h-3.5" />
-            OPHTHALMIC CALIBRATION
+            DIMENSI FRAME
           </div>
           <div className="flex justify-between gap-4 text-neutral-300">
-            <span>Lens Width:</span>
+            <span>Lebar Lensa:</span>
             <span className="font-bold text-white">{frame.dimensions.lensWidth} mm</span>
           </div>
           <div className="flex justify-between gap-4 text-neutral-300">
-            <span>Bridge Distance:</span>
+            <span>Lebar Bridge:</span>
             <span className="font-bold text-white">{frame.dimensions.bridgeWidth} mm</span>
           </div>
           <div className="flex justify-between gap-4 text-neutral-300">
-            <span>Temple Length:</span>
+            <span>Panjang Gagang:</span>
             <span className="font-bold text-white">{frame.dimensions.templeLength} mm</span>
           </div>
           <div className="flex justify-between gap-4 text-neutral-300">
-            <span>Lens Height:</span>
+            <span>Tinggi Lensa:</span>
             <span className="font-bold text-white">{frame.dimensions.lensHeight} mm</span>
           </div>
         </div>
@@ -497,14 +498,14 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
       <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-3 bg-neutral-950/80 backdrop-blur-lg border border-neutral-800/80 p-2.5 rounded-xl shadow-2xl">
         {/* Lens Tint Selector */}
         <div className="flex items-center gap-1.5 text-xs">
-          <span className="text-neutral-400 mr-1 hidden sm:inline">Lens Optics:</span>
+          <span className="text-neutral-400 mr-1 hidden sm:inline">Lensa:</span>
           {(
             [
-              { id: 'clear', label: 'Clear AR', desc: 'Anti-Reflective' },
-              { id: 'blue_light', label: 'Blue Shield', desc: '420nm Filter' },
-              { id: 'dark_sun', label: 'Polarized', desc: 'Category 3' },
-              { id: 'gradient_amber', label: 'Gradient', desc: 'Sunset Tint' },
-              { id: 'photochromic', label: 'Transition', desc: 'UV Reactive' },
+              { id: 'clear', label: 'Bening', desc: 'Anti-Refleksi' },
+              { id: 'blue_light', label: 'Filter Biru', desc: 'Filter 420nm' },
+              { id: 'dark_sun', label: 'Polarized', desc: 'Kategori 3' },
+              { id: 'gradient_amber', label: 'Gradasi', desc: 'Warna Senja' },
+              { id: 'photochromic', label: 'Photochromic', desc: 'Reaktif UV' },
             ] as const
           ).map((t) => (
             <button
@@ -525,8 +526,8 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
         <div className="flex items-center gap-1">
           <button
             onClick={() => setIsRotating((prev) => !prev)}
-            title={isRotating ? 'Pause 360° rotation' : 'Start 360° rotation'}
-            aria-label="Toggle 360 degree rotation"
+            title={isRotating ? 'Hentikan putaran 360°' : 'Putar 360°'}
+            aria-label="Putar 360 derajat"
             className={`p-2 rounded-lg transition-colors ${
               isRotating ? 'bg-amber-500/20 text-amber-400' : 'text-neutral-400 hover:bg-neutral-800'
             }`}
@@ -535,24 +536,24 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
           </button>
           <button
             onClick={() => adjustZoom(-0.8)}
-            title="Zoom In"
-            aria-label="Zoom In"
+            title="Perbesar"
+            aria-label="Perbesar"
             className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
             onClick={() => adjustZoom(0.8)}
-            title="Zoom Out"
-            aria-label="Zoom Out"
+            title="Perkecil"
+            aria-label="Perkecil"
             className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
           <button
             onClick={() => setExplodedView((prev) => !prev)}
-            title={explodedView ? 'Standard View' : 'Explode Hinge Components'}
-            aria-label="Toggle exploded view"
+            title={explodedView ? 'Tampilan Normal' : 'Urai Komponen Engsel'}
+            aria-label="Urai komponen"
             className={`p-2 rounded-lg transition-colors ${
               explodedView ? 'bg-amber-500/20 text-amber-400' : 'text-neutral-400 hover:bg-neutral-800'
             }`}
@@ -561,8 +562,8 @@ export const ThreeFrameCanvas: React.FC<ThreeFrameCanvasProps> = ({
           </button>
           <button
             onClick={() => setShowDimensions((prev) => !prev)}
-            title="Toggle Specs HUD"
-            aria-label="Toggle dimensions HUD"
+            title="Tampilkan Dimensi"
+            aria-label="Tampilkan dimensi"
             className={`p-2 rounded-lg transition-colors ${
               showDimensions ? 'bg-amber-500/20 text-amber-400' : 'text-neutral-400 hover:bg-neutral-800'
             }`}

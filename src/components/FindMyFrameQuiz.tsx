@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { OpticalFrame, FaceShape } from '../types';
 import { Sparkles, Check, ArrowRight, RotateCcw, Camera, Eye } from 'lucide-react';
+import { formatRupiah, faceShapeLabel, frameShapeLabel, materialLabel } from '../utils/format';
 import { calculateFaceFrameMatchScore } from '../utils/opticalMath';
 
 interface FindMyFrameQuizProps {
@@ -73,11 +74,11 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-amber-400" />
               <span className="text-xs uppercase tracking-wider font-semibold text-neutral-300">
-                Find My Frame · Optical Matching Guide
+                Cari Frame-ku · Panduan Memilih
               </span>
             </div>
             <span className="text-xs font-mono text-neutral-400">
-              Step {currentStep} of {totalSteps}
+              Langkah {currentStep} dari {totalSteps}
             </span>
           </div>
 
@@ -93,10 +94,10 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
             <div className="space-y-6">
               <div className="space-y-1">
                 <h3 className="text-xl md:text-2xl font-serif font-bold text-white">
-                  What is your primary daily eyewear environment?
+                  Di mana Anda paling sering memakai kacamata?
                 </h3>
                 <p className="text-xs text-neutral-400">
-                  This calibrates weight distribution, blue-light filter coatings, and temple flex.
+                  Ini menentukan bobot frame, lapisan filter blue light, dan kelenturan gagang.
                 </p>
               </div>
 
@@ -104,23 +105,23 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                 {[
                   {
                     id: 'digital',
-                    title: 'Digital & Remote Studio',
-                    desc: 'Prolonged screen hours requiring featherlight bridge pressure and blue-light filtration.',
+                    title: 'Kerja Digital & Remote',
+                    desc: 'Berjam-jam di depan layar, butuh frame ringan dan filter blue light.',
                   },
                   {
                     id: 'fashion',
-                    title: 'Executive & Haute Couture',
-                    desc: 'Sharp, distinctive silhouettes making an authoritative style statement.',
+                    title: 'Eksekutif & Fashion',
+                    desc: 'Siluet tegas dan khas yang menonjolkan gaya Anda.',
                   },
                   {
                     id: 'outdoor',
-                    title: 'Sun & Active Commute',
-                    desc: 'Anti-glare polarized performance with secure non-slip titanium nose pads.',
+                    title: 'Outdoor & Aktif',
+                    desc: 'Lensa polarized anti-silau dengan bantalan hidung titanium anti-selip.',
                   },
                   {
                     id: 'all_day',
-                    title: 'All-Day Universal Optical',
-                    desc: 'Supreme comfort balance engineered for continuous 16-hour daily wear.',
+                    title: 'Dipakai Seharian',
+                    desc: 'Nyaman dipakai hingga 16 jam sehari.',
                   },
                 ].map((opt) => (
                   <button
@@ -143,10 +144,10 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
             <div className="space-y-6">
               <div className="space-y-1">
                 <h3 className="text-xl md:text-2xl font-serif font-bold text-white">
-                  Which design aesthetic resonates with your personal presence?
+                  Gaya desain seperti apa yang paling cocok dengan Anda?
                 </h3>
                 <p className="text-xs text-neutral-400">
-                  Defines silhouette lines, bridge architecture, and bevel profiles.
+                  Menentukan garis siluet, bentuk bridge, dan profil tepi frame.
                 </p>
               </div>
 
@@ -154,23 +155,23 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                 {[
                   {
                     id: 'minimalist',
-                    title: 'Architectural Minimalist',
-                    desc: 'Sharp geometry, rimless or ultra-fine wire contours, clean functionalism.',
+                    title: 'Minimalis',
+                    desc: 'Geometri tegas, tanpa bingkai atau kawat super tipis, bersih dan fungsional.',
                   },
                   {
                     id: 'bold',
-                    title: 'Bold Statement Avant-Garde',
-                    desc: 'Beveled Italian acetate with deep rich color tones and prominent presence.',
+                    title: 'Berani & Mencolok',
+                    desc: 'Asetat Italia dengan warna pekat dan tampilan menonjol.',
                   },
                   {
                     id: 'retro',
-                    title: 'Timeless Mid-Century Classic',
-                    desc: 'Iconic aviator bars, keyhole bridges, and vintage round tortoiseshell.',
+                    title: 'Klasik Abadi',
+                    desc: 'Aviator ikonik, bridge keyhole, dan frame bulat motif tortoise vintage.',
                   },
                   {
                     id: 'sculptural',
-                    title: 'Sculpted Luxe Elegance',
-                    desc: 'Upswept cat-eye browlines, brushed champagne gold, high-luster polishing.',
+                    title: 'Elegan & Mewah',
+                    desc: 'Cat-eye terangkat, warna emas champagne, dan finishing mengilap.',
                   },
                 ].map((opt) => (
                   <button
@@ -193,10 +194,10 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
             <div className="space-y-6">
               <div className="space-y-1">
                 <h3 className="text-xl md:text-2xl font-serif font-bold text-white">
-                  What material tactile quality do you prefer?
+                  Material seperti apa yang Anda sukai?
                 </h3>
                 <p className="text-xs text-neutral-400">
-                  Balances weight, thermal comfort, and structural rigidity.
+                  Menyeimbangkan bobot, kenyamanan, dan kekokohan frame.
                 </p>
               </div>
 
@@ -204,23 +205,23 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                 {[
                   {
                     id: 'titanium',
-                    title: 'Aerospace Grade Titanium',
-                    desc: 'Featherlight (under 15g), hypoallergenic, corrosion-resistant with subtle flex.',
+                    title: 'Titanium Aerospace',
+                    desc: 'Super ringan (di bawah 15g), hipoalergenik, tahan karat, dan sedikit lentur.',
                   },
                   {
                     id: 'acetate',
-                    title: 'Italian Mazzucchelli Acetate',
-                    desc: 'Warm organic feel, high-luster depth, custom wire core temples.',
+                    title: 'Asetat Mazzucchelli Italia',
+                    desc: 'Terasa hangat dan alami, kilau dalam, gagang berinti kawat.',
                   },
                   {
                     id: 'eco',
-                    title: 'Circular Bio-Polymer',
-                    desc: 'Lightweight sustainable engineering with velvety matte tactile finish.',
+                    title: 'Bio-Polimer Daur Ulang',
+                    desc: 'Ringan, ramah lingkungan, dengan finishing matte selembut beludru.',
                   },
                   {
                     id: 'hybrid',
-                    title: 'Hybrid Titanium & Acetate',
-                    desc: 'The best of both worlds: acetate front with aerospace titanium temples.',
+                    title: 'Kombinasi Titanium & Asetat',
+                    desc: 'Perpaduan terbaik: bagian depan asetat dengan gagang titanium.',
                   },
                 ].map((opt) => (
                   <button
@@ -243,10 +244,10 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
             <div className="space-y-6">
               <div className="space-y-1">
                 <h3 className="text-xl md:text-2xl font-serif font-bold text-white">
-                  Which facial contour best describes your face shape?
+                  Bentuk wajah mana yang paling mirip dengan Anda?
                 </h3>
                 <p className="text-xs text-neutral-400">
-                  Used by our optical algorithm to calculate complementary geometric counterbalances.
+                  Dipakai untuk menghitung bentuk frame yang paling menyeimbangkan wajah Anda.
                 </p>
               </div>
 
@@ -254,28 +255,28 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                 {[
                   {
                     id: 'Oval',
-                    title: 'Oval Symmetry',
-                    desc: 'Balanced length and width with gently rounded jawline.',
+                    title: 'Oval',
+                    desc: 'Panjang dan lebar seimbang dengan garis rahang membulat lembut.',
                   },
                   {
                     id: 'Square',
-                    title: 'Square Structure',
-                    desc: 'Chiseled angular jawline and broad forehead breadth.',
+                    title: 'Kotak',
+                    desc: 'Garis rahang tegas bersudut dan dahi lebar.',
                   },
                   {
                     id: 'Round',
-                    title: 'Soft Circular',
-                    desc: 'Curved soft lines with nearly equal width and length.',
+                    title: 'Bulat',
+                    desc: 'Garis lembut melengkung dengan lebar dan panjang hampir sama.',
                   },
                   {
                     id: 'Heart',
-                    title: 'Heart Contours',
-                    desc: 'Wider brow and high cheekbones tapering to a delicate chin.',
+                    title: 'Hati',
+                    desc: 'Dahi lebar dan tulang pipi tinggi, meruncing ke dagu yang kecil.',
                   },
                   {
                     id: 'Diamond',
-                    title: 'Diamond Geometry',
-                    desc: 'Dramatic high cheekbones with narrower forehead and jaw.',
+                    title: 'Diamond',
+                    desc: 'Tulang pipi tinggi dengan dahi dan rahang yang lebih sempit.',
                   },
                 ].map((opt) => (
                   <button
@@ -300,13 +301,13 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-2">
                 <Check className="w-3.5 h-3.5" />
-                Optical Profile Calibrated
+                Profil Selesai Dihitung
               </div>
               <h3 className="text-2xl font-serif font-bold text-white">
-                Your Curated Match Results
+                Rekomendasi Frame untuk Anda
               </h3>
               <p className="text-xs text-neutral-400 mt-1">
-                Optimized for your {answers.faceShape} facial structure and lifestyle preferences.
+                Disesuaikan dengan bentuk wajah {faceShapeLabel(answers.faceShape ?? '')} dan gaya hidup Anda.
               </p>
             </div>
 
@@ -315,7 +316,7 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
               className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white bg-neutral-950 border border-neutral-800 flex items-center gap-1.5 self-start"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Retake Quiz
+              Ulangi Kuis
             </button>
           </div>
 
@@ -330,18 +331,18 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                   <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-neutral-900 mb-3">
                     <img src={frame.imageUrl} alt={frame.name} className="w-full h-full object-cover" />
                     <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500 text-neutral-950 shadow-md">
-                      {finalScore}% Match
+                      Cocok {finalScore}%
                     </div>
                     {idx === 0 && (
                       <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-950/80 text-amber-400 border border-amber-500/30">
-                        Top Synergy Pick
+                        Pilihan Terbaik
                       </div>
                     )}
                   </div>
 
                   <h4 className="font-serif font-bold text-white text-base">{frame.name}</h4>
                   <div className="text-xs text-neutral-400 mb-2">
-                    ${frame.price} · {frame.shape} · {frame.material}
+                    {formatRupiah(frame.price)} · {frameShapeLabel(frame.shape)} · {materialLabel(frame.material)}
                   </div>
                   <p className="text-xs text-neutral-300 line-clamp-2">{frame.description}</p>
                 </div>
@@ -352,7 +353,7 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                     className="w-full py-2 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <Camera className="w-3.5 h-3.5 text-amber-400" />
-                    Live AR Try-On
+                    Coba dengan AR
                   </button>
 
                   <button
@@ -360,7 +361,7 @@ export const FindMyFrameQuiz: React.FC<FindMyFrameQuizProps> = ({
                     className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    Configure Lenses
+                    Atur Lensa
                   </button>
                 </div>
               </div>

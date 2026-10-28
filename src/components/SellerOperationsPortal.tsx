@@ -16,6 +16,9 @@ import {
   Sliders,
   X,
 } from 'lucide-react';
+import { formatRupiah, frameShapeLabel, materialLabel, orderStatusLabel, lensTypeLabel, faceShapeLabel } from '../utils/format';
+
+const URGENCY_LABELS: Record<string, string> = { High: 'Tinggi', Medium: 'Sedang', Low: 'Rendah' };
 
 interface SellerOperationsPortalProps {
   frames: OpticalFrame[];
@@ -42,9 +45,9 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
   const [newFrameName, setNewFrameName] = useState<string>('');
   const [newFrameShape, setNewFrameShape] = useState<OpticalFrame['shape']>('Geometric');
   const [newFrameMaterial, setNewFrameMaterial] = useState<OpticalFrame['material']>('Aerospace Titanium');
-  const [newFramePrice, setNewFramePrice] = useState<number>(320);
+  const [newFramePrice, setNewFramePrice] = useState<number>(5_000_000);
   const [newFrameStock, setNewFrameStock] = useState<number>(20);
-  const [newFrameDesc, setNewFrameDesc] = useState<string>('Custom atelier handcrafted optical silhouette.');
+  const [newFrameDesc, setNewFrameDesc] = useState<string>('Frame buatan tangan dengan siluet khas.');
 
   const totalRevenue = orders.reduce((acc, o) => acc + o.totalAmount, 0);
   const lowStockFrames = frames.filter((f) => f.stock < 15);
@@ -66,11 +69,11 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
       if (res.ok && data?.insights) {
         setAiInsights(data.insights);
       } else {
-        setInsightsError(data?.error || 'AI insights are unavailable right now.');
+        setInsightsError(data?.error || 'Insight AI sedang tidak tersedia.');
       }
     } catch (e) {
       console.error(e);
-      setInsightsError('Could not reach the insights service.');
+      setInsightsError('Layanan insight tidak dapat dihubungi.');
     } finally {
       setIsLoadingInsights(false);
     }
@@ -122,11 +125,11 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
         <div>
           <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold uppercase tracking-wider mb-1">
             <Sliders className="w-4 h-4" />
-            Merchant & Studio Operations Portal
+            Portal Toko
           </div>
-          <h2 className="text-2xl font-serif font-bold text-white">Store Intelligence & Fulfillment</h2>
+          <h2 className="text-2xl font-serif font-bold text-white">Inventaris & Pesanan</h2>
           <p className="text-xs text-neutral-400 mt-1">
-            Manage frame stock levels, track digital lens lab orders, and review Gemini demand insights.
+            Kelola stok frame, pantau pesanan, dan lihat insight permintaan dari Gemini.
           </p>
         </div>
 
@@ -137,7 +140,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
             className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 shadow-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Add New Frame
+            Tambah Frame
           </button>
         </div>
       </div>
@@ -146,40 +149,40 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-1">
           <div className="flex items-center justify-between text-neutral-400 text-xs">
-            <span>Total Optical Catalog</span>
+            <span>Total Katalog</span>
             <Package className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-serif font-bold text-white">{frames.length} Models</div>
-          <div className="text-[11px] text-neutral-400">Titanium, Acetate, Eco-polymers</div>
+          <div className="text-2xl font-serif font-bold text-white">{frames.length} Model</div>
+          <div className="text-[11px] text-neutral-400">Titanium, Asetat, Eko-Polimer</div>
         </div>
 
         <div className="p-5 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-1">
           <div className="flex items-center justify-between text-neutral-400 text-xs">
-            <span>Lab Orders in Queue</span>
+            <span>Pesanan Masuk</span>
             <Clock className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-2xl font-serif font-bold text-white">{orders.length} Active</div>
-          <div className="text-[11px] text-emerald-400">100% on-time surfacing rate</div>
+          <div className="text-2xl font-serif font-bold text-white">{orders.length} Pesanan</div>
+          <div className="text-[11px] text-emerald-400">{orders.filter((o) => o.status !== 'delivered').length} belum selesai</div>
         </div>
 
         <div className="p-5 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-1">
           <div className="flex items-center justify-between text-neutral-400 text-xs">
-            <span>Gross Platform Volume</span>
+            <span>Total Penjualan</span>
             <DollarSign className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-serif font-bold text-white font-mono">
-            ${totalRevenue.toLocaleString()}
+            {formatRupiah(totalRevenue)}
           </div>
-          <div className="text-[11px] text-neutral-400">Average order value: $340</div>
+          <div className="text-[11px] text-neutral-400">Rata-rata per pesanan: {formatRupiah(orders.length ? totalRevenue / orders.length : 0)}</div>
         </div>
 
         <div className="p-5 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-1">
           <div className="flex items-center justify-between text-neutral-400 text-xs">
-            <span>Low Stock Restock Alerts</span>
+            <span>Stok Menipis</span>
             <AlertTriangle className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-serif font-bold text-amber-400">{lowStockFrames.length} Frames</div>
-          <div className="text-[11px] text-neutral-400">Under 15 units in vault</div>
+          <div className="text-2xl font-serif font-bold text-amber-400">{lowStockFrames.length} Frame</div>
+          <div className="text-[11px] text-neutral-400">Di bawah 15 unit</div>
         </div>
       </div>
 
@@ -193,7 +196,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
               : 'text-neutral-400 hover:text-white hover:bg-neutral-900'
           }`}
         >
-          Inventory Management ({frames.length})
+          Inventaris ({frames.length})
         </button>
         <button
           onClick={() => setActiveTab('orders')}
@@ -203,7 +206,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
               : 'text-neutral-400 hover:text-white hover:bg-neutral-900'
           }`}
         >
-          Customer Orders & Surfacing ({orders.length})
+          Pesanan Pelanggan ({orders.length})
         </button>
         <button
           onClick={() => {
@@ -217,7 +220,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
-          AI Store Intelligence
+          Insight AI
         </button>
       </div>
 
@@ -225,8 +228,8 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
       {activeTab === 'inventory' && (
         <div className="rounded-3xl bg-neutral-900 border border-neutral-800 overflow-hidden shadow-xl">
           <div className="p-4 bg-neutral-950/60 border-b border-neutral-800 flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider">
-            <span>Optical Inventory Stock</span>
-            <span>Live Vault Sync</span>
+            <span>Stok Frame</span>
+            <span>Tersimpan di Firestore</span>
           </div>
 
           <div className="divide-y divide-neutral-800/80 overflow-x-auto">
@@ -244,7 +247,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                   <div>
                     <h4 className="font-serif font-bold text-white text-sm">{frame.name}</h4>
                     <div className="text-xs text-neutral-400">
-                      {frame.shape} · {frame.material} · {frame.dimensions.lensWidth}mm lens width
+                      {frameShapeLabel(frame.shape)} · {materialLabel(frame.material)} · lensa {frame.dimensions.lensWidth}mm
                     </div>
                   </div>
                 </div>
@@ -252,14 +255,14 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                 <div className="flex items-center gap-6">
                   {/* Price */}
                   <div className="text-right">
-                    <span className="text-[10px] text-neutral-500 block uppercase font-mono">Retail MSRP</span>
-                    <span className="font-mono font-bold text-sm text-white">${frame.price}</span>
+                    <span className="text-[10px] text-neutral-500 block uppercase font-mono">Harga</span>
+                    <span className="font-mono font-bold text-sm text-white">{formatRupiah(frame.price)}</span>
                   </div>
 
                   {/* Stock Controls */}
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <span className="text-[10px] text-neutral-500 block uppercase font-mono">Vault Stock</span>
+                      <span className="text-[10px] text-neutral-500 block uppercase font-mono">Stok</span>
                       <span
                         className={`font-mono font-bold text-sm ${
                           frame.stock < 12
@@ -269,21 +272,21 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                             : 'text-emerald-400'
                         }`}
                       >
-                        {frame.stock} units
+                        {frame.stock} unit
                       </span>
                     </div>
 
                     <div className="flex items-center border border-neutral-800 rounded-lg bg-neutral-950 p-0.5">
                       <button
                         onClick={() => onUpdateFrameStock(frame.id, Math.max(0, frame.stock - 1))}
-                        aria-label={`Decrease stock for ${frame.name}`}
+                        aria-label={`Kurangi stok ${frame.name}`}
                         className="w-7 h-7 rounded hover:bg-neutral-800 flex items-center justify-center text-neutral-300 font-mono text-sm"
                       >
                         -
                       </button>
                       <button
                         onClick={() => onUpdateFrameStock(frame.id, frame.stock + 5)}
-                        aria-label={`Add 5 units for ${frame.name}`}
+                        aria-label={`Tambah 5 unit ${frame.name}`}
                         className="w-7 h-7 rounded hover:bg-neutral-800 flex items-center justify-center text-amber-400 font-mono text-xs font-bold"
                       >
                         +5
@@ -302,7 +305,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
         <div className="space-y-4">
           {orders.length === 0 ? (
             <div className="p-12 text-center rounded-3xl bg-neutral-900 border border-neutral-800 text-neutral-400 text-sm">
-              No orders placed yet. Orders will appear here in real time.
+              Belum ada pesanan.
             </div>
           ) : (
             orders.map((ord) => (
@@ -319,10 +322,10 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-neutral-400">
-                      {new Date(ord.createdAt).toLocaleDateString()}
+                      {new Date(ord.createdAt).toLocaleDateString('id-ID')}
                     </span>
                     <span className="font-mono font-bold text-amber-400 text-base">
-                      ${ord.totalAmount}
+                      {formatRupiah(ord.totalAmount)}
                     </span>
                   </div>
                 </div>
@@ -340,9 +343,9 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                         className="w-12 h-10 object-cover rounded-lg bg-neutral-900"
                       />
                       <div>
-                        <div className="font-bold text-white">{it.frame.name} (Qty: {it.quantity})</div>
+                        <div className="font-bold text-white">{it.frame.name} (Jumlah: {it.quantity})</div>
                         <div className="text-neutral-400">
-                          {it.lensConfig.type.replace('_', ' ')} · {it.selectedColor.name}
+                          {lensTypeLabel(it.lensConfig.type)} · {it.selectedColor.name}
                         </div>
                       </div>
                     </div>
@@ -352,7 +355,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                 {/* Order Status Advancement */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-neutral-400">Fulfillment Status:</span>
+                    <span className="text-xs text-neutral-400">Status:</span>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                         ord.status === 'delivered'
@@ -362,12 +365,12 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                           : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                       }`}
                     >
-                      {ord.status.replace('_', ' ')}
+                      {orderStatusLabel(ord.status)}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-neutral-400">Update Phase:</span>
+                    <span className="text-xs text-neutral-400">Ubah Status:</span>
                     {(['received', 'crafting_lenses', 'optical_qc', 'shipped', 'delivered'] as OrderStatus[]).map(
                       (st) => (
                         <button
@@ -381,7 +384,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                               : 'bg-neutral-950 text-neutral-400 hover:text-white border border-neutral-800'
                           }`}
                         >
-                          {st.replace('_', ' ')}
+                          {orderStatusLabel(st)}
                         </button>
                       )
                     )}
@@ -398,9 +401,9 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
         <div className="space-y-6">
           <div className="flex items-center justify-between p-6 rounded-3xl bg-neutral-900 border border-neutral-800">
             <div>
-              <h3 className="font-serif font-bold text-xl text-white">Gemini Optical Retail Intelligence</h3>
+              <h3 className="font-serif font-bold text-xl text-white">Insight Penjualan dari Gemini</h3>
               <p className="text-xs text-neutral-400 mt-1">
-                Deep analytical inference of customer try-on patterns, lens upgrades, and supply chain health.
+                Analisis pola try-on pelanggan, tren upgrade lensa, dan kondisi stok.
               </p>
             </div>
             <button
@@ -409,7 +412,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
               className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoadingInsights ? 'animate-spin' : ''}`} />
-              {isLoadingInsights ? 'Analyzing Trends...' : 'Refresh Insights'}
+              {isLoadingInsights ? 'Menganalisis...' : 'Perbarui Insight'}
             </button>
           </div>
 
@@ -422,7 +425,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
           {isLoadingInsights && !aiInsights && (
             <div className="py-20 text-center space-y-3">
               <RefreshCw className="w-8 h-8 text-amber-400 animate-spin mx-auto" />
-              <p className="text-xs text-neutral-400">Synthesizing platform try-on telemetry with Gemini 3.8 Flash...</p>
+              <p className="text-xs text-neutral-400">Menganalisis data dengan Gemini 3.8 Flash...</p>
             </div>
           )}
 
@@ -431,7 +434,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
               {/* Executive Summary */}
               <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-500/10 via-neutral-900 to-neutral-900 border border-amber-500/30 space-y-2">
                 <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
-                  Executive AI Summary
+                  Ringkasan AI
                 </span>
                 <p className="text-sm text-neutral-200 leading-relaxed font-sans">{aiInsights.summary}</p>
               </div>
@@ -441,14 +444,14 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                 <div className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-4">
                   <div className="flex items-center gap-2 text-white font-serif font-bold text-lg">
                     <TrendingUp className="w-5 h-5 text-amber-400" />
-                    Customer Facial Geometry Distribution
+                    Sebaran Bentuk Wajah Pelanggan
                   </div>
                   <div className="space-y-3">
                     {aiInsights.trendingFaceShapes.map((t) => (
                       <div key={t.shape} className="space-y-1">
                         <div className="flex justify-between text-xs">
-                          <span className="font-semibold text-white">{t.shape} Architecture</span>
-                          <span className="font-mono text-amber-400 font-bold">{t.percentage}% of try-ons</span>
+                          <span className="font-semibold text-white">Wajah {faceShapeLabel(t.shape)}</span>
+                          <span className="font-mono text-amber-400 font-bold">{t.percentage}% try-on</span>
                         </div>
                         <div className="w-full bg-neutral-950 h-2 rounded-full overflow-hidden">
                           <div className="bg-amber-500 h-full rounded-full" style={{ width: `${t.percentage}%` }} />
@@ -463,7 +466,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                 <div className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-4">
                   <div className="flex items-center gap-2 text-white font-serif font-bold text-lg">
                     <Package className="w-5 h-5 text-emerald-400" />
-                    Automated Restock Directives
+                    Rekomendasi Restock
                   </div>
                   <div className="space-y-3">
                     {aiInsights.restockRecommendations.map((r) => (
@@ -480,7 +483,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                                 : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                             }`}
                           >
-                            {r.urgency} Urgency
+                            Urgensi {URGENCY_LABELS[r.urgency] ?? r.urgency}
                           </span>
                         </div>
                         <p className="text-neutral-400 text-[11px]">{r.rationale}</p>
@@ -493,7 +496,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
               {/* Projected Demand Summary */}
               <div className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-2">
                 <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
-                  Quarterly Demand Projection
+                  Proyeksi Permintaan Kuartal Depan
                 </span>
                 <p className="text-xs text-neutral-300 leading-relaxed">{aiInsights.projectedDemandSummary}</p>
               </div>
@@ -507,10 +510,10 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in">
           <div className="relative w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-              <h3 className="font-serif font-bold text-lg text-white">Add Optical Frame to Catalog</h3>
+              <h3 className="font-serif font-bold text-lg text-white">Tambah Frame ke Katalog</h3>
               <button
                 onClick={() => setShowAddFrameModal(false)}
-                aria-label="Close modal"
+                aria-label="Tutup"
                 className="text-neutral-400 hover:text-white"
               >
                 <X className="w-5 h-5" />
@@ -519,11 +522,11 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
 
             <form onSubmit={handleCreateFrame} className="space-y-4">
               <div>
-                <label className="text-xs text-neutral-400 block mb-1">Frame Name</label>
+                <label className="text-xs text-neutral-400 block mb-1">Nama Frame</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Monaco Sculpted Acetate"
+                  placeholder="cth. Monaco Sculpted Acetate"
                   value={newFrameName}
                   onChange={(e) => setNewFrameName(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-amber-500"
@@ -532,15 +535,15 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-neutral-400 block mb-1">Shape</label>
+                  <label className="text-xs text-neutral-400 block mb-1">Bentuk</label>
                   <select
                     value={newFrameShape}
                     onChange={(e) => setNewFrameShape(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white"
                   >
-                    <option value="Geometric">Geometric</option>
-                    <option value="Square">Square</option>
-                    <option value="Round">Round</option>
+                    <option value="Geometric">Geometris</option>
+                    <option value="Square">Kotak</option>
+                    <option value="Round">Bulat</option>
                     <option value="Aviator">Aviator</option>
                     <option value="Cat-Eye">Cat-Eye</option>
                     <option value="Oval">Oval</option>
@@ -553,17 +556,17 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                     onChange={(e) => setNewFrameMaterial(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white"
                   >
-                    <option value="Aerospace Titanium">Aerospace Titanium</option>
-                    <option value="Italian Acetate">Italian Acetate</option>
-                    <option value="Eco-Polymer">Eco-Polymer</option>
-                    <option value="Mixed Titanium Acetate">Mixed Titanium Acetate</option>
+                    <option value="Aerospace Titanium">Titanium Aerospace</option>
+                    <option value="Italian Acetate">Asetat Italia</option>
+                    <option value="Eco-Polymer">Eko-Polimer</option>
+                    <option value="Mixed Titanium Acetate">Kombinasi Titanium & Asetat</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-neutral-400 block mb-1">MSRP ($)</label>
+                  <label className="text-xs text-neutral-400 block mb-1">Harga (Rp)</label>
                   <input
                     type="number"
                     required
@@ -573,7 +576,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-neutral-400 block mb-1">Initial Vault Stock</label>
+                  <label className="text-xs text-neutral-400 block mb-1">Stok Awal</label>
                   <input
                     type="number"
                     required
@@ -585,7 +588,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
               </div>
 
               <div>
-                <label className="text-xs text-neutral-400 block mb-1">Design Notes & Ergonomics</label>
+                <label className="text-xs text-neutral-400 block mb-1">Deskripsi</label>
                 <textarea
                   rows={2}
                   value={newFrameDesc}
@@ -600,13 +603,13 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                   onClick={() => setShowAddFrameModal(false)}
                   className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 text-xs font-semibold"
                 >
-                  Cancel
+                  Batal
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs"
                 >
-                  Publish to Catalog
+                  Simpan ke Katalog
                 </button>
               </div>
             </form>

@@ -10,7 +10,7 @@ export const LazyThreeFrameCanvas: typeof ThreeFrameCanvasType = (props) => (
   <Suspense
     fallback={
       <div className="aspect-[4/3] w-full rounded-2xl bg-neutral-900 flex items-center justify-center text-xs text-neutral-500">
-        Loading 3D viewer...
+        Memuat tampilan 3D...
       </div>
     }
   >

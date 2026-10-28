@@ -2,7 +2,16 @@ import React, { useState } from 'react';
 import { OpticalFrame, FrameColorOption, LensConfiguration, PrescriptionInput, LensType, LensIndex } from '../types';
 import type { LensTint } from './ThreeFrameCanvas';
 import { LazyThreeFrameCanvas } from './LazyThreeFrameCanvas';
-import { calculateLensPricing, validatePrescription } from '../utils/opticalMath';
+import {
+  calculateLensPricing,
+  validatePrescription,
+  LENS_TYPE_PRICES,
+  INDEX_UPGRADE_PRICES,
+  TREATMENT_PRICES,
+} from '../utils/opticalMath';
+import { formatRupiah, frameShapeLabel, materialLabel } from '../utils/format';
+
+const addOnPrice = (amount: number) => (amount === 0 ? 'Termasuk' : `+${formatRupiah(amount)}`);
 import { X, Check, ShoppingBag, Eye, Shield, Sun, Sparkles, AlertCircle } from 'lucide-react';
 
 interface LensConfiguratorModalProps {
@@ -100,15 +109,15 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
         <div className="p-6 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
           <div>
             <h2 className="text-xl md:text-2xl font-serif font-bold text-white tracking-wide">
-              Configure Ophthalmic Lenses
+              Atur Lensa Kacamata
             </h2>
             <p className="text-xs text-neutral-400">
-              {frame.name} · {frame.shape} · {frame.material}
+              {frame.name} · {frameShapeLabel(frame.shape)} · {materialLabel(frame.material)}
             </p>
           </div>
           <button
             onClick={onClose}
-            aria-label="Close Lens Configurator"
+            aria-label="Tutup Pengaturan Lensa"
             className="p-2 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
@@ -131,7 +140,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
             {/* Color Swatch Options */}
             <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800/80">
               <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block mb-2">
-                Selected Frame Finish
+                Warna Frame
               </span>
               <div className="flex flex-wrap items-center gap-2">
                 {frame.colors.map((c) => (
@@ -157,14 +166,14 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
             {/* 1. Lens Purpose / Type */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-neutral-300 uppercase tracking-wider block">
-                1. Select Vision Type
+                1. Pilih Jenis Lensa
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
-                  { id: 'single_vision', name: 'Single Vision', price: '+$50', desc: 'Distance or reading' },
-                  { id: 'progressive', name: 'Progressive', price: '+$140', desc: 'Seamless multi-focal' },
-                  { id: 'reading', name: 'Reading', price: '+$30', desc: 'Magnification only' },
-                  { id: 'non_prescription', name: 'Plano / Fashion', price: '$0', desc: 'Zero correction' },
+                  { id: 'single_vision', name: 'Single Vision', price: addOnPrice(LENS_TYPE_PRICES.single_vision), desc: 'Jarak jauh atau baca' },
+                  { id: 'progressive', name: 'Progresif', price: addOnPrice(LENS_TYPE_PRICES.progressive), desc: 'Multifokus tanpa garis' },
+                  { id: 'reading', name: 'Baca', price: addOnPrice(LENS_TYPE_PRICES.reading), desc: 'Hanya pembesaran' },
+                  { id: 'non_prescription', name: 'Plano / Fashion', price: formatRupiah(0), desc: 'Tanpa koreksi' },
                 ].map((t) => (
                   <button
                     key={t.id}
@@ -186,33 +195,33 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
             {/* 2. Lens Index (Thinness) */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-neutral-300 uppercase tracking-wider block">
-                2. Lens Thickness & Index
+                2. Ketebalan & Indeks Lensa
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   {
                     id: '1.50_standard',
                     name: '1.50 Standard CR-39',
-                    price: 'Included',
-                    rec: 'Recommended for SPH 0.00 to ±2.00',
+                    price: addOnPrice(INDEX_UPGRADE_PRICES['1.50_standard']),
+                    rec: 'Disarankan untuk SPH 0.00 s.d. ±2.00',
                   },
                   {
                     id: '1.60_thin',
-                    name: '1.60 Slim Polycarbonate',
-                    price: '+$45',
-                    rec: 'Impact-resistant, up to ±4.00 SPH',
+                    name: '1.60 Polikarbonat Tipis',
+                    price: addOnPrice(INDEX_UPGRADE_PRICES['1.60_thin']),
+                    rec: 'Tahan benturan, hingga SPH ±4.00',
                   },
                   {
                     id: '1.67_ultrathin',
-                    name: '1.67 Ultra-Thin High Index',
-                    price: '+$85',
-                    rec: '40% thinner, up to ±6.50 SPH',
+                    name: '1.67 Ultra Tipis High Index',
+                    price: addOnPrice(INDEX_UPGRADE_PRICES['1.67_ultrathin']),
+                    rec: '40% lebih tipis, hingga SPH ±6.50',
                   },
                   {
                     id: '1.74_high_index',
-                    name: '1.74 Razor Thin High Index',
-                    price: '+$135',
-                    rec: 'Our thinnest lens, up to ±10.00 SPH',
+                    name: '1.74 Super Tipis High Index',
+                    price: addOnPrice(INDEX_UPGRADE_PRICES['1.74_high_index']),
+                    rec: 'Lensa paling tipis kami, hingga SPH ±10.00',
                   },
                 ].map((idxOpt) => (
                   <button
@@ -237,7 +246,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
             {/* 3. Optical Coatings & Advanced Filters */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-neutral-300 uppercase tracking-wider block">
-                3. Optical Coatings & Filters
+                3. Lapisan & Filter Lensa
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button
@@ -249,10 +258,10 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">Blue Light Shield</span>
-                    <span className="text-xs text-amber-400 font-mono">+$35</span>
+                    <span className="text-xs font-bold text-white">Filter Blue Light</span>
+                    <span className="text-xs text-amber-400 font-mono">{addOnPrice(TREATMENT_PRICES.blueLightFilter)}</span>
                   </div>
-                  <div className="text-[10px] text-neutral-400 mt-1">Filters harmful 420nm HEV digital light</div>
+                  <div className="text-[10px] text-neutral-400 mt-1">Menyaring cahaya biru HEV 420nm dari layar</div>
                 </button>
 
                 <button
@@ -265,9 +274,9 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-white">Photochromic</span>
-                    <span className="text-xs text-amber-400 font-mono">+$75</span>
+                    <span className="text-xs text-amber-400 font-mono">{addOnPrice(TREATMENT_PRICES.photochromic)}</span>
                   </div>
-                  <div className="text-[10px] text-neutral-400 mt-1">Darkens outdoors automatically in UV</div>
+                  <div className="text-[10px] text-neutral-400 mt-1">Otomatis menggelap saat terkena sinar UV</div>
                 </button>
 
                 <button
@@ -279,10 +288,10 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">Anti-Reflective</span>
-                    <span className="text-xs text-amber-400 font-mono">+$25</span>
+                    <span className="text-xs font-bold text-white">Anti-Refleksi</span>
+                    <span className="text-xs text-amber-400 font-mono">{addOnPrice(TREATMENT_PRICES.antiReflective)}</span>
                   </div>
-                  <div className="text-[10px] text-neutral-400 mt-1">Eliminates headlight & screen glare</div>
+                  <div className="text-[10px] text-neutral-400 mt-1">Mengurangi silau lampu kendaraan & layar</div>
                 </button>
               </div>
             </div>
@@ -291,9 +300,9 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
             <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-white block">Include Optometric Prescription</span>
+                  <span className="text-xs font-bold text-white block">Tambahkan Resep Kacamata</span>
                   <span className="text-[11px] text-neutral-400">
-                    Input your Sphere (SPH), Cylinder (CYL), Axis, and Pupillary Distance (PD).
+                    Masukkan nilai Sphere (SPH), Cylinder (CYL), Axis, dan Jarak Pupil (PD).
                   </span>
                 </div>
                 <input
@@ -309,7 +318,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     <div>
                       <label className="text-[10px] uppercase font-mono text-neutral-400 block mb-1">
-                        OD Right SPH
+                        OD Kanan SPH
                       </label>
                       <input
                         type="number"
@@ -321,7 +330,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                     </div>
                     <div>
                       <label className="text-[10px] uppercase font-mono text-neutral-400 block mb-1">
-                        OD Right CYL
+                        OD Kanan CYL
                       </label>
                       <input
                         type="number"
@@ -333,7 +342,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                     </div>
                     <div>
                       <label className="text-[10px] uppercase font-mono text-neutral-400 block mb-1">
-                        OS Left SPH
+                        OS Kiri SPH
                       </label>
                       <input
                         type="number"
@@ -345,7 +354,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                     </div>
                     <div>
                       <label className="text-[10px] uppercase font-mono text-neutral-400 block mb-1">
-                        Pupillary Dist (PD)
+                        Jarak Pupil (PD)
                       </label>
                       <input
                         type="number"
@@ -375,12 +384,12 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
             <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">
-                  Total Investment (Frame + Customized Lenses)
+                  Total (Frame + Lensa)
                 </span>
                 <div className="text-2xl font-serif font-bold text-amber-400 mt-0.5">
-                  ${pricing.total}{' '}
+                  {formatRupiah(pricing.total)}{' '}
                   <span className="text-xs font-mono font-normal text-neutral-400">
-                    (${pricing.framePrice} frame + ${pricing.total - pricing.framePrice} lab lenses)
+                    ({formatRupiah(pricing.framePrice)} frame + {formatRupiah(pricing.total - pricing.framePrice)} lensa)
                   </span>
                 </div>
               </div>
@@ -390,7 +399,7 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
                 className="py-3 px-8 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
               >
                 <ShoppingBag className="w-4 h-4" />
-                Add to Shopping Bag
+                Tambah ke Keranjang
               </button>
             </div>
           </div>
