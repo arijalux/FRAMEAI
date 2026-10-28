@@ -21,6 +21,7 @@ import { LazyThreeFrameCanvas } from './components/LazyThreeFrameCanvas';
 import { LensConfiguratorModal } from './components/LensConfiguratorModal';
 import { ShoppingBagDrawer } from './components/ShoppingBagDrawer';
 import { UserSavedLooksModal } from './components/UserSavedLooksModal';
+import CircularCarousel from './components/CircularCarousel';
 
 // Secondary views are code-split so the catalog loads fast
 const ARFaceTryOn = lazy(() => import('./components/ARFaceTryOn').then((m) => ({ default: m.ARFaceTryOn })));
@@ -74,7 +75,6 @@ export default function App() {
   // Unknown until the visitor picks a shape, runs the AI face scan or completes Cari dengan AI;
   // match scores are hidden until then rather than assuming a face shape
   const [userFaceShape, setUserFaceShape] = useState<FaceShape | null>(null);
-  const [heroIndex, setHeroIndex] = useState<number>(0);
   // Free-text question sent to Gemini from the navbar's AI search button
   const [aiQuery, setAiQuery] = useState<string>('');
 
@@ -219,11 +219,6 @@ export default function App() {
     ...(isAdmin ? [{ view: 'seller' as const, label: 'Portal Toko' }] : []),
   ];
 
-  // Hero showcases the top catalog frames; the dots switch between them
-  const heroFrames = frames.slice(0, 3);
-  const heroFrame = heroFrames[heroIndex % Math.max(1, heroFrames.length)] ?? selectedFrame;
-  const heroMatch = userFaceShape ? calculateFaceFrameMatchScore(userFaceShape, heroFrame.shape) : null;
-
   return (
     <div className="min-h-screen bg-canvas text-ink flex flex-col font-sans">
       {/* Main Navigation Header */}
@@ -323,119 +318,64 @@ export default function App() {
         {/* VIEW 0: Landing page */}
         {activeView === 'home' && (
           <div className="space-y-24">
-            {/* Hero */}
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center pt-4 lg:pt-10">
-              <div className="space-y-7">
+            {/* Hero: catalog carousel on top, centred copy and actions below */}
+            <section className="flex flex-col items-center text-center gap-10 pt-2">
+              {/* 3D ring of catalog frames; clicking one opens its lens configurator */}
+              <div className="relative w-full h-[230px] sm:h-[400px] lg:h-[440px]">
+                <CircularCarousel
+                  items={frames.map((f) => ({
+                    src: f.imageUrl,
+                    alt: `${f.name}, ${materialLabel(f.material)}, ${formatRupiah(f.price)}`,
+                    title: f.name,
+                  }))}
+                  preset="cylinder"
+                  intro="rise"
+                  cardWidth={240}
+                  aspectRatio={0.8}
+                  speed={14}
+                  fadeColor="#ffffff"
+                  innerShade={0.85}
+                  cornerRadius={20}
+                  onItemClick={(_item, index) => {
+                    setSelectedFrame(frames[index]);
+                    setIsLensConfiguratorOpen(true);
+                  }}
+                />
+              </div>
+
+              <div className="max-w-4xl flex flex-col items-center gap-7">
                 <h1 className="text-[2.4rem] md:text-6xl font-normal tracking-[-0.045em] leading-[1.04] text-ink">
                   Coba. Bandingkan. Pilih.
                   <br />
                   Kacamata yang pas, dibantu AI.
                 </h1>
 
-                <p className="text-lg text-muted leading-relaxed max-w-lg">
+                <p className="text-lg text-muted leading-relaxed max-w-xl">
                   Jawab beberapa pertanyaan, scan wajahmu, dan biarkan Gemini memilihkan frame yang paling cocok. Lalu coba
                   langsung lewat kamera.
                 </p>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-3">
                   <button
                     onClick={() => {
-                    setAiQuery('');
-                    setActiveView('finder');
-                  }}
+                      setAiQuery('');
+                      setActiveView('finder');
+                    }}
                     className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center gap-2 transition-colors"
                   >
                     <Sparkles className="w-4 h-4" />
                     Cari dengan AI
                   </button>
                   <button
-                    onClick={() => setActiveView('ar_tryon')}
+                    onClick={() => setActiveView('catalog')}
                     className="h-12 px-6 rounded-full border border-line hover:border-ink text-ink text-sm font-medium flex items-center gap-2 transition-colors"
                   >
-                    <Camera className="w-4 h-4" />
-                    Buka cermin AR
+                    <LayoutGrid className="w-4 h-4" />
+                    Cari di katalog
                   </button>
                 </div>
 
                 <p className="text-xs text-muted">Gratis ongkir ke seluruh Indonesia. Garansi pas 30 hari.</p>
-              </div>
-
-              {/* Showcase card with floating UI */}
-              <div className="space-y-4">
-                <div className="relative aspect-[4/5] sm:aspect-[5/5] rounded-[32px] overflow-hidden bg-sand shadow-float">
-                  <img src={heroFrame.imageUrl} alt={heroFrame.name} className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/10" />
-
-                  <div className="absolute top-5 left-5 right-5 space-y-3">
-                    <span className="inline-block px-3 py-1.5 rounded-full bg-white/90 text-xs text-ink">
-                      {frameShapeLabel(heroFrame.shape)} / {materialLabel(heroFrame.material)}
-                    </span>
-                    <p className="text-2xl md:text-3xl font-normal tracking-[-0.03em] text-white">{heroFrame.name}</p>
-                  </div>
-
-                  {/* Floating "AI note" card */}
-                  <div className="absolute left-4 sm:left-[-8px] bottom-24 w-[min(260px,80%)] rounded-2xl bg-white p-4 shadow-float space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2 text-sm text-ink">
-                        <span className="w-6 h-6 rounded-full bg-sage-tint flex items-center justify-center">
-                          <Sparkles className="w-3.5 h-3.5 text-sage" />
-                        </span>
-                        Gemini
-                        <span className="text-xs text-faint">baru saja</span>
-                      </span>
-                    </div>
-                    {heroMatch && userFaceShape ? (
-                      <>
-                        <p className="text-sm text-body leading-snug">{heroMatch.guidance}</p>
-                        <div className="pt-2 border-t border-line flex items-center gap-1.5 text-xs text-muted">
-                          <Check className="w-3.5 h-3.5 text-sage" />
-                          Cocok {heroMatch.score}% untuk wajah {faceShapeLabel(userFaceShape).toLowerCase()}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-sm text-body leading-snug">
-                          Biarkan Gemini memilihkan frame yang cocok dengan wajah dan gayamu.
-                        </p>
-                        <button
-                          onClick={() => {
-                    setAiQuery('');
-                    setActiveView('finder');
-                  }}
-                          className="pt-2 border-t border-line w-full flex items-center gap-1.5 text-xs text-sage hover:text-ink"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          Cari dengan AI
-                        </button>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Floating price chip */}
-                  <button
-                    onClick={() => {
-                      setSelectedFrame(heroFrame);
-                      setIsLensConfiguratorOpen(true);
-                    }}
-                    className="absolute right-4 bottom-4 flex items-center gap-2 pl-4 pr-1.5 py-1.5 rounded-full bg-white shadow-float text-sm text-ink"
-                  >
-                    <span className="tabular-nums">{formatRupiah(heroFrame.price)}</span>
-                    <span className="w-8 h-8 rounded-full bg-ink text-white flex items-center justify-center">
-                      <ArrowUpRight className="w-4 h-4" />
-                    </span>
-                  </button>
-                </div>
-
-                <div className="flex justify-center gap-2">
-                  {heroFrames.map((f, i) => (
-                    <button
-                      key={f.id}
-                      onClick={() => setHeroIndex(i)}
-                      aria-label={`Tampilkan ${f.name}`}
-                      className={`h-1.5 rounded-full transition-all ${heroIndex === i ? 'w-5 bg-ink' : 'w-1.5 bg-line-strong'}`}
-                    />
-                  ))}
-                </div>
               </div>
             </section>
 
