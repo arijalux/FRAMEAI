@@ -18,7 +18,6 @@ import { formatRupiah, faceShapeLabel, frameShapeLabel, materialLabel } from './
 
 // Components
 import { LazyThreeFrameCanvas } from './components/LazyThreeFrameCanvas';
-import { AIFaceAnalyzerModal } from './components/AIFaceAnalyzerModal';
 import { LensConfiguratorModal } from './components/LensConfiguratorModal';
 import { ShoppingBagDrawer } from './components/ShoppingBagDrawer';
 import { UserSavedLooksModal } from './components/UserSavedLooksModal';
@@ -28,7 +27,7 @@ const ARFaceTryOn = lazy(() => import('./components/ARFaceTryOn').then((m) => ({
 const FrameComparisonBench = lazy(() =>
   import('./components/FrameComparisonBench').then((m) => ({ default: m.FrameComparisonBench }))
 );
-const FindMyFrameQuiz = lazy(() => import('./components/FindMyFrameQuiz').then((m) => ({ default: m.FindMyFrameQuiz })));
+const AIFrameFinder = lazy(() => import('./components/AIFrameFinder').then((m) => ({ default: m.AIFrameFinder })));
 const SellerOperationsPortal = lazy(() =>
   import('./components/SellerOperationsPortal').then((m) => ({ default: m.SellerOperationsPortal }))
 );
@@ -57,7 +56,7 @@ import {
 
 export default function App() {
   // Navigation View
-  const [activeView, setActiveView] = useState<'home' | 'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'quiz' | 'seller'>('home');
+  const [activeView, setActiveView] = useState<'home' | 'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'finder' | 'seller'>('home');
 
   // Catalog & Frame State
   const [frames, setFrames] = useState<OpticalFrame[]>(INITIAL_FRAMES);
@@ -70,14 +69,13 @@ export default function App() {
   const [shapeFilter, setShapeFilter] = useState<string>('All');
   const [materialFilter, setMaterialFilter] = useState<string>('All');
   const [polarizedOnly, setPolarizedOnly] = useState<boolean>(false);
-  // Unknown until the visitor picks a shape, runs the AI face scan or finishes the quiz;
+  // Unknown until the visitor picks a shape, runs the AI face scan or completes Cari dengan AI;
   // match scores are hidden until then rather than assuming a face shape
   const [userFaceShape, setUserFaceShape] = useState<FaceShape | null>(null);
   const [heroIndex, setHeroIndex] = useState<number>(0);
 
   // AI & Modals
   const [faceAnalysis, setFaceAnalysis] = useState<FaceAnalysisResult | null>(null);
-  const [isFaceAnalyzerOpen, setIsFaceAnalyzerOpen] = useState<boolean>(false);
   const [isLensConfiguratorOpen, setIsLensConfiguratorOpen] = useState<boolean>(false);
   const [isBagOpen, setIsBagOpen] = useState<boolean>(false);
   const [isVaultOpen, setIsVaultOpen] = useState<boolean>(false);
@@ -215,7 +213,6 @@ export default function App() {
     { view: 'catalog', label: 'Koleksi' },
     { view: 'ar_tryon', label: 'Coba AR' },
     { view: '3d_studio', label: 'Inspeksi 3D' },
-    { view: 'quiz', label: 'Cari Frame-ku' },
     ...(isAdmin ? [{ view: 'seller' as const, label: 'Portal Toko' }] : []),
   ];
 
@@ -310,17 +307,17 @@ export default function App() {
                 </h1>
 
                 <p className="text-lg text-muted leading-relaxed max-w-lg">
-                  Scan bentuk wajah dengan Gemini, coba frame langsung lewat kamera, lalu atur lensa sesuai resep.
-                  Semua di satu tempat.
+                  Jawab beberapa pertanyaan, scan wajahmu, dan biarkan Gemini memilihkan frame yang paling cocok. Lalu coba
+                  langsung lewat kamera.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3">
                   <button
-                    onClick={() => setIsFaceAnalyzerOpen(true)}
+                    onClick={() => setActiveView('finder')}
                     className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center gap-2 transition-colors"
                   >
-                    Scan bentuk wajah
-                    <ArrowUpRight className="w-4 h-4" />
+                    <Sparkles className="w-4 h-4" />
+                    Cari dengan AI
                   </button>
                   <button
                     onClick={() => setActiveView('ar_tryon')}
@@ -369,14 +366,14 @@ export default function App() {
                     ) : (
                       <>
                         <p className="text-sm text-body leading-snug">
-                          Scan wajahmu dengan AI untuk melihat seberapa cocok frame ini.
+                          Biarkan Gemini memilihkan frame yang cocok dengan wajah dan gayamu.
                         </p>
                         <button
-                          onClick={() => setIsFaceAnalyzerOpen(true)}
+                          onClick={() => setActiveView('finder')}
                           className="pt-2 border-t border-line w-full flex items-center gap-1.5 text-xs text-sage hover:text-ink"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
-                          Scan wajah dengan AI
+                          Cari dengan AI
                         </button>
                       </>
                     )}
@@ -467,11 +464,11 @@ export default function App() {
                     ))}
                   </div>
                   <button
-                    onClick={() => setIsFaceAnalyzerOpen(true)}
+                    onClick={() => setActiveView('finder')}
                     className="flex items-center gap-1.5 text-sm text-sage hover:text-ink"
                   >
                     <Sparkles className="w-4 h-4" />
-                    Belum tahu? Scan dengan AI
+                    Belum tahu? Cari dengan AI
                   </button>
                 </div>
 
@@ -766,10 +763,16 @@ export default function App() {
           />
         )}
 
-        {/* VIEW 5: Smart Quiz */}
-        {activeView === 'quiz' && (
-          <FindMyFrameQuiz
+        {/* VIEW 5: Cari dengan AI (questionnaire → face scan → Gemini picks) */}
+        {activeView === 'finder' && (
+          <AIFrameFinder
             frames={frames}
+            faceAnalysis={faceAnalysis}
+            onScanResult={(res) => {
+              setFaceAnalysis(res);
+              setUserFaceShape(res.faceShape);
+            }}
+            onPickFaceShape={(shape) => setUserFaceShape(shape)}
             onSelectFrameForTryOn={(f) => {
               setSelectedFrame(f);
               setActiveView('ar_tryon');
@@ -778,7 +781,6 @@ export default function App() {
               setSelectedFrame(f);
               setIsLensConfiguratorOpen(true);
             }}
-            onCompleteQuiz={(detected) => setUserFaceShape(detected)}
           />
         )}
 
@@ -818,8 +820,8 @@ export default function App() {
                 {item.label}
               </button>
             ))}
-            <button onClick={() => setIsFaceAnalyzerOpen(true)} className="hover:text-ink transition-colors">
-              Scan Wajah AI
+            <button onClick={() => setActiveView('finder')} className="hover:text-ink transition-colors">
+              Cari dengan AI
             </button>
             <button onClick={() => setIsVaultOpen(true)} className="hover:text-ink transition-colors">
               Look & pesanan saya
@@ -829,20 +831,6 @@ export default function App() {
       </footer>
 
       {/* Modals & Drawers */}
-      <AIFaceAnalyzerModal
-        isOpen={isFaceAnalyzerOpen}
-        onClose={() => setIsFaceAnalyzerOpen(false)}
-        frames={frames}
-        onApplyAnalysis={(res) => {
-          setFaceAnalysis(res);
-          setUserFaceShape(res.faceShape);
-        }}
-        onSelectFrameForTryOn={(f) => {
-          setSelectedFrame(f);
-          setActiveView('ar_tryon');
-        }}
-      />
-
       <LensConfiguratorModal
         frame={selectedFrame}
         isOpen={isLensConfiguratorOpen}

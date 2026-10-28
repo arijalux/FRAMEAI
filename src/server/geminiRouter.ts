@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, Type, type GenerateContentResponse } from '@google/genai';
 
 export const apiRouter = Router();
 
@@ -78,6 +78,43 @@ function getAi(): GoogleGenAI {
   return aiClient;
 }
 
+type GenerateParams = Parameters<GoogleGenAI['models']['generateContent']>[0];
+
+// Tried in order. When the primary model is overloaded (429/5xx) or too slow, fall back to
+// an older Flash model rather than failing the visitor's request.
+// The lite model is the last resort: lower quality, but it stays fast under heavy load.
+const MODEL_CHAIN: { model: string; timeoutMs: number }[] = [
+  { model: 'gemini-3.8-flash', timeoutMs: 12_000 },
+  { model: 'gemini-3.5-flash', timeoutMs: 12_000 },
+  { model: 'gemini-3.5-flash-lite', timeoutMs: 20_000 },
+];
+
+function isTransient(error: unknown): boolean {
+  const { status, name, message } = error as { status?: number; name?: string; message?: string };
+  if (status === 429 || (status !== undefined && status >= 500)) return true;
+  // Client-side timeout (AbortSignal) or a dropped connection
+  return name === 'AbortError' || name === 'TimeoutError' || /abort|timeout|fetch failed/i.test(message ?? '');
+}
+
+/** generateContent across MODEL_CHAIN, moving on when a model is overloaded or times out */
+async function generateWithRetry(params: GenerateParams): Promise<GenerateContentResponse> {
+  let lastError: unknown;
+  for (const { model, timeoutMs } of MODEL_CHAIN) {
+    try {
+      return await getAi().models.generateContent({
+        ...params,
+        model,
+        config: { ...params.config, httpOptions: { ...params.config?.httpOptions, timeout: timeoutMs } },
+      });
+    } catch (error) {
+      lastError = error;
+      if (!isTransient(error)) throw error;
+      console.warn(`Gemini ${model} unavailable, trying next model:`, (error as { status?: number }).status ?? (error as Error).message);
+    }
+  }
+  throw lastError;
+}
+
 /**
  * POST /api/analyze-face
  * Analyzes uploaded face image (or base64 snapshot) using Gemini 3.8 Flash
@@ -121,7 +158,7 @@ Language: keep every enum value above exactly as listed in English, but write st
 
     parts.push({ text: promptText });
 
-    const response = await getAi().models.generateContent({
+    const response = await generateWithRetry({
       model: 'gemini-3.8-flash',
       contents: { parts },
       config: {
@@ -210,7 +247,7 @@ Highlight how the bridge, rim shape, and proportions complement their features.
 Write the answer in natural Bahasa Indonesia.
 `;
 
-    const response = await getAi().models.generateContent({
+    const response = await generateWithRetry({
       model: 'gemini-3.8-flash',
       contents: prompt,
       config: {
@@ -252,7 +289,7 @@ Generate strategic merchant store intelligence including:
 Language: write all descriptive text in natural Bahasa Indonesia. Keep "shape" as one of Oval, Square, Round, Heart, Diamond and "urgency" as one of High, Medium, Low, in English.
 `;
 
-    const response = await getAi().models.generateContent({
+    const response = await generateWithRetry({
       model: 'gemini-3.8-flash',
       contents: prompt,
       config: {
@@ -314,6 +351,90 @@ Language: write all descriptive text in natural Bahasa Indonesia. Keep "shape" a
     res.json({ success: true, insights: parsed });
   } catch (error) {
     console.error('Error in /api/seller-insights:', error);
+    sendAiUnavailable(res);
+  }
+});
+
+/**
+ * POST /api/recommend-frames
+ * Picks the best frames for a visitor from the catalog they were shown, using their quiz
+ * answers and (optionally) their AI face analysis. Gemini may only return catalog ids.
+ */
+const MAX_CATALOG_SIZE = 40;
+const clip = (v: unknown, max = 200) => (typeof v === 'string' ? v.slice(0, max) : '');
+
+apiRouter.post('/recommend-frames', async (req: Request, res: Response): Promise<void> => {
+  const { answers, face, frames } = req.body ?? {};
+  if (!Array.isArray(frames) || frames.length === 0) {
+    res.status(400).json({ success: false, error: 'Katalog frame kosong.' });
+    return;
+  }
+
+  // Only pass the fields the model needs, with bounded lengths
+  const catalog = frames.slice(0, MAX_CATALOG_SIZE).map((f: any) => ({
+    id: clip(f?.id, 128),
+    name: clip(f?.name, 100),
+    shape: clip(f?.shape, 30),
+    material: clip(f?.material, 60),
+    priceIdr: Number(f?.price) || 0,
+    weightGrams: Number(f?.weightGrams) || 0,
+    lensWidthMm: Number(f?.dimensions?.lensWidth) || 0,
+    totalWidthMm: Number(f?.dimensions?.totalWidth) || 0,
+    polarized: Boolean(f?.isPolarized),
+    description: clip(f?.description, 300),
+  })).filter((f) => f.id);
+  const ids = catalog.map((f) => f.id);
+
+  const profile = {
+    lifestyle: clip(answers?.lifestyle, 40),
+    aesthetic: clip(answers?.aesthetic, 40),
+    materialPreference: clip(answers?.materialPref, 40),
+    faceShape: clip(face?.faceShape, 20) || 'unknown',
+    skinUndertone: clip(face?.skinUndertone, 20) || 'unknown',
+    jawline: clip(face?.jawline, 40) || 'unknown',
+    pupillaryDistanceMm: Number(face?.estimatedPd) || null,
+  };
+
+  try {
+    const response = await generateWithRetry({
+      model: 'gemini-3.8-flash',
+      contents: `Customer profile:\n${JSON.stringify(profile)}\n\nCatalog (choose ONLY from these ids):\n${JSON.stringify(catalog)}\n\nPick the 3 best frames for this customer, best first. Weigh face shape harmony, lifestyle (e.g. light frames and blue-light needs for screen work, polarized for outdoor), preferred aesthetic and material, and fit (frame width vs. PD when known). Write each reason and the summary in natural Bahasa Indonesia, addressing the customer as "kamu", 1-2 sentences each, mentioning concrete attributes. Use Indonesian names for face shapes (Oval, Kotak, Bulat, Hati, Diamond) and frame shapes (Geometris, Kotak, Bulat, Aviator, Cat-Eye, Oval); never write the English words Square, Round or Heart.`,
+      config: {
+        systemInstruction: 'You are an expert optician and eyewear stylist at FrameAI. Only recommend frames from the provided catalog. Return JSON matching the schema.',
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            summary: { type: Type.STRING },
+            recommendations: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  frameId: { type: Type.STRING, enum: ids },
+                  reason: { type: Type.STRING },
+                },
+                required: ['frameId', 'reason'],
+              },
+            },
+          },
+          required: ['summary', 'recommendations'],
+        },
+      },
+    });
+
+    const parsed = JSON.parse(response.text || '{}');
+    // Defence in depth: drop unknown or duplicate ids even though the schema restricts them
+    const seen = new Set<string>();
+    const recommendations = (Array.isArray(parsed.recommendations) ? parsed.recommendations : [])
+      .filter((r: any) => ids.includes(r?.frameId) && !seen.has(r.frameId) && seen.add(r.frameId))
+      .slice(0, 3)
+      .map((r: any) => ({ frameId: r.frameId as string, reason: clip(r.reason, 400) }));
+
+    if (recommendations.length === 0) throw new Error('Gemini returned no catalog frames');
+    res.json({ success: true, summary: clip(parsed.summary, 500), recommendations });
+  } catch (error) {
+    console.error('Error in /api/recommend-frames:', error);
     sendAiUnavailable(res);
   }
 });
