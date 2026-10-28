@@ -25,12 +25,13 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
   const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
 
   // Checkout form
-  const [customerName, setCustomerName] = useState<string>('Alex Vance');
-  const [customerEmail, setCustomerEmail] = useState<string>('alex.vance@atelier.com');
-  const [address, setAddress] = useState<string>('740 Park Avenue, Apt 11B');
-  const [city, setCity] = useState<string>('New York');
-  const [postalCode, setPostalCode] = useState<string>('10021');
-  const [country, setCountry] = useState<string>('United States');
+  const [customerName, setCustomerName] = useState<string>('');
+  const [customerEmail, setCustomerEmail] = useState<string>('');
+  const [address, setAddress] = useState<string>('');
+  const [city, setCity] = useState<string>('');
+  const [postalCode, setPostalCode] = useState<string>('');
+  const [country, setCountry] = useState<string>('');
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -41,9 +42,11 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setCheckoutError(null);
 
     const orderData: Omit<Order, 'id'> = {
-      userId: 'customer-' + Math.random().toString(36).substring(2, 9),
+      // Overwritten by createCustomerOrder with the signed-in uid or 'guest-checkout'
+      userId: '',
       customerName,
       customerEmail,
       items,
@@ -61,22 +64,14 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
 
     try {
       const orderId = await createCustomerOrder(orderData);
-      const completedOrder: Order = {
-        id: orderId || 'ORD-' + Math.floor(100000 + Math.random() * 900000),
-        ...orderData,
-      };
+      const completedOrder: Order = { ...orderData, id: orderId };
       setPlacedOrder(completedOrder);
       setCheckoutStep('success');
       onOrderPlaced(completedOrder);
     } catch (err) {
+      // Never show a success screen for an order that was not saved
       console.error(err);
-      const fallbackOrder: Order = {
-        id: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
-        ...orderData,
-      };
-      setPlacedOrder(fallbackOrder);
-      setCheckoutStep('success');
-      onOrderPlaced(fallbackOrder);
+      setCheckoutError('We could not place your order. Nothing was charged — please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -184,6 +179,12 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
 
           {checkoutStep === 'checkout' && (
             <form id="checkout-form" onSubmit={handleCheckoutSubmit} className="space-y-4">
+              {checkoutError && (
+                <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+                  {checkoutError}
+                </div>
+              )}
+
               <div className="space-y-1">
                 <span className="text-xs font-bold text-neutral-300 uppercase tracking-wider">
                   Contact Information
@@ -348,7 +349,8 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
                   disabled={isSubmitting}
                   className="flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Surfacing Order...' : `Pay $${total.toFixed(2)} & Start Lab Craft`}
+                  {/* No payment is taken yet, so don't label this "Pay" */}
+                  {isSubmitting ? 'Placing Order...' : `Place Order · $${total.toFixed(2)}`}
                 </button>
               </div>
             )}

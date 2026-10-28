@@ -16,7 +16,6 @@ import {
   Sliders,
   X,
 } from 'lucide-react';
-import { updateOrderStatusInDb } from '../lib/firebase';
 
 interface SellerOperationsPortalProps {
   frames: OpticalFrame[];
@@ -375,7 +374,6 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                           key={st}
                           onClick={() => {
                             onUpdateOrderStatus(ord.id, st);
-                            updateOrderStatusInDb(ord.id, st);
                           }}
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
                             ord.status === st

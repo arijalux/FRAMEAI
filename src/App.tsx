@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { OpticalFrame, CartItem, Order, FaceAnalysisResult, FrameShape, FrameMaterial, FaceShape } from './types';
+import { OpticalFrame, CartItem, Order, OrderStatus, FaceAnalysisResult, FrameShape, FrameMaterial, FaceShape } from './types';
 import { INITIAL_FRAMES } from './data/initialFrames';
-import { fetchCatalogFrames, auth, loginWithGoogle, logoutUser, onAuthStateChanged, User } from './lib/firebase';
+import {
+  fetchCatalogFrames,
+  fetchAllOrders,
+  saveFrameToDb,
+  updateOrderStatusInDb,
+  checkIsAdmin,
+  auth,
+  loginWithGoogle,
+  logoutUser,
+  onAuthStateChanged,
+  User,
+} from './lib/firebase';
 import { calculateFaceFrameMatchScore } from './utils/opticalMath';
 
 // Components
@@ -61,43 +72,13 @@ export default function App() {
 
   // Cart & Orders State
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: 'ORD-729401',
-      userId: 'customer-init',
-      customerName: 'Claire Beaumont',
-      customerEmail: 'claire.b@luxury.fr',
-      items: [
-        {
-          id: 'item-demo-1',
-          frame: INITIAL_FRAMES[0],
-          selectedColor: INITIAL_FRAMES[0].colors[0],
-          lensConfig: {
-            type: 'single_vision',
-            index: '1.67_ultrathin',
-            blueLightFilter: true,
-            photochromic: false,
-            antiReflective: true,
-          },
-          calculatedPrice: 475,
-          quantity: 1,
-        },
-      ],
-      totalAmount: 514.18,
-      status: 'crafting_lenses',
-      shippingAddress: {
-        address: '14 Rue du Faubourg Saint-Honoré',
-        city: 'Paris',
-        postalCode: '75008',
-        country: 'France',
-      },
-      createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ]);
+  // Orders placed by this visitor (shown in their vault) vs. every order (admin portal only)
+  const [myOrders, setMyOrders] = useState<Order[]>([]);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
 
   // Auth User
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   // Load Catalog from Firestore
   useEffect(() => {
@@ -108,12 +89,20 @@ export default function App() {
       }
     });
 
-    const unsubscribe = onAuthStateChanged(auth, (usr) => {
+    const unsubscribe = onAuthStateChanged(auth, async (usr) => {
       setCurrentUser(usr);
+      const admin = await checkIsAdmin(usr);
+      setIsAdmin(admin);
+      setAllOrders(admin ? await fetchAllOrders().catch(() => []) : []);
     });
 
     return () => unsubscribe();
   }, []);
+
+  // Leave the merchant portal if the user signs out or is not an admin
+  useEffect(() => {
+    if (activeView === 'seller' && !isAdmin) setActiveView('catalog');
+  }, [activeView, isAdmin]);
 
   // Filtered frames
   const filteredFrames = frames
@@ -169,6 +158,31 @@ export default function App() {
 
   const handleRemoveFromCompare = (frameId: string) => {
     setComparedFrames((prev) => prev.filter((f) => f.id !== frameId));
+  };
+
+  // Merchant portal writes: update the UI optimistically, roll back if Firestore rejects it
+  const handleSaveFrame = async (updated: OpticalFrame, isNew: boolean) => {
+    const previous = frames;
+    setFrames((prev) => (isNew ? [updated, ...prev] : prev.map((f) => (f.id === updated.id ? updated : f))));
+    try {
+      await saveFrameToDb(updated);
+    } catch (e) {
+      console.error(e);
+      setFrames(previous);
+      alert('Could not save the frame. Check your admin access and try again.');
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId: string, status: OrderStatus) => {
+    const previous = allOrders;
+    setAllOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
+    try {
+      await updateOrderStatusInDb(orderId, status);
+    } catch (e) {
+      console.error(e);
+      setAllOrders(previous);
+      alert('Could not update the order status. Please try again.');
+    }
   };
 
   // Auth toggle
@@ -259,14 +273,16 @@ export default function App() {
                 <HelpCircle className="w-3.5 h-3.5" />
                 Find My Frame
               </button>
-              <button
-                onClick={() => setActiveView('seller')}
-                className={`px-3.5 py-1.5 rounded-xl transition-all ${
-                  activeView === 'seller' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                Store Portal
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => setActiveView('seller')}
+                  className={`px-3.5 py-1.5 rounded-xl transition-all ${
+                    activeView === 'seller' ? 'bg-neutral-800 text-white shadow' : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  Store Portal
+                </button>
+              )}
             </nav>
           </div>
 
@@ -351,12 +367,14 @@ export default function App() {
           >
             Quiz
           </button>
-          <button
-            onClick={() => setActiveView('seller')}
-            className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'seller' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
-          >
-            Seller Portal
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setActiveView('seller')}
+              className={`px-3 py-1 rounded-lg shrink-0 ${activeView === 'seller' ? 'bg-amber-500 text-neutral-950 font-bold' : 'text-neutral-400'}`}
+            >
+              Seller Portal
+            </button>
+          )}
         </div>
       </header>
 
@@ -750,19 +768,16 @@ export default function App() {
         )}
 
         {/* VIEW 6: Merchant Portal */}
-        {activeView === 'seller' && (
+        {activeView === 'seller' && isAdmin && (
           <SellerOperationsPortal
             frames={frames}
-            orders={orders}
+            orders={allOrders}
             onUpdateFrameStock={(id, newStock) => {
-              setFrames((prev) => prev.map((f) => (f.id === id ? { ...f, stock: newStock } : f)));
+              const frame = frames.find((f) => f.id === id);
+              if (frame) handleSaveFrame({ ...frame, stock: newStock }, false);
             }}
-            onAddNewFrame={(newFrame) => {
-              setFrames((prev) => [newFrame, ...prev]);
-            }}
-            onUpdateOrderStatus={(id, status) => {
-              setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
-            }}
+            onAddNewFrame={(newFrame) => handleSaveFrame(newFrame, true)}
+            onUpdateOrderStatus={handleUpdateOrderStatus}
           />
         )}
       </main>
@@ -788,9 +803,11 @@ export default function App() {
             <button onClick={() => setActiveView('compare')} className="hover:text-white transition-colors">
               Geometry Bench
             </button>
-            <button onClick={() => setActiveView('seller')} className="hover:text-white transition-colors">
-              Merchant Portal
-            </button>
+            {isAdmin && (
+              <button onClick={() => setActiveView('seller')} className="hover:text-white transition-colors">
+                Merchant Portal
+              </button>
+            )}
           </div>
         </div>
       </footer>
@@ -824,7 +841,8 @@ export default function App() {
         onRemoveItem={handleRemoveCartItem}
         onUpdateQuantity={handleUpdateCartQuantity}
         onOrderPlaced={(newOrder) => {
-          setOrders((prev) => [newOrder, ...prev]);
+          setMyOrders((prev) => [newOrder, ...prev]);
+          if (isAdmin) setAllOrders((prev) => [newOrder, ...prev]);
           setCartItems([]);
         }}
       />
@@ -832,7 +850,7 @@ export default function App() {
       <UserSavedLooksModal
         isOpen={isVaultOpen}
         onClose={() => setIsVaultOpen(false)}
-        orders={orders}
+        orders={myOrders}
       />
     </div>
   );
