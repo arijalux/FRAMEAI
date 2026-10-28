@@ -53,7 +53,6 @@ import {
   Shield,
   Sun,
   Flame,
-  Award,
 } from 'lucide-react';
 
 export default function App() {
@@ -257,15 +256,6 @@ export default function App() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsVaultOpen(true)}
-              title="Koleksi Look & Pesanan"
-              aria-label="Koleksi Look Tersimpan"
-              className="w-9 h-9 rounded-full border border-line hover:bg-soft text-body flex items-center justify-center transition-colors"
-            >
-              <Award className="w-4 h-4" />
-            </button>
-
-            <button
               onClick={() => setIsBagOpen(true)}
               aria-label="Buka Keranjang Belanja"
               className="relative w-9 h-9 rounded-full border border-line hover:bg-soft text-ink flex items-center justify-center transition-colors"
@@ -280,19 +270,10 @@ export default function App() {
 
             <button
               onClick={handleAuthAction}
-              className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-full text-sm text-muted hover:text-ink whitespace-nowrap transition-colors"
+              className="flex items-center gap-1.5 h-9 px-3 rounded-full text-sm text-muted hover:text-ink whitespace-nowrap transition-colors"
             >
               <UserIcon className="w-4 h-4" />
-              <span>{currentUser ? currentUser.displayName || 'Akun' : 'Masuk'}</span>
-            </button>
-
-            <button
-              onClick={() => setIsFaceAnalyzerOpen(true)}
-              className="h-9 px-4 rounded-full border border-line hover:border-ink text-sm font-medium text-ink flex items-center gap-2 whitespace-nowrap transition-colors"
-            >
-              <span className="hidden sm:inline">Scan Wajah AI</span>
-              <Sparkles className="w-4 h-4 sm:hidden" />
-              {faceAnalysis && <span className="w-1.5 h-1.5 rounded-full bg-sage" />}
+              <span className="hidden sm:inline">{currentUser ? currentUser.displayName || 'Akun' : 'Masuk'}</span>
             </button>
           </div>
         </div>
@@ -798,6 +779,12 @@ export default function App() {
                 {item.label}
               </button>
             ))}
+            <button onClick={() => setIsFaceAnalyzerOpen(true)} className="hover:text-ink transition-colors">
+              Scan Wajah AI
+            </button>
+            <button onClick={() => setIsVaultOpen(true)} className="hover:text-ink transition-colors">
+              Look & pesanan saya
+            </button>
           </div>
         </div>
       </footer>
