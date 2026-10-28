@@ -318,26 +318,49 @@ export default function App() {
         {/* VIEW 0: Landing page */}
         {activeView === 'home' && (
           <div className="space-y-24">
-            {/* Hero */}
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center pt-4 lg:pt-10">
-              <div className="space-y-7">
+            {/* Hero: catalog carousel on top, centred copy and actions below */}
+            <section className="flex flex-col items-center text-center gap-10 pt-2">
+              {/* 3D ring of catalog frames; clicking one opens its lens configurator */}
+              <div className="relative w-full h-[230px] sm:h-[400px] lg:h-[440px]">
+                <CircularCarousel
+                  items={frames.map((f) => ({
+                    src: f.imageUrl,
+                    alt: `${f.name}, ${materialLabel(f.material)}, ${formatRupiah(f.price)}`,
+                    title: f.name,
+                  }))}
+                  preset="cylinder"
+                  intro="rise"
+                  cardWidth={240}
+                  aspectRatio={0.8}
+                  speed={14}
+                  fadeColor="#ffffff"
+                  innerShade={0.85}
+                  cornerRadius={20}
+                  onItemClick={(_item, index) => {
+                    setSelectedFrame(frames[index]);
+                    setIsLensConfiguratorOpen(true);
+                  }}
+                />
+              </div>
+
+              <div className="max-w-4xl flex flex-col items-center gap-7">
                 <h1 className="text-[2.4rem] md:text-6xl font-normal tracking-[-0.045em] leading-[1.04] text-ink">
                   Coba. Bandingkan. Pilih.
                   <br />
                   Kacamata yang pas, dibantu AI.
                 </h1>
 
-                <p className="text-lg text-muted leading-relaxed max-w-lg">
+                <p className="text-lg text-muted leading-relaxed max-w-xl">
                   Jawab beberapa pertanyaan, scan wajahmu, dan biarkan Gemini memilihkan frame yang paling cocok. Lalu coba
                   langsung lewat kamera.
                 </p>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-3">
                   <button
                     onClick={() => {
-                    setAiQuery('');
-                    setActiveView('finder');
-                  }}
+                      setAiQuery('');
+                      setActiveView('finder');
+                    }}
                     className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center gap-2 transition-colors"
                   >
                     <Sparkles className="w-4 h-4" />
@@ -353,31 +376,6 @@ export default function App() {
                 </div>
 
                 <p className="text-xs text-muted">Gratis ongkir ke seluruh Indonesia. Garansi pas 30 hari.</p>
-              </div>
-
-              {/* 3D ring of catalog frames; clicking one opens its lens configurator */}
-              <div className="relative h-[420px] sm:h-[520px] -mx-4 sm:mx-0 text-ink">
-                <CircularCarousel
-                  items={frames.map((f) => ({
-                    src: f.imageUrl,
-                    alt: f.name,
-                    title: f.name,
-                    subtitle: `${materialLabel(f.material)} · ${formatRupiah(f.price)}`,
-                  }))}
-                  preset="cylinder"
-                  intro="rise"
-                  cardWidth={220}
-                  aspectRatio={0.8}
-                  speed={14}
-                  fadeColor="#ffffff"
-                  innerShade={0.85}
-                  cornerRadius={20}
-                  captions
-                  onItemClick={(_item, index) => {
-                    setSelectedFrame(frames[index]);
-                    setIsLensConfiguratorOpen(true);
-                  }}
-                />
               </div>
             </section>
 
