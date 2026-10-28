@@ -534,21 +534,11 @@ export default function App() {
                       className="group rounded-3xl border border-line bg-white overflow-hidden flex flex-col transition-shadow hover:shadow-float"
                     >
                       <div className={`relative ${tint} p-5 pb-0`}>
-                        <div className="flex items-start justify-between gap-2 mb-4">
-                          {match && (
-                            <span className="px-2.5 py-1 rounded-full bg-white/90 text-xs text-ink">
-                              Cocok {match.score}%
-                            </span>
-                          )}
-                          <div className="ml-auto flex gap-1">
-                            {frame.isBestseller && (
-                              <span className="px-2.5 py-1 rounded-full bg-ink text-white text-xs">Terlaris</span>
-                            )}
-                            {frame.isNew && (
-                              <span className="px-2.5 py-1 rounded-full bg-white/90 text-sage text-xs">Baru</span>
-                            )}
-                          </div>
-                        </div>
+                        {match && (
+                          <span className="inline-block mb-4 px-2.5 py-1 rounded-full bg-white/90 text-xs text-ink">
+                            Cocok {match.score}%
+                          </span>
+                        )}
                         <div className="aspect-[4/3] rounded-t-2xl overflow-hidden shadow-card">
                           <img
                             src={frame.imageUrl}
