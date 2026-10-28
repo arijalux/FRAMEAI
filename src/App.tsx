@@ -448,7 +448,7 @@ export default function App() {
 
             {/* Catalog */}
             <section className="space-y-8">
-              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+              <div className="space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">Koleksi</h2>
                   <p className="text-muted">
@@ -457,22 +457,23 @@ export default function App() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative">
+                {/* One row at every width: search stretches, and on phones the row scrolls sideways */}
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                  <div className="relative flex-1 min-w-[200px]">
                     <Search className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       placeholder="Cari frame..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-10 w-56 pl-10 pr-4 rounded-full bg-soft text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-1 focus:ring-ink"
+                      className="h-10 w-full pl-10 pr-4 rounded-full bg-soft text-sm text-ink placeholder:text-faint focus:outline-none focus:ring-1 focus:ring-ink"
                     />
                   </div>
                   <select
                     aria-label="Filter frame berdasarkan bentuk"
                     value={shapeFilter}
                     onChange={(e) => setShapeFilter(e.target.value)}
-                    className="h-10 px-4 rounded-full bg-soft text-sm text-ink focus:outline-none"
+                    className="shrink-0 h-10 px-4 rounded-full bg-soft text-sm text-ink focus:outline-none"
                   >
                     <option value="All">Semua bentuk</option>
                     <option value="Geometric">Geometris</option>
@@ -486,7 +487,7 @@ export default function App() {
                     aria-label="Filter frame berdasarkan material"
                     value={materialFilter}
                     onChange={(e) => setMaterialFilter(e.target.value)}
-                    className="h-10 px-4 rounded-full bg-soft text-sm text-ink focus:outline-none"
+                    className="shrink-0 h-10 px-4 rounded-full bg-soft text-sm text-ink focus:outline-none"
                   >
                     <option value="All">Semua material</option>
                     <option value="Aerospace Titanium">Titanium Aerospace</option>
@@ -496,7 +497,7 @@ export default function App() {
                   </select>
                   <button
                     onClick={() => setPolarizedOnly((p) => !p)}
-                    className={`h-10 px-4 rounded-full text-sm flex items-center gap-1.5 transition-colors ${
+                    className={`shrink-0 h-10 px-4 rounded-full text-sm flex items-center gap-1.5 whitespace-nowrap transition-colors ${
                       polarizedOnly ? 'bg-ink text-white' : 'bg-soft text-ink hover:bg-soft-strong'
                     }`}
                   >
