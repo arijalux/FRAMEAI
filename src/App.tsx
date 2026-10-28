@@ -209,10 +209,9 @@ export default function App() {
     }
   };
 
+  // AR try-on and the 3D inspector start from a chosen frame (card buttons), so they aren't nav items
   const navItems: { view: typeof activeView; label: string }[] = [
     { view: 'catalog', label: 'Koleksi' },
-    { view: 'ar_tryon', label: 'Coba AR' },
-    { view: '3d_studio', label: 'Inspeksi 3D' },
     ...(isAdmin ? [{ view: 'seller' as const, label: 'Portal Toko' }] : []),
   ];
 
