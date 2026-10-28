@@ -39,6 +39,18 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 
 apiRouter.use(rateLimit);
 
+// Fail fast with a clear message when the server has no Gemini key (e.g. running locally without .env)
+apiRouter.use((_req: Request, res: Response, next: NextFunction): void => {
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'MY_GEMINI_API_KEY') {
+    res.status(503).json({
+      success: false,
+      error: 'Layanan AI belum dikonfigurasi di server ini (GEMINI_API_KEY belum diatur).',
+    });
+    return;
+  }
+  next();
+});
+
 // Never fabricate AI results: report the failure so the UI can tell the user honestly
 function sendAiUnavailable(res: Response): void {
   res.status(503).json({

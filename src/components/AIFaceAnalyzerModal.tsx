@@ -65,6 +65,10 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
   const [analysisResult, setAnalysisResult] = useState<FaceAnalysisResult | null>(null);
   const [scanStepText, setScanStepText] = useState<string>('Menyiapkan pemetaan titik wajah...');
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  // Held in state (not just a ref) so the effect below can attach it once <video> has mounted
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isCameraReady, setIsCameraReady] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -79,34 +83,64 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
     return () => cancelAnimationFrame(raf);
   }, [analysisError]);
 
-  if (!isOpen) return null;
+  // The <video> only exists while mode === 'camera', so attach the stream after it renders
+  useEffect(() => {
+    const video = videoRef.current;
+    if (mode !== 'camera' || !cameraStream || !video) return;
+    video.srcObject = cameraStream;
+    video.play().catch((e) => console.warn('Camera preview failed to play:', e));
+  }, [mode, cameraStream]);
 
-  const handleStartCamera = async () => {
-    setMode('camera');
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 640, height: 480 },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-    } catch (e) {
-      console.warn('Camera failed to start:', e);
-      setMode('presets');
-    }
-  };
+  // Release the camera when the modal unmounts
+  useEffect(() => () => streamRef.current?.getTracks().forEach((t) => t.stop()), []);
+
+  if (!isOpen) return null;
 
   const handleStopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     }
+    setCameraStream(null);
+    setIsCameraReady(false);
+  };
+
+  const switchMode = (next: 'upload' | 'camera' | 'presets') => {
+    handleStopCamera();
+    setAnalysisError(null);
+    setCameraError(null);
+    setMode(next);
+  };
+
+  const handleStartCamera = async () => {
+    switchMode('camera');
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError('Browser ini tidak mendukung akses kamera. Gunakan Unggah Foto.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } },
+      });
+      streamRef.current = stream;
+      setCameraStream(stream);
+    } catch (e) {
+      console.warn('Camera failed to start:', e);
+      const name = (e as { name?: string }).name;
+      setCameraError(
+        name === 'NotAllowedError'
+          ? 'Izin kamera ditolak. Izinkan akses kamera di pengaturan browser, atau gunakan Unggah Foto.'
+          : name === 'NotFoundError' || name === 'OverconstrainedError'
+          ? 'Kamera tidak ditemukan di perangkat ini. Gunakan Unggah Foto.'
+          : name === 'NotReadableError'
+          ? 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi tersebut lalu coba lagi.'
+          : 'Kamera tidak bisa dibuka. Coba lagi atau gunakan Unggah Foto.'
+      );
+    }
   };
 
   const handleCaptureFromCamera = () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || !isCameraReady) return;
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth || 640;
     canvas.height = videoRef.current.videoHeight || 480;
@@ -242,10 +276,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
               <div className="flex justify-center">
                 <div className="flex items-center gap-2 p-1.5 bg-soft rounded-2xl border border-line">
                   <button
-                    onClick={() => {
-                      handleStopCamera();
-                      setMode('presets');
-                    }}
+                    onClick={() => switchMode('presets')}
                     className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
                       mode === 'presets' ? 'bg-ink text-white' : 'text-muted hover:text-ink'
                     }`}
@@ -263,8 +294,7 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
                   </button>
                   <button
                     onClick={() => {
-                      handleStopCamera();
-                      setMode('upload');
+                      switchMode('upload');
                       fileInputRef.current?.click();
                     }}
                     className={`px-4 py-2 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all ${
@@ -287,19 +317,55 @@ export const AIFaceAnalyzerModal: React.FC<AIFaceAnalyzerModalProps> = ({
 
               {/* Mode: Camera Viewfinder */}
               {mode === 'camera' && (
-                <div className="relative max-w-md mx-auto aspect-[4/3] rounded-2xl overflow-hidden bg-soft border border-line flex items-center justify-center">
-                  <video ref={videoRef} playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
-                  <div className="absolute inset-0 border-2 border-dashed border-sage-line m-6 rounded-3xl pointer-events-none flex items-center justify-center">
-                    <span className="text-xs text-sage tabular-nums bg-ink/30 px-2 py-1 rounded">
-                      Posisikan Wajah di Dalam Bingkai
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleCaptureFromCamera}
-                    className="absolute bottom-4 py-2.5 px-6 rounded-full bg-ink hover:bg-ink-soft text-white font-medium text-sm shadow-card transition-all"
-                  >
-                    Analisis Foto
-                  </button>
+                <div className="relative max-w-md mx-auto aspect-[4/3] rounded-3xl overflow-hidden bg-soft flex items-center justify-center">
+                  <video
+                    ref={videoRef}
+                    playsInline
+                    muted
+                    onLoadedData={() => setIsCameraReady(true)}
+                    className={`absolute inset-0 w-full h-full object-cover -scale-x-100 transition-opacity ${
+                      isCameraReady ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
+
+                  {cameraError ? (
+                    <div className="relative max-w-xs text-center space-y-4 px-6">
+                      <p className="text-sm text-body leading-relaxed">{cameraError}</p>
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={handleStartCamera}
+                          className="h-10 px-4 rounded-full border border-line hover:border-ink text-sm text-ink"
+                        >
+                          Coba lagi
+                        </button>
+                        <button
+                          onClick={() => {
+                            switchMode('upload');
+                            fileInputRef.current?.click();
+                          }}
+                          className="h-10 px-4 rounded-full bg-ink text-white text-sm"
+                        >
+                          Unggah Foto
+                        </button>
+                      </div>
+                    </div>
+                  ) : !isCameraReady ? (
+                    <p className="relative text-sm text-muted">Membuka kamera...</p>
+                  ) : (
+                    <>
+                      {/* Face guide */}
+                      <div className="absolute inset-y-6 left-1/2 -translate-x-1/2 aspect-[3/4] rounded-[50%] border-2 border-dashed border-white/80 pointer-events-none" />
+                      <span className="absolute top-4 px-3 py-1.5 rounded-full bg-white/90 text-xs text-ink">
+                        Posisikan wajah di dalam bingkai
+                      </span>
+                      <button
+                        onClick={handleCaptureFromCamera}
+                        className="absolute bottom-4 h-11 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium shadow-card transition-colors"
+                      >
+                        Analisis Foto
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
 
