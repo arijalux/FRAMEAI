@@ -70,7 +70,9 @@ export default function App() {
   const [shapeFilter, setShapeFilter] = useState<string>('All');
   const [materialFilter, setMaterialFilter] = useState<string>('All');
   const [polarizedOnly, setPolarizedOnly] = useState<boolean>(false);
-  const [userFaceShape, setUserFaceShape] = useState<FaceShape>('Oval');
+  // Unknown until the visitor picks a shape, runs the AI face scan or finishes the quiz;
+  // match scores are hidden until then rather than assuming a face shape
+  const [userFaceShape, setUserFaceShape] = useState<FaceShape | null>(null);
   const [heroIndex, setHeroIndex] = useState<number>(0);
 
   // AI & Modals
@@ -127,7 +129,8 @@ export default function App() {
       return matchSearch && matchShape && matchMat && matchPolarized;
     })
     .sort((a, b) => {
-      // Sort by face shape match synergy
+      // Best match first once we know the face shape; otherwise keep catalog order
+      if (!userFaceShape) return 0;
       const scoreA = calculateFaceFrameMatchScore(userFaceShape, a.shape).score;
       const scoreB = calculateFaceFrameMatchScore(userFaceShape, b.shape).score;
       return scoreB - scoreA;
@@ -220,7 +223,7 @@ export default function App() {
   // Hero showcases the top catalog frames; the dots switch between them
   const heroFrames = frames.slice(0, 3);
   const heroFrame = heroFrames[heroIndex % Math.max(1, heroFrames.length)] ?? selectedFrame;
-  const heroMatch = calculateFaceFrameMatchScore(userFaceShape, heroFrame.shape);
+  const heroMatch = userFaceShape ? calculateFaceFrameMatchScore(userFaceShape, heroFrame.shape) : null;
 
   return (
     <div className="min-h-screen bg-canvas text-ink flex flex-col font-sans">
@@ -351,7 +354,7 @@ export default function App() {
 
                 {/* Face shape selector */}
                 <div className="space-y-2.5 pt-2">
-                  <span className="text-xs text-muted">Tampilkan kecocokan untuk wajah:</span>
+                  <span className="text-xs text-muted">Pilih bentuk wajahmu untuk melihat kecocokan:</span>
                   <div className="flex gap-1 p-1 rounded-full bg-soft w-fit max-w-full overflow-x-auto">
                     {(['Oval', 'Square', 'Round', 'Heart', 'Diamond'] as FaceShape[]).map((shape) => (
                       <button
@@ -392,11 +395,28 @@ export default function App() {
                         <span className="text-xs text-faint">baru saja</span>
                       </span>
                     </div>
-                    <p className="text-sm text-body leading-snug">{heroMatch.guidance}</p>
-                    <div className="pt-2 border-t border-line flex items-center gap-1.5 text-xs text-muted">
-                      <Check className="w-3.5 h-3.5 text-sage" />
-                      Cocok {heroMatch.score}% untuk wajah {faceShapeLabel(userFaceShape).toLowerCase()}
-                    </div>
+                    {heroMatch && userFaceShape ? (
+                      <>
+                        <p className="text-sm text-body leading-snug">{heroMatch.guidance}</p>
+                        <div className="pt-2 border-t border-line flex items-center gap-1.5 text-xs text-muted">
+                          <Check className="w-3.5 h-3.5 text-sage" />
+                          Cocok {heroMatch.score}% untuk wajah {faceShapeLabel(userFaceShape).toLowerCase()}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-body leading-snug">
+                          Pilih bentuk wajahmu untuk melihat seberapa cocok frame ini.
+                        </p>
+                        <button
+                          onClick={() => setIsFaceAnalyzerOpen(true)}
+                          className="pt-2 border-t border-line w-full flex items-center gap-1.5 text-xs text-sage hover:text-ink"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Scan wajah dengan AI
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   {/* Floating price chip */}
@@ -446,8 +466,9 @@ export default function App() {
                 <div className="space-y-2">
                   <h2 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">Koleksi</h2>
                   <p className="text-muted">
-                    {filteredFrames.length} frame, diurutkan dari yang paling cocok untuk wajah{' '}
-                    {faceShapeLabel(userFaceShape).toLowerCase()}.
+                    {userFaceShape
+                      ? `${filteredFrames.length} frame, diurutkan dari yang paling cocok untuk wajah ${faceShapeLabel(userFaceShape).toLowerCase()}.`
+                      : `${filteredFrames.length} frame. Pilih bentuk wajahmu di atas untuk melihat skor kecocokan.`}
                   </p>
                 </div>
 
@@ -503,7 +524,7 @@ export default function App() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredFrames.map((frame, idx) => {
-                  const match = calculateFaceFrameMatchScore(userFaceShape, frame.shape);
+                  const match = userFaceShape ? calculateFaceFrameMatchScore(userFaceShape, frame.shape) : null;
                   // Rotate through the soft panel tints like an editorial grid
                   const tint = ['bg-sand', 'bg-mist', 'bg-sage-tint', 'bg-stone'][idx % 4];
 
@@ -514,10 +535,12 @@ export default function App() {
                     >
                       <div className={`relative ${tint} p-5 pb-0`}>
                         <div className="flex items-start justify-between gap-2 mb-4">
-                          <span className="px-2.5 py-1 rounded-full bg-white/90 text-xs text-ink">
-                            Cocok {match.score}%
-                          </span>
-                          <div className="flex gap-1">
+                          {match && (
+                            <span className="px-2.5 py-1 rounded-full bg-white/90 text-xs text-ink">
+                              Cocok {match.score}%
+                            </span>
+                          )}
+                          <div className="ml-auto flex gap-1">
                             {frame.isBestseller && (
                               <span className="px-2.5 py-1 rounded-full bg-ink text-white text-xs">Terlaris</span>
                             )}
@@ -739,7 +762,7 @@ export default function App() {
               setSelectedFrame(f);
               setIsLensConfiguratorOpen(true);
             }}
-            userFaceShape={userFaceShape}
+            userFaceShape={userFaceShape ?? undefined}
           />
         )}
 
