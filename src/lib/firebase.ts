@@ -103,20 +103,44 @@ export async function logoutUser(): Promise<void> {
   await signOut(auth);
 }
 
+// Keep in sync with isAdmin() in firestore.rules. This only decides what UI to show;
+// the rules are what actually protect admin data.
+const ADMIN_EMAIL = 'arijalibnujati@gmail.com';
+
+export async function checkIsAdmin(user: User | null): Promise<boolean> {
+  if (!user) return false;
+  if (user.email === ADMIN_EMAIL) return true;
+  try {
+    const snap = await getDocFromServer(doc(db, 'admins', user.uid));
+    return snap.exists();
+  } catch {
+    return false;
+  }
+}
+
 // Optical Frames Store Services
 export async function fetchCatalogFrames(): Promise<OpticalFrame[]> {
   try {
     const snap = await getDocs(collection(db, 'frames'));
-    if (snap.empty) {
-      // Seed initial collection if empty
-      return INITIAL_FRAMES;
-    }
-    const frames: OpticalFrame[] = [];
-    snap.forEach((d) => frames.push(d.data() as OpticalFrame));
-    return frames;
+    // Firestore holds admin edits and additions; overlay them on the built-in catalog by id
+    const byId = new Map(INITIAL_FRAMES.map((f) => [f.id, f]));
+    snap.forEach((d) => {
+      const frame = d.data() as OpticalFrame;
+      byId.set(frame.id, frame);
+    });
+    return [...byId.values()];
   } catch {
     // Graceful offline fallback
     return INITIAL_FRAMES;
+  }
+}
+
+export async function saveFrameToDb(frame: OpticalFrame): Promise<void> {
+  const path = `frames/${frame.id}`;
+  try {
+    await setDoc(doc(db, 'frames', frame.id), frame);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
 
