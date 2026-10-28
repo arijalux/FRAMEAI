@@ -18,7 +18,6 @@ import { formatRupiah, faceShapeLabel, frameShapeLabel, materialLabel } from './
 
 // Components
 import { LazyThreeFrameCanvas } from './components/LazyThreeFrameCanvas';
-import { AIFaceAnalyzerModal } from './components/AIFaceAnalyzerModal';
 import { LensConfiguratorModal } from './components/LensConfiguratorModal';
 import { ShoppingBagDrawer } from './components/ShoppingBagDrawer';
 import { UserSavedLooksModal } from './components/UserSavedLooksModal';
@@ -77,9 +76,6 @@ export default function App() {
 
   // AI & Modals
   const [faceAnalysis, setFaceAnalysis] = useState<FaceAnalysisResult | null>(null);
-  const [isFaceAnalyzerOpen, setIsFaceAnalyzerOpen] = useState<boolean>(false);
-  // When the scan is opened from the Cari dengan AI flow it closes on success and the flow continues
-  const [scanForFinder, setScanForFinder] = useState<boolean>(false);
   const [isLensConfiguratorOpen, setIsLensConfiguratorOpen] = useState<boolean>(false);
   const [isBagOpen, setIsBagOpen] = useState<boolean>(false);
   const [isVaultOpen, setIsVaultOpen] = useState<boolean>(false);
@@ -468,11 +464,11 @@ export default function App() {
                     ))}
                   </div>
                   <button
-                    onClick={() => setIsFaceAnalyzerOpen(true)}
+                    onClick={() => setActiveView('finder')}
                     className="flex items-center gap-1.5 text-sm text-sage hover:text-ink"
                   >
                     <Sparkles className="w-4 h-4" />
-                    Belum tahu? Scan dengan AI
+                    Belum tahu? Cari dengan AI
                   </button>
                 </div>
 
@@ -772,9 +768,9 @@ export default function App() {
           <AIFrameFinder
             frames={frames}
             faceAnalysis={faceAnalysis}
-            onRequestScan={() => {
-              setScanForFinder(true);
-              setIsFaceAnalyzerOpen(true);
+            onScanResult={(res) => {
+              setFaceAnalysis(res);
+              setUserFaceShape(res.faceShape);
             }}
             onPickFaceShape={(shape) => setUserFaceShape(shape)}
             onSelectFrameForTryOn={(f) => {
@@ -835,24 +831,6 @@ export default function App() {
       </footer>
 
       {/* Modals & Drawers */}
-      <AIFaceAnalyzerModal
-        isOpen={isFaceAnalyzerOpen}
-        onClose={() => {
-          setIsFaceAnalyzerOpen(false);
-          setScanForFinder(false);
-        }}
-        closeOnResult={scanForFinder}
-        frames={frames}
-        onApplyAnalysis={(res) => {
-          setFaceAnalysis(res);
-          setUserFaceShape(res.faceShape);
-        }}
-        onSelectFrameForTryOn={(f) => {
-          setSelectedFrame(f);
-          setActiveView('ar_tryon');
-        }}
-      />
-
       <LensConfiguratorModal
         frame={selectedFrame}
         isOpen={isLensConfiguratorOpen}

@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, Camera, Check, RotateCcw, Sparkles, ShieldCheck } from 'lucide-react';
+import { FaceScanPanel } from './FaceScanPanel';
 import { OpticalFrame, FaceShape, FaceAnalysisResult } from '../types';
 import { calculateFaceFrameMatchScore } from '../utils/opticalMath';
 import { formatRupiah, faceShapeLabel, frameShapeLabel, materialLabel } from '../utils/format';
@@ -8,8 +9,8 @@ interface AIFrameFinderProps {
   frames: OpticalFrame[];
   /** Latest AI face scan, if the visitor has done one (here or elsewhere in the app) */
   faceAnalysis: FaceAnalysisResult | null;
-  /** Opens the face scan; its result arrives back through `faceAnalysis` */
-  onRequestScan: () => void;
+  /** Stores a new scan result app-wide (face shape for match scores, PD for AR) */
+  onScanResult: (analysis: FaceAnalysisResult) => void;
   onPickFaceShape: (shape: FaceShape) => void;
   onSelectFrameForTryOn: (frame: OpticalFrame) => void;
   onConfigureLenses: (frame: OpticalFrame) => void;
@@ -115,7 +116,7 @@ function rankLocally(frames: OpticalFrame[], answers: Answers, faceShape: FaceSh
 export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
   frames,
   faceAnalysis,
-  onRequestScan,
+  onScanResult,
   onPickFaceShape,
   onSelectFrameForTryOn,
   onConfigureLenses,
@@ -128,19 +129,17 @@ export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
   const [summary, setSummary] = useState<string>('');
   const [isFallback, setIsFallback] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // Set when the visitor starts a scan from the face step, so its result moves the flow on
-  const awaitingScan = useRef(false);
 
   const faceShape: FaceShape | null = manualShape ?? faceAnalysis?.faceShape ?? null;
   const stepIndex = STEP_ORDER.indexOf(step);
 
-  const fetchRecommendations = async (shape: FaceShape | null) => {
+  const fetchRecommendations = async (shape: FaceShape | null, scan: FaceAnalysisResult | null = faceAnalysis) => {
     setStep('result');
     setIsLoading(true);
     setResults(null);
     setIsFallback(false);
     try {
-      const face = manualShape ? { faceShape: shape } : faceAnalysis ?? (shape ? { faceShape: shape } : null);
+      const face = manualShape ? { faceShape: shape } : scan ?? (shape ? { faceShape: shape } : null);
       const res = await fetch('/api/recommend-frames', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -164,16 +163,6 @@ export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
       setIsLoading(false);
     }
   };
-
-  // A scan started from the face step finishes by updating faceAnalysis: continue to results
-  useEffect(() => {
-    if (awaitingScan.current && faceAnalysis && step === 'face') {
-      awaitingScan.current = false;
-      setManualShape(null);
-      fetchRecommendations(faceAnalysis.faceShape);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [faceAnalysis]);
 
   const answer = (key: keyof Answers, value: string) => {
     setAnswers((a) => ({ ...a, [key]: value }));
@@ -268,29 +257,27 @@ export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
             </div>
           )}
 
+          <FaceScanPanel
+            onResult={(analysis) => {
+              onScanResult(analysis);
+              setManualShape(null);
+              fetchRecommendations(analysis.faceShape, analysis);
+            }}
+          />
+
           <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={() => {
-                awaitingScan.current = true;
-                onRequestScan();
-              }}
-              className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center gap-2 transition-colors"
-            >
-              <Camera className="w-4 h-4" />
-              {faceAnalysis ? 'Scan ulang' : 'Scan wajah'}
-            </button>
-            <button
               onClick={() => setShowManualPicker((v) => !v)}
-              className="h-12 px-6 rounded-full border border-line hover:border-ink text-ink text-sm font-medium transition-colors"
+              className="h-11 px-5 rounded-full border border-line hover:border-ink text-ink text-sm font-medium transition-colors"
             >
               Saya sudah tahu bentuk wajah saya
             </button>
             <button
               onClick={() => {
                 setManualShape(null);
-                fetchRecommendations(null);
+                fetchRecommendations(null, null);
               }}
-              className="h-12 px-4 text-sm text-muted hover:text-ink"
+              className="h-11 px-4 text-sm text-muted hover:text-ink"
             >
               Lewati
             </button>
@@ -316,7 +303,7 @@ export const AIFrameFinder: React.FC<AIFrameFinderProps> = ({
 
           <p className="flex items-start gap-2 text-xs text-muted leading-relaxed max-w-xl">
             <ShieldCheck className="w-4 h-4 shrink-0 text-sage" />
-            Foto hanya dikirim ke Gemini untuk dianalisis saat kamu menekan tombol analisis, dan tidak kami simpan.
+            Foto hanya dikirim ke Gemini untuk dianalisis saat kamu mengambil atau memilih foto, dan tidak kami simpan.
           </p>
         </section>
       )}

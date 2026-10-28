@@ -69,8 +69,6 @@ function getAi(): GoogleGenAI {
     aiClient = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
       httpOptions: {
-        // Don't leave visitors waiting forever when Gemini is overloaded
-        timeout: 30_000,
         headers: {
           'User-Agent': 'aistudio-build',
         },
@@ -82,18 +80,39 @@ function getAi(): GoogleGenAI {
 
 type GenerateParams = Parameters<GoogleGenAI['models']['generateContent']>[0];
 
-/** generateContent with a short retry on transient Gemini overload / rate-limit errors */
-async function generateWithRetry(params: GenerateParams, attempts = 3): Promise<GenerateContentResponse> {
-  for (let i = 1; ; i++) {
+// Tried in order. When the primary model is overloaded (429/5xx) or too slow, fall back to
+// an older Flash model rather than failing the visitor's request.
+// The lite model is the last resort: lower quality, but it stays fast under heavy load.
+const MODEL_CHAIN: { model: string; timeoutMs: number }[] = [
+  { model: 'gemini-3.8-flash', timeoutMs: 12_000 },
+  { model: 'gemini-3.5-flash', timeoutMs: 12_000 },
+  { model: 'gemini-3.5-flash-lite', timeoutMs: 20_000 },
+];
+
+function isTransient(error: unknown): boolean {
+  const { status, name, message } = error as { status?: number; name?: string; message?: string };
+  if (status === 429 || (status !== undefined && status >= 500)) return true;
+  // Client-side timeout (AbortSignal) or a dropped connection
+  return name === 'AbortError' || name === 'TimeoutError' || /abort|timeout|fetch failed/i.test(message ?? '');
+}
+
+/** generateContent across MODEL_CHAIN, moving on when a model is overloaded or times out */
+async function generateWithRetry(params: GenerateParams): Promise<GenerateContentResponse> {
+  let lastError: unknown;
+  for (const { model, timeoutMs } of MODEL_CHAIN) {
     try {
-      return await getAi().models.generateContent(params);
+      return await getAi().models.generateContent({
+        ...params,
+        model,
+        config: { ...params.config, httpOptions: { ...params.config?.httpOptions, timeout: timeoutMs } },
+      });
     } catch (error) {
-      const status = (error as { status?: number }).status;
-      const transient = status === 503 || status === 429 || status === 500;
-      if (!transient || i >= attempts) throw error;
-      await new Promise((r) => setTimeout(r, 600 * 2 ** (i - 1))); // 0.6s, 1.2s
+      lastError = error;
+      if (!isTransient(error)) throw error;
+      console.warn(`Gemini ${model} unavailable, trying next model:`, (error as { status?: number }).status ?? (error as Error).message);
     }
   }
+  throw lastError;
 }
 
 /**
@@ -379,7 +398,7 @@ apiRouter.post('/recommend-frames', async (req: Request, res: Response): Promise
   try {
     const response = await generateWithRetry({
       model: 'gemini-3.8-flash',
-      contents: `Customer profile:\n${JSON.stringify(profile)}\n\nCatalog (choose ONLY from these ids):\n${JSON.stringify(catalog)}\n\nPick the 3 best frames for this customer, best first. Weigh face shape harmony, lifestyle (e.g. light frames and blue-light needs for screen work, polarized for outdoor), preferred aesthetic and material, and fit (frame width vs. PD when known). Write each reason and the summary in natural Bahasa Indonesia, addressing the customer as "kamu", 1-2 sentences each, mentioning concrete attributes.`,
+      contents: `Customer profile:\n${JSON.stringify(profile)}\n\nCatalog (choose ONLY from these ids):\n${JSON.stringify(catalog)}\n\nPick the 3 best frames for this customer, best first. Weigh face shape harmony, lifestyle (e.g. light frames and blue-light needs for screen work, polarized for outdoor), preferred aesthetic and material, and fit (frame width vs. PD when known). Write each reason and the summary in natural Bahasa Indonesia, addressing the customer as "kamu", 1-2 sentences each, mentioning concrete attributes. Use Indonesian names for face shapes (Oval, Kotak, Bulat, Hati, Diamond) and frame shapes (Geometris, Kotak, Bulat, Aviator, Cat-Eye, Oval); never write the English words Square, Round or Heart.`,
       config: {
         systemInstruction: 'You are an expert optician and eyewear stylist at FrameAI. Only recommend frames from the provided catalog. Return JSON matching the schema.',
         responseMimeType: 'application/json',
