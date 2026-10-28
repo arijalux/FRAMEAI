@@ -21,7 +21,7 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { saveTryOnLookToFirestore } from '../lib/firebase';
-import { OpticalFaceTracker, TrackedLandmarks } from '../utils/faceTracker';
+import { OpticalFaceTracker, TrackedLandmarks, landmarksFromEyes, coverTransform } from '../utils/faceTracker';
 import { formatRupiah, frameShapeLabel, materialLabel } from '../utils/format';
 
 interface ARFaceTryOnProps {
@@ -64,8 +64,13 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   userPd = 63,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const demoImageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trackerRef = useRef<OpticalFaceTracker | null>(null);
+  // Last good face position: used while locked, and to bridge brief detection dropouts
+  const lastLandmarksRef = useRef<TrackedLandmarks | null>(null);
+  const lastSeenAtRef = useRef<number>(0);
+  const faceDetectedRef = useRef<boolean>(false);
 
   // Camera states
   const [cameraActive, setCameraActive] = useState<boolean>(false);
@@ -73,6 +78,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [isFaceDetected, setIsFaceDetected] = useState<boolean>(false);
+  const [trackerStatus, setTrackerStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
   // Model selection when camera is off
   const [selectedDemoIndex, setSelectedDemoIndex] = useState<number>(0);
@@ -98,10 +104,30 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   // Stream ref for cleanup
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Initialize tracker
+  // Initialize tracker (downloads the MediaPipe model once)
   useEffect(() => {
-    trackerRef.current = new OpticalFaceTracker();
+    let cancelled = false;
+    const tracker = new OpticalFaceTracker();
+    tracker
+      .init()
+      .then(() => {
+        if (cancelled) return;
+        trackerRef.current = tracker;
+        setTrackerStatus('ready');
+      })
+      .catch((err) => {
+        console.warn('Face tracker failed to load:', err);
+        if (!cancelled) setTrackerStatus('error');
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  // A new subject means previous face positions no longer apply
+  useEffect(() => {
+    lastLandmarksRef.current = null;
+  }, [cameraActive, selectedDemoIndex, facingMode]);
 
   // Sync active color when frame changes
   useEffect(() => {
@@ -182,31 +208,68 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      const width = canvas.width;
-      const height = canvas.height;
-
+      // Match the canvas to its on-screen size so overlay coordinates line up with the
+      // video/image (both shown with object-fit: cover). Drawing happens in CSS pixels.
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      if (!width || !height) {
+        // Not laid out yet (e.g. hidden or still mounting)
+        animId = requestAnimationFrame(renderAR);
+        return;
+      }
+      if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
 
-      let landmarks: TrackedLandmarks;
+      const tracker = trackerRef.current;
+      const demoImage = demoImageRef.current;
+      let tracked: TrackedLandmarks | null = null;
 
-      if (cameraActive && video && video.readyState >= 2 && autoTracking && trackerRef.current) {
-        landmarks = await trackerRef.current.track(video, width, height);
-        setIsFaceDetected(landmarks.detected);
-      } else {
-        // Use demo model coordinates or manual lock
+      if (autoTracking && tracker) {
+        if (cameraActive && video && video.readyState >= 2) {
+          tracked = tracker.track(video, width, height, facingMode === 'user');
+        } else if (!cameraActive && demoImage?.complete && demoImage.naturalWidth) {
+          tracked = tracker.track(demoImage, width, height, false);
+        }
+      }
+
+      const now = performance.now();
+      if (tracked) {
+        lastLandmarksRef.current = tracked;
+        lastSeenAtRef.current = now;
+      }
+
+      // Keep the last position briefly through blinks/dropouts, or indefinitely when locked
+      const held =
+        lastLandmarksRef.current && (!autoTracking || now - lastSeenAtRef.current < 600)
+          ? lastLandmarksRef.current
+          : null;
+
+      let landmarks: TrackedLandmarks | null = tracked ?? held;
+
+      if (!landmarks && !cameraActive && (!tracker || !autoTracking)) {
+        // Tracker unavailable on a demo photo: fall back to the preset eye positions
         const demo = DEMO_MODELS[selectedDemoIndex];
-        const leftEye = { x: width * demo.eyeLeft.x, y: height * demo.eyeLeft.y };
-        const rightEye = { x: width * demo.eyeRight.x, y: height * demo.eyeRight.y };
-        landmarks = {
-          leftEye,
-          rightEye,
-          center: { x: (leftEye.x + rightEye.x) / 2, y: (leftEye.y + rightEye.y) / 2 },
-          eyeDistance: Math.hypot(rightEye.x - leftEye.x, rightEye.y - leftEye.y),
-          angle: Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x),
-          faceWidth: width * 0.35,
-          detected: true,
-        };
-        setIsFaceDetected(true);
+        landmarks = landmarksFromEyes(
+          { x: width * demo.eyeLeft.x, y: height * demo.eyeLeft.y },
+          { x: width * demo.eyeRight.x, y: height * demo.eyeRight.y },
+          width * 0.35
+        );
+      }
+
+      const detectedNow = landmarks !== null;
+      if (detectedNow !== faceDetectedRef.current) {
+        faceDetectedRef.current = detectedNow;
+        setIsFaceDetected(detectedNow);
+      }
+
+      if (!landmarks) {
+        animId = requestAnimationFrame(renderAR);
+        return;
       }
 
       // Apply user manual offset adjustments
@@ -269,10 +332,10 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
       ctx.translate(centerX, centerY);
       ctx.rotate(angle);
 
-      // Frame scale calculation based on eye distance
-      const frameWidth = eyeDistance * 2.2 * scaleMultiplier;
-      const rimRadius = frameWidth * 0.225;
-      const rimSpacing = frameWidth * 0.265;
+      // Real-world scale: the pupils are userPd mm apart, so size the frame from its mm dimensions
+      const pxPerMm = (eyeDistance / userPd) * scaleMultiplier;
+      const rimRadius = (activeFrame.dimensions.lensWidth / 2) * pxPerMm;
+      const rimSpacing = ((activeFrame.dimensions.lensWidth + activeFrame.dimensions.bridgeWidth) / 2) * pxPerMm;
 
       // Soft drop shadow on face
       ctx.save();
@@ -403,7 +466,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
         ctx.lineWidth = isTitanium ? 1.2 : 2.0;
         ctx.beginPath();
-        ctx.arc(xOffset, -1, rimRadius - 1.2, Math.PI * 1.1, Math.PI * 1.55);
+        ctx.arc(xOffset, -1, Math.max(0, rimRadius - 1.2), Math.PI * 1.1, Math.PI * 1.55);
         ctx.stroke();
 
         ctx.restore();
@@ -468,6 +531,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
     };
   }, [
     cameraActive,
+    facingMode,
     autoTracking,
     manualOffset,
     scaleMultiplier,
@@ -513,6 +577,18 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
     const ctx = offscreen.getContext('2d');
     if (!ctx) return;
 
+    // Draw the background exactly as it appears on screen (object-fit: cover, optional mirror)
+    const drawCover = (source: CanvasImageSource, srcW: number, srcH: number, mirror: boolean) => {
+      const { scale, offsetX, offsetY } = coverTransform(srcW, srcH, offscreen.width, offscreen.height);
+      ctx.save();
+      if (mirror) {
+        ctx.translate(offscreen.width, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(source, offsetX, offsetY, srcW * scale, srcH * scale);
+      ctx.restore();
+    };
+
     const finalize = () => {
       ctx.drawImage(canvas, 0, 0);
       drawWatermark(ctx, offscreen.width, offscreen.height);
@@ -521,19 +597,15 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
     };
 
     if (cameraActive && videoRef.current) {
-      // Mirror video onto offscreen canvas
-      ctx.save();
-      ctx.translate(offscreen.width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(videoRef.current, 0, 0, offscreen.width, offscreen.height);
-      ctx.restore();
+      const v = videoRef.current;
+      drawCover(v, v.videoWidth, v.videoHeight, facingMode === 'user');
       finalize();
     } else {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.src = DEMO_MODELS[selectedDemoIndex].url;
       img.onload = () => {
-        ctx.drawImage(img, 0, 0, offscreen.width, offscreen.height);
+        drawCover(img, img.naturalWidth, img.naturalHeight, false);
         finalize();
       };
     }
@@ -613,11 +685,15 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
             Coba AR Real-Time
           </span>
           <span className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-mono">
-            {cameraActive
-              ? isFaceDetected
-                ? 'Wajah Terkunci (Live Tracking)'
-                : 'Mencari Wajah...'
-              : 'Mode Simulasi Model'}
+            {trackerStatus === 'loading'
+              ? 'Memuat pelacak wajah...'
+              : trackerStatus === 'error'
+              ? 'Pelacak gagal dimuat · geser manual'
+              : !cameraActive
+              ? 'Mode Simulasi Model'
+              : isFaceDetected
+              ? 'Wajah Terdeteksi'
+              : 'Mencari Wajah...'}
           </span>
         </div>
 
@@ -653,7 +729,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
           autoPlay
           playsInline
           muted
-          className={`absolute inset-0 w-full h-full object-cover transform -scale-x-100 ${
+          className={`absolute inset-0 w-full h-full object-cover ${facingMode === 'user' ? '-scale-x-100' : ''} ${
             cameraActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         />
@@ -661,6 +737,8 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         {/* Fallback Demo Model Portrait */}
         {!cameraActive && (
           <img
+            ref={demoImageRef}
+            crossOrigin="anonymous"
             src={DEMO_MODELS[selectedDemoIndex].url}
             alt={DEMO_MODELS[selectedDemoIndex].name}
             className="absolute inset-0 w-full h-full object-cover"
@@ -670,13 +748,11 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         {/* Real-Time Optical Canvas Overlay */}
         <canvas
           ref={canvasRef}
-          width={1280}
-          height={800}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerLeave={handlePointerUp}
-          className="absolute inset-0 w-full h-full object-cover z-10 cursor-move"
+          className="absolute inset-0 w-full h-full z-10 cursor-move"
           title="Geser langsung untuk menyesuaikan posisi kacamata"
         />
 
