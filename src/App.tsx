@@ -349,11 +349,11 @@ export default function App() {
                     Cari dengan AI
                   </button>
                   <button
-                    onClick={() => setActiveView('ar_tryon')}
+                    onClick={() => setActiveView('catalog')}
                     className="h-12 px-6 rounded-full border border-line hover:border-ink text-ink text-sm font-medium flex items-center gap-2 transition-colors"
                   >
-                    <Camera className="w-4 h-4" />
-                    Buka cermin AR
+                    <LayoutGrid className="w-4 h-4" />
+                    Cari di katalog
                   </button>
                 </div>
 
