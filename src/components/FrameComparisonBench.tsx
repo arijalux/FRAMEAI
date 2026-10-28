@@ -21,7 +21,7 @@ export const FrameComparisonBench: React.FC<FrameComparisonBenchProps> = ({
   onRemoveFrame,
   onSelectFrameForTryOn,
   onConfigureLenses,
-  userFaceShape = 'Oval',
+  userFaceShape,
 }) => {
   const maxSlots = 4;
   const availableFramesToAdd = allFrames.filter((f) => !comparedFrames.some((c) => c.id === f.id));
@@ -84,7 +84,7 @@ export const FrameComparisonBench: React.FC<FrameComparisonBenchProps> = ({
         /* Comparison Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {comparedFrames.map((frame) => {
-            const match = calculateFaceFrameMatchScore(userFaceShape, frame.shape);
+            const match = userFaceShape ? calculateFaceFrameMatchScore(userFaceShape, frame.shape) : null;
 
             return (
               <div
@@ -104,9 +104,11 @@ export const FrameComparisonBench: React.FC<FrameComparisonBenchProps> = ({
                 <div>
                   <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-soft mb-4">
                     <img src={frame.imageUrl} alt={frame.name} className="w-full h-full object-cover" />
-                    <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-medium bg-sage-tint text-sage border border-sage-line">
-                      Cocok {match.score}% · {faceShapeLabel(userFaceShape)}
-                    </div>
+                    {match && userFaceShape && (
+                      <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs bg-white/90 text-ink">
+                        Cocok {match.score}% · {faceShapeLabel(userFaceShape)}
+                      </div>
+                    )}
                   </div>
 
                   <h3 className="font-normal tracking-[-0.03em] text-lg text-ink">{frame.name}</h3>
