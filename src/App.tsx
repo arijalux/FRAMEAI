@@ -320,7 +320,7 @@ export default function App() {
           <div className="space-y-24">
             {/* Hero: catalog carousel on top, centred copy and actions below */}
             <section className="flex flex-col items-center text-center gap-10 pt-2">
-              {/* 3D ring of catalog frames; clicking one opens its lens configurator */}
+              {/* 3D ring of catalog frames; clicking any card opens Koleksi */}
               <div className="relative w-full h-[230px] sm:h-[400px] lg:h-[440px]">
                 <CircularCarousel
                   items={frames.map((f) => ({
@@ -336,9 +336,9 @@ export default function App() {
                   fadeColor="#ffffff"
                   innerShade={0.85}
                   cornerRadius={20}
-                  onItemClick={(_item, index) => {
-                    setSelectedFrame(frames[index]);
-                    setIsLensConfiguratorOpen(true);
+                  onItemClick={() => {
+                    setActiveView('catalog');
+                    window.scrollTo({ top: 0 });
                   }}
                 />
               </div>
