@@ -29,6 +29,9 @@ const FrameComparisonBench = lazy(() =>
   import('./components/FrameComparisonBench').then((m) => ({ default: m.FrameComparisonBench }))
 );
 const AIFrameFinder = lazy(() => import('./components/AIFrameFinder').then((m) => ({ default: m.AIFrameFinder })));
+const CustomFrameDesigner = lazy(() =>
+  import('./components/CustomFrameDesigner').then((m) => ({ default: m.CustomFrameDesigner }))
+);
 const SellerOperationsPortal = lazy(() =>
   import('./components/SellerOperationsPortal').then((m) => ({ default: m.SellerOperationsPortal }))
 );
@@ -59,7 +62,7 @@ import {
 
 export default function App() {
   // Navigation View
-  const [activeView, setActiveView] = useState<'home' | 'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'finder' | 'seller'>('home');
+  const [activeView, setActiveView] = useState<'home' | 'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'finder' | 'custom' | 'seller'>('home');
 
   // Catalog & Frame State
   const [frames, setFrames] = useState<OpticalFrame[]>(INITIAL_FRAMES);
@@ -326,6 +329,10 @@ export default function App() {
             onOpenFinder={() => {
               setAiQuery('');
               setActiveView('finder');
+            }}
+            onOpenCustom={() => {
+              setActiveView('custom');
+              window.scrollTo({ top: 0 });
             }}
           />
         )}
@@ -678,7 +685,18 @@ export default function App() {
           />
         )}
 
-        {/* VIEW 6: Merchant Portal */}
+        {/* VIEW 6: Custom wooden frame for BJ Homemade's cutting machine */}
+        {activeView === 'custom' && (
+          <CustomFrameDesigner
+            faceAnalysis={faceAnalysis}
+            onScanResult={(res) => {
+              setFaceAnalysis(res);
+              setUserFaceShape(res.faceShape);
+            }}
+          />
+        )}
+
+        {/* VIEW 7: Merchant Portal */}
         {activeView === 'seller' && isAdmin && (
           <SellerOperationsPortal
             frames={frames}
