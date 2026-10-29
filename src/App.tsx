@@ -1,9 +1,11 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { OpticalFrame, CartItem, Order, OrderStatus, FaceAnalysisResult, FrameShape, FrameMaterial, FaceShape } from './types';
+import { OpticalFrame, CartItem, Order, OrderStatus, CustomDesignRequest, CustomDesignStatus, FaceAnalysisResult, FrameShape, FrameMaterial, FaceShape } from './types';
 import { INITIAL_FRAMES } from './data/initialFrames';
 import {
   fetchCatalogFrames,
   fetchAllOrders,
+  fetchCustomDesigns,
+  updateCustomDesignStatus,
   saveFrameToDb,
   updateOrderStatusInDb,
   checkIsAdmin,
@@ -92,6 +94,8 @@ export default function App() {
   // Orders placed by this visitor (shown in their vault) vs. every order (admin portal only)
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
+  // Custom frame designs sent to BJ Homemade (admin portal only)
+  const [customDesigns, setCustomDesigns] = useState<CustomDesignRequest[]>([]);
 
   // Auth User
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -111,6 +115,7 @@ export default function App() {
       const admin = await checkIsAdmin(usr);
       setIsAdmin(admin);
       setAllOrders(admin ? await fetchAllOrders().catch(() => []) : []);
+      setCustomDesigns(admin ? await fetchCustomDesigns().catch(() => []) : []);
     });
 
     return () => unsubscribe();
@@ -200,6 +205,18 @@ export default function App() {
       console.error(e);
       setAllOrders(previous);
       alert('Status pesanan gagal diperbarui. Silakan coba lagi.');
+    }
+  };
+
+  const handleUpdateDesignStatus = async (designId: string, status: CustomDesignStatus) => {
+    const previous = customDesigns;
+    setCustomDesigns((prev) => prev.map((d) => (d.id === designId ? { ...d, status } : d)));
+    try {
+      await updateCustomDesignStatus(designId, status);
+    } catch (e) {
+      console.error(e);
+      setCustomDesigns(previous);
+      alert('Status desain gagal diperbarui. Silakan coba lagi.');
     }
   };
 
@@ -693,6 +710,7 @@ export default function App() {
               setFaceAnalysis(res);
               setUserFaceShape(res.faceShape);
             }}
+            isAdmin={isAdmin}
           />
         )}
 
@@ -707,6 +725,8 @@ export default function App() {
             }}
             onAddNewFrame={(newFrame) => handleSaveFrame(newFrame, true)}
             onUpdateOrderStatus={handleUpdateOrderStatus}
+            customDesigns={customDesigns}
+            onUpdateDesignStatus={handleUpdateDesignStatus}
           />
         )}
         </Suspense>

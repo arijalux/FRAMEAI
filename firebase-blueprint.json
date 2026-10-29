@@ -58,6 +58,26 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "userId", "customerName", "customerEmail", "totalAmount", "status", "createdAt"]
+    },
+    "CustomDesign": {
+      "title": "CustomDesign",
+      "description": "Custom wooden frame design sent to BJ Homemade, with the sizes used to generate the cutting file",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 80 },
+        "contact": { "type": "string", "maxLength": 80 },
+        "note": { "type": "string", "maxLength": 500 },
+        "params": { "type": "object" },
+        "wood": { "type": "string", "maxLength": 40 },
+        "sizeCode": { "type": "string", "maxLength": 40 },
+        "faceShape": { "type": ["string", "null"] },
+        "estimatedPd": { "type": ["number", "null"] },
+        "status": { "type": "string", "enum": ["new", "confirmed", "in_production", "done"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "customerName", "contact", "params", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -72,6 +92,10 @@
     "/orders/{orderId}": {
       "schema": "Order",
       "description": "Eyewear purchases with custom lens options"
+    },
+    "/customDesigns/{designId}": {
+      "schema": "CustomDesign",
+      "description": "Custom wooden frame designs for BJ Homemade; admin-only reads"
     }
   }
 }

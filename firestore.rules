@@ -53,5 +53,28 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
+
+    // Custom wooden frame designs sent to BJ Homemade
+    // Contain contact details and the cutting files: only admins can list or read them.
+    match /customDesigns/{designId} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAdmin();
+      allow create: if isValidId(designId)
+                    && request.resource.data.customerName is string
+                    && request.resource.data.customerName.size() > 0
+                    && request.resource.data.customerName.size() <= 80
+                    && request.resource.data.contact is string
+                    && request.resource.data.contact.size() >= 5
+                    && request.resource.data.contact.size() <= 80
+                    && request.resource.data.note is string
+                    && request.resource.data.note.size() <= 500
+                    && request.resource.data.params is map
+                    && request.resource.data.status == 'new'
+                    && ((isSignedIn() && request.resource.data.userId == request.auth.uid)
+                        || (!isSignedIn() && request.resource.data.userId == 'guest'));
+      allow update: if isAdmin()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+      allow delete: if isAdmin();
+    }
   }
 }

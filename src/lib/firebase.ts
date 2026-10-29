@@ -25,7 +25,7 @@ import {
 export { onAuthStateChanged };
 export type { User };
 import firebaseConfig from '../../firebase-applet-config.json';
-import { OpticalFrame, Order, TryOnLook } from '../types';
+import { CustomDesignRequest, CustomDesignStatus, OpticalFrame, Order, TryOnLook } from '../types';
 import { INITIAL_FRAMES } from '../data/initialFrames';
 
 const app = initializeApp(firebaseConfig);
@@ -233,6 +233,46 @@ export async function updateOrderStatusInDb(orderId: string, status: Order['stat
       status,
       updatedAt: new Date().toISOString(),
     });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+}
+
+// Custom wooden frame designs. Guests can send one (with their contact details); only
+// admins can read them, since they hold contact info and the cutting files.
+export async function submitCustomDesign(
+  design: Omit<CustomDesignRequest, 'id' | 'userId' | 'status' | 'createdAt'>
+): Promise<string> {
+  const path = 'customDesigns';
+  try {
+    const docRef = await addDoc(collection(db, path), {
+      ...design,
+      userId: auth.currentUser?.uid || 'guest',
+      status: 'new',
+      createdAt: new Date().toISOString(),
+    });
+    return docRef.id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+  }
+}
+
+export async function fetchCustomDesigns(): Promise<CustomDesignRequest[]> {
+  const path = 'customDesigns';
+  try {
+    const snap = await getDocs(query(collection(db, path), orderBy('createdAt', 'desc')));
+    const designs: CustomDesignRequest[] = [];
+    snap.forEach((d) => designs.push({ id: d.id, ...d.data() } as CustomDesignRequest));
+    return designs;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+  }
+}
+
+export async function updateCustomDesignStatus(designId: string, status: CustomDesignStatus): Promise<void> {
+  const path = `customDesigns/${designId}`;
+  try {
+    await updateDoc(doc(db, 'customDesigns', designId), { status });
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }

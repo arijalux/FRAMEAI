@@ -1,14 +1,14 @@
 import React, { useDeferredValue, useMemo, useState } from 'react';
-import { Download, ScanFace, Sparkles } from 'lucide-react';
+import { CheckCircle2, Download, MessageCircle, ScanFace, Send, Sparkles } from 'lucide-react';
 import { FaceAnalysisResult, FrameShape } from '../types';
 import { FaceScanPanel } from './FaceScanPanel';
 import { faceShapeLabel, frameShapeLabel } from '../utils/format';
+import { downloadCutFile } from '../utils/cutFileDownload';
+import { submitCustomDesign } from '../lib/firebase';
 import {
   CustomFrameParams,
   DEFAULT_PARAMS,
   PARAM_LIMITS,
-  buildCutDxf,
-  buildCutSvg,
   buildFrameGeometry,
   defaultLensHeight,
   estimatedFaceWidth,
@@ -58,19 +58,30 @@ const SLIDER_GROUPS: { title: string; sliders: Slider[] }[] = [
   },
 ];
 
+// BJ Homemade's WhatsApp (digits only, e.g. 628123456789). Without it, chat opens their Instagram DM.
+const WHATSAPP = (import.meta.env.VITE_BJ_HOMEMADE_WHATSAPP ?? '').replace(/\D/g, '');
+const INSTAGRAM_DM = 'https://ig.me/m/bj.homamede';
+
 interface CustomFrameDesignerProps {
   faceAnalysis: FaceAnalysisResult | null;
   onScanResult: (analysis: FaceAnalysisResult) => void;
+  /** Only admins can download the cutting files; buyers send the design instead */
+  isAdmin: boolean;
 }
 
 /** Sizes a wooden frame from the face scan and exports a true-size cutting file for BJ Homemade's machine */
-export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAnalysis, onScanResult }) => {
+export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAnalysis, onScanResult, isAdmin }) => {
   const [params, setParams] = useState<CustomFrameParams>(() =>
     faceAnalysis ? paramsFromFace(faceAnalysis) : DEFAULT_PARAMS
   );
   const [wood, setWood] = useState<(typeof WOODS)[number]['id']>('sonokeling');
   const [showScan, setShowScan] = useState(false);
   const [sizedFromScan, setSizedFromScan] = useState(Boolean(faceAnalysis));
+  const [sendOpen, setSendOpen] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [contact, setContact] = useState('');
+  const [note, setNote] = useState('');
+  const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   // Slider drags stay responsive; the outline catches up a frame later
   const deferredParams = useDeferredValue(params);
@@ -94,18 +105,32 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
     setShowScan(false);
   };
 
-  const download = (format: 'svg' | 'dxf') => {
-    const blob =
-      format === 'svg'
-        ? new Blob([buildCutSvg(params)], { type: 'image/svg+xml' })
-        : new Blob([buildCutDxf(params)], { type: 'application/dxf' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `frameai-bj-homemade-${sizeCode(params)}.${format}`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const woodLabel = WOODS.find((w) => w.id === wood)!.label;
+  const canSend = customerName.trim().length > 0 && contact.trim().length >= 5 && sendState !== 'sending';
+
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSend) return;
+    setSendState('sending');
+    try {
+      await submitCustomDesign({
+        customerName: customerName.trim(),
+        contact: contact.trim(),
+        note: note.trim(),
+        params,
+        wood: woodLabel,
+        sizeCode: sizeCode(params),
+        faceShape: faceAnalysis?.faceShape ?? null,
+        estimatedPd: faceAnalysis?.estimatedPd ?? null,
+      });
+      setSendState('sent');
+    } catch {
+      setSendState('error');
+    }
   };
+
+  const chatMessage = `Halo BJ Homemade, saya mau tanya custom frame kayu ${frameShapeLabel(params.shape).toLowerCase()} ${woodLabel.toLowerCase()} ukuran ${sizeCode(params)} dari FrameAI.`;
+  const chatHref = WHATSAPP ? `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(chatMessage)}` : INSTAGRAM_DM;
 
   const pad = 6;
   const frontBox = `${-geometry.width / 2 - pad} ${geometry.top - pad} ${geometry.width + pad * 2} ${geometry.height + pad * 2}`;
@@ -294,25 +319,122 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
             />
           </label>
 
-          <div className="space-y-3">
-            <span className="text-sm text-ink">Unduh file potong</span>
-            <div className="grid grid-cols-2 gap-3">
-              {(['svg', 'dxf'] as const).map((format) => (
+          {/* Buyers send the design to BJ Homemade; the cutting files stay with the admin */}
+          <section className="space-y-3">
+            {sendState === 'sent' ? (
+              <div className="p-5 rounded-3xl bg-sage-tint space-y-2">
+                <p className="text-ink flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-sage" />
+                  Desain terkirim ke BJ Homemade
+                </p>
+                <p className="text-sm text-body leading-relaxed">
+                  Mereka akan menghubungi {contact.trim()} untuk konfirmasi harga dan waktu pengerjaan.
+                </p>
                 <button
-                  key={format}
-                  onClick={() => download(format)}
+                  onClick={() => {
+                    setSendState('idle');
+                    setSendOpen(false);
+                  }}
+                  className="text-sm text-ink underline underline-offset-4"
+                >
+                  Buat desain lain
+                </button>
+              </div>
+            ) : sendOpen ? (
+              <form onSubmit={send} className="p-5 rounded-3xl border border-line space-y-3">
+                <p className="text-sm text-ink">Kirim desain ke BJ Homemade</p>
+                <input
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  maxLength={80}
+                  placeholder="Nama"
+                  autoComplete="name"
+                  className="w-full h-12 px-4 rounded-full border border-line focus:border-ink outline-none text-sm text-ink"
+                />
+                <input
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  maxLength={80}
+                  placeholder="Nomor WhatsApp atau email"
+                  autoComplete="tel"
+                  className="w-full h-12 px-4 rounded-full border border-line focus:border-ink outline-none text-sm text-ink"
+                />
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  maxLength={500}
+                  rows={3}
+                  placeholder="Catatan (opsional), misalnya resep lensa atau warna finishing"
+                  className="w-full px-4 py-3 rounded-3xl border border-line focus:border-ink outline-none text-sm text-ink resize-none"
+                />
+                {sendState === 'error' && (
+                  <p className="text-sm text-body">Desain belum terkirim. Periksa koneksimu lalu coba lagi.</p>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSendOpen(false)}
+                    className="h-12 rounded-full border border-line hover:border-ink text-ink text-sm font-medium transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!canSend}
+                    className="h-12 rounded-full bg-ink hover:bg-ink-soft disabled:opacity-40 text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                    {sendState === 'sending' ? 'Mengirim...' : 'Kirim'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setSendOpen(true)}
                   className="h-12 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors"
                 >
-                  <Download className="w-4 h-4" />
-                  {format.toUpperCase()}
+                  <Send className="w-4 h-4" />
+                  Kirim desain
                 </button>
-              ))}
-            </div>
+                <a
+                  href={chatHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-12 rounded-full border border-line hover:border-ink text-ink text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Chat custom lain
+                </a>
+              </div>
+            )}
             <p className="text-xs text-muted leading-relaxed">
-              Ukuran asli dalam milimeter. SVG untuk software laser, DXF untuk CNC atau CAD. Garis potong merah (layer
-              CUT), ukiran hitam (layer ENGRAVE). Lubang lensa perlu disesuaikan dengan alur lensa dari optik.
+              Desainmu dikirim beserta ukurannya ke BJ Homemade untuk dibuat. Mau bentuk lain atau ukiran khusus? Chat
+              langsung dengan mereka.
             </p>
-          </div>
+          </section>
+
+          {isAdmin && (
+            <section className="space-y-3 pt-6 border-t border-line">
+              <span className="text-sm text-ink">File potong (khusus admin)</span>
+              <div className="grid grid-cols-2 gap-3">
+                {(['svg', 'dxf'] as const).map((format) => (
+                  <button
+                    key={format}
+                    onClick={() => downloadCutFile(params, format)}
+                    className="h-12 rounded-full border border-line hover:border-ink text-ink text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    {format.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted leading-relaxed">
+                Ukuran asli dalam milimeter. SVG untuk software laser, DXF untuk CNC atau CAD. Garis potong merah (layer
+                CUT), ukiran hitam (layer ENGRAVE). Lubang lensa perlu disesuaikan dengan alur lensa dari optik.
+              </p>
+            </section>
+          )}
         </div>
       </div>
     </div>
