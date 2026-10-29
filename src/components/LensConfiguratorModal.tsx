@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { OpticalFrame, FrameColorOption, LensConfiguration, PrescriptionInput, LensType, LensIndex } from '../types';
 import type { LensTint } from './ThreeFrameCanvas';
 import { LazyThreeFrameCanvas } from './LazyThreeFrameCanvas';
@@ -25,6 +25,7 @@ interface LensConfiguratorModalProps {
     totalPrice: number
   ) => void;
   initialTint?: LensTint;
+  initialColor?: FrameColorOption;
 }
 
 export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
@@ -33,9 +34,14 @@ export const LensConfiguratorModal: React.FC<LensConfiguratorModalProps> = ({
   onClose,
   onAddToCart,
   initialTint = 'clear',
+  initialColor,
 }) => {
-  const [selectedColor, setSelectedColor] = useState<FrameColorOption>(frame.colors[0]);
+  const [selectedColor, setSelectedColor] = useState<FrameColorOption>(initialColor ?? frame.colors[0]);
   const [lensTint, setLensTint] = useState<LensTint>(initialTint);
+
+  useEffect(() => {
+    setSelectedColor(initialColor ?? frame.colors[0]);
+  }, [frame, initialColor]);
 
   // Lens configuration state
   const [lensType, setLensType] = useState<LensType>('single_vision');

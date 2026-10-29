@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CartItem, Order } from '../types';
 import { X, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { formatRupiah, lensTypeLabel, PPN_RATE } from '../utils/format';
@@ -11,6 +11,7 @@ interface ShoppingBagDrawerProps {
   onRemoveItem: (itemId: string) => void;
   onUpdateQuantity: (itemId: string, qty: number) => void;
   onOrderPlaced: (order: Order) => void;
+  initialStep?: 'cart' | 'checkout';
 }
 
 export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
@@ -20,8 +21,15 @@ export const ShoppingBagDrawer: React.FC<ShoppingBagDrawerProps> = ({
   onRemoveItem,
   onUpdateQuantity,
   onOrderPlaced,
+  initialStep = 'cart',
 }) => {
-  const [checkoutStep, setCheckoutStep] = useState<'cart' | 'checkout' | 'success'>('cart');
+  const [checkoutStep, setCheckoutStep] = useState<'cart' | 'checkout' | 'success'>(initialStep);
+
+  useEffect(() => {
+    if (isOpen) {
+      setCheckoutStep(initialStep);
+    }
+  }, [isOpen, initialStep]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
 
