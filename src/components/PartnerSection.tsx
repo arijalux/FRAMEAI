@@ -2,13 +2,11 @@ import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { ArrowUpRight, Camera, ShieldCheck, Sparkles } from 'lucide-react';
 
-// All partner copy in one place so it's easy to review and edit.
-// Keep claims about the partner to what has been agreed with them.
+// All section copy in one place so it's easy to review and edit.
+// Don't name a specific partner here until there is a written agreement with them.
 const PARTNER = {
-  name: 'BJ Homemade',
-  eyebrow: 'Partner resmi',
-  title: 'FrameAI × BJ Homemade',
-  body: 'FrameAI bekerja sama dengan BJ Homemade untuk menghadirkan pengalaman memilih kacamata yang lebih mudah: kenali bentuk wajahmu dengan AI, coba frame secara virtual, lalu pesan dengan lensa yang sesuai resepmu.',
+  eyebrow: 'Untuk brand lokal',
+  body: 'FrameAI membantu brand dan perajin kacamata lokal menjual secara online dengan lebih yakin: pembeli mengenali bentuk wajahnya dengan AI, mencoba frame secara virtual, lalu memesan dengan lensa yang sesuai resepnya.',
   points: [
     { icon: Sparkles, title: 'Rekomendasi AI', text: 'Gemini memilihkan frame dari jawaban dan bentuk wajahmu.' },
     { icon: Camera, title: 'Coba virtual', text: 'Lihat frame langsung di wajahmu lewat kamera.' },
@@ -36,11 +34,10 @@ export const PartnerSection: React.FC<PartnerSectionProps> = ({ onOpenCatalog })
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 text-xs text-ink">
           {PARTNER.eyebrow}
         </span>
-        {/* Text wordmark until the partner's official logo file is added */}
         <h2 id="partner-title" className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.05] text-ink">
-          FrameAI <span className="text-muted">×</span>
+          Dibuat untuk
           <br />
-          {PARTNER.name}
+          brand kacamata lokal.
         </h2>
         <p className="text-lg text-body leading-relaxed max-w-lg">{PARTNER.body}</p>
         <button

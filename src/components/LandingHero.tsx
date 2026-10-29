@@ -142,7 +142,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
         </motion.div>
       </section>
 
-      {/* Partner: BJ Homemade */}
+      {/* For local eyewear brands */}
       <PartnerSection onOpenCatalog={onOpenCatalog} />
 
       {/* Editorial statement */}
