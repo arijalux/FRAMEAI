@@ -24,6 +24,7 @@ import { LensConfiguratorModal } from './components/LensConfiguratorModal';
 import { ShoppingBagDrawer } from './components/ShoppingBagDrawer';
 import { UserSavedLooksModal } from './components/UserSavedLooksModal';
 import { LandingHero } from './components/LandingHero';
+import { REAL_SIZE_PARAM } from './components/realsize/realSizeModels';
 
 // Secondary views are code-split so the catalog loads fast
 const ARFaceTryOn = lazy(() => import('./components/ARFaceTryOn').then((m) => ({ default: m.ARFaceTryOn })));
@@ -34,6 +35,7 @@ const AIFrameFinder = lazy(() => import('./components/AIFrameFinder').then((m) =
 const CustomFrameDesigner = lazy(() =>
   import('./components/CustomFrameDesigner').then((m) => ({ default: m.CustomFrameDesigner }))
 );
+const RealSizeViewer = lazy(() => import('./components/RealSizeViewer').then((m) => ({ default: m.RealSizeViewer })));
 const SellerOperationsPortal = lazy(() =>
   import('./components/SellerOperationsPortal').then((m) => ({ default: m.SellerOperationsPortal }))
 );
@@ -64,7 +66,10 @@ import {
 
 export default function App() {
   // Navigation View
-  const [activeView, setActiveView] = useState<'home' | 'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'finder' | 'custom' | 'seller'>('home');
+  const [activeView, setActiveView] = useState<'home' | 'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'finder' | 'custom' | 'real_size' | 'seller'>(() =>
+    // The printed card's QR code opens the real-size viewer directly
+    new URLSearchParams(window.location.search).has(REAL_SIZE_PARAM) ? 'real_size' : 'home'
+  );
 
   // Catalog & Frame State
   const [frames, setFrames] = useState<OpticalFrame[]>(INITIAL_FRAMES);
@@ -714,7 +719,16 @@ export default function App() {
           />
         )}
 
-        {/* VIEW 7: Merchant Portal */}
+        {/* VIEW 7: Real-size frame on a printed card */}
+        {activeView === 'real_size' && (
+          <RealSizeViewer
+            frames={frames}
+            initialModelId={new URLSearchParams(window.location.search).get(REAL_SIZE_PARAM) ?? undefined}
+            onTryOnFace={() => setActiveView('ar_tryon')}
+          />
+        )}
+
+        {/* VIEW 8: Merchant Portal */}
         {activeView === 'seller' && isAdmin && (
           <SellerOperationsPortal
             frames={frames}
@@ -757,6 +771,9 @@ export default function App() {
                     setActiveView('finder');
                   }} className="hover:text-ink transition-colors">
               Cari dengan AI
+            </button>
+            <button onClick={() => setActiveView('real_size')} className="hover:text-ink transition-colors">
+              Ukuran asli
             </button>
             <button onClick={() => setIsVaultOpen(true)} className="hover:text-ink transition-colors">
               Look & pesanan saya
