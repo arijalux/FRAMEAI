@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
 import { ArrowUpRight, LayoutGrid, Sparkles } from 'lucide-react';
-import CircularCarousel from './CircularCarousel';
+import { RotatingCards } from './RotatingCards';
 import { OpticalFrame } from '../types';
 import { formatRupiah, materialLabel } from '../utils/format';
 
@@ -61,22 +61,17 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
           style={still ? undefined : { y: carouselY, scale: carouselScale, opacity: carouselOpacity }}
           className="relative w-full h-[230px] sm:h-[400px] lg:h-[440px] will-change-transform"
         >
-          {/* 3D ring of catalog frames; clicking any card opens Koleksi */}
-          <CircularCarousel
-            items={frames.map((f) => ({
+          {/* Draggable 3D ring of catalog frames; clicking a card opens Koleksi */}
+          <RotatingCards
+            cards={frames.map((f) => ({
               src: f.imageUrl,
               alt: `${f.name}, ${materialLabel(f.material)}, ${formatRupiah(f.price)}`,
-              title: f.name,
             }))}
-            preset="cylinder"
-            intro="rise"
-            cardWidth={240}
-            aspectRatio={0.8}
-            speed={14}
-            fadeColor="#ffffff"
-            innerShade={0.85}
-            cornerRadius={20}
-            onItemClick={onOpenCatalog}
+            cardWidth={230}
+            aspectRatio={0.78}
+            speed={12}
+            tilt={-8}
+            onCardClick={onOpenCatalog}
           />
         </motion.div>
 
