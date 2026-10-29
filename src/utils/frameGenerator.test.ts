@@ -67,3 +67,15 @@ test('cut DXF is a millimetre R12 file with closed CUT polylines and ENGRAVE tex
   const xs = lines.flatMap((l, i) => (l === ' 10' ? [Number(lines[i + 1])] : []));
   assert.ok(xs.every((x) => Number.isFinite(x) && x >= 0));
 });
+
+test('temple follows its bend, length and thickness settings', () => {
+  const flat = buildFrameGeometry({ ...DEFAULT_PARAMS, templeBend: 0 });
+  const bent = buildFrameGeometry({ ...DEFAULT_PARAMS, templeBend: 30 });
+  const thick = buildFrameGeometry({ ...DEFAULT_PARAMS, templeBend: 0, templeThickness: 7 });
+  // A straight temple is as tall as it is thick; bending adds the drop
+  assert.ok(Math.abs(flat.templeHeight - DEFAULT_PARAMS.templeThickness) < 0.2);
+  assert.ok(bent.templeHeight > flat.templeHeight + 10);
+  assert.ok(Math.abs(thick.templeHeight - 7) < 0.2);
+  // Reaches the full length when straight (plus the rounded tip)
+  assert.ok(Math.abs(flat.templeWidth - DEFAULT_PARAMS.templeLength) < DEFAULT_PARAMS.templeThickness);
+});
