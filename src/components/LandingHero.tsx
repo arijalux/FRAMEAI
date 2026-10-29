@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
 import { ArrowUpRight, LayoutGrid, Sparkles } from 'lucide-react';
 import { RotatingCards } from './RotatingCards';
+import { PartnerSection } from './PartnerSection';
 import { OpticalFrame } from '../types';
 import { formatRupiah, materialLabel } from '../utils/format';
 
@@ -140,6 +141,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
           </motion.p>
         </motion.div>
       </section>
+
+      {/* Partner: BJ Homemade */}
+      <PartnerSection onOpenCatalog={onOpenCatalog} />
 
       {/* Editorial statement */}
       <section
