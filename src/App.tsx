@@ -327,6 +327,19 @@ export default function App() {
               setAiQuery('');
               setActiveView('finder');
             }}
+            onOpenFeature={(target) => {
+              if (target === 'search') {
+                // The AI search lives in the header: bring it into view and focus it
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                document.querySelector<HTMLInputElement>('header input[type="search"]')?.focus();
+                return;
+              }
+              if (target === 'finder') setAiQuery('');
+              setActiveView(
+                target === 'finder' ? 'finder' : target === 'ar' ? 'ar_tryon' : target === '3d' ? '3d_studio' : 'catalog'
+              );
+              window.scrollTo({ top: 0 });
+            }}
           />
         )}
 

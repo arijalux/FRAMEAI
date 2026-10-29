@@ -3,6 +3,7 @@ import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'mo
 import { ArrowUpRight, LayoutGrid, Sparkles } from 'lucide-react';
 import { RotatingCards } from './RotatingCards';
 import { PartnerSection } from './PartnerSection';
+import { FeaturesSection, FeatureTarget } from './FeaturesSection';
 import { OpticalFrame } from '../types';
 import { formatRupiah, materialLabel } from '../utils/format';
 
@@ -10,6 +11,7 @@ interface LandingHeroProps {
   frames: OpticalFrame[];
   onOpenCatalog: () => void;
   onOpenFinder: () => void;
+  onOpenFeature: (target: FeatureTarget) => void;
 }
 
 // Shared fade-up for elements entering the viewport
@@ -28,7 +30,7 @@ const reveal = {
 };
 
 /** Beranda hero + editorial section, with scroll-driven parallax */
-export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog, onOpenFinder }) => {
+export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog, onOpenFinder, onOpenFeature }) => {
   const reduceMotion = useReducedMotion();
   const heroRef = useRef<HTMLElement>(null);
   const editorialRef = useRef<HTMLElement>(null);
@@ -141,6 +143,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
           </motion.p>
         </motion.div>
       </section>
+
+      {/* What the app can do */}
+      <FeaturesSection onOpen={onOpenFeature} />
 
       {/* Partner: BJ Homemade */}
       <PartnerSection onOpenCatalog={onOpenCatalog} />
