@@ -17,9 +17,10 @@ const PARTNER = {
 
 interface PartnerSectionProps {
   onOpenCatalog: () => void;
+  onOpenCustom: () => void;
 }
 
-export const PartnerSection: React.FC<PartnerSectionProps> = ({ onOpenCatalog }) => {
+export const PartnerSection: React.FC<PartnerSectionProps> = ({ onOpenCatalog, onOpenCustom }) => {
   const still = Boolean(useReducedMotion());
 
   return (
@@ -42,13 +43,21 @@ export const PartnerSection: React.FC<PartnerSectionProps> = ({ onOpenCatalog })
           {PARTNER.name}
         </h2>
         <p className="text-lg text-body leading-relaxed max-w-lg">{PARTNER.body}</p>
-        <button
-          onClick={onOpenCatalog}
-          className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium inline-flex items-center gap-2 transition-colors"
-        >
-          Lihat koleksi
-          <ArrowUpRight className="w-4 h-4" />
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={onOpenCustom}
+            className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium inline-flex items-center gap-2 transition-colors"
+          >
+            Desain frame custom
+            <ArrowUpRight className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onOpenCatalog}
+            className="h-12 px-6 rounded-full border border-ink/20 hover:border-ink text-ink text-sm font-medium inline-flex items-center gap-2 transition-colors"
+          >
+            Lihat koleksi
+          </button>
+        </div>
       </div>
 
       <ul className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3 self-end">

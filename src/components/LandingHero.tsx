@@ -10,6 +10,7 @@ interface LandingHeroProps {
   frames: OpticalFrame[];
   onOpenCatalog: () => void;
   onOpenFinder: () => void;
+  onOpenCustom: () => void;
 }
 
 // Shared fade-up for elements entering the viewport
@@ -28,7 +29,7 @@ const reveal = {
 };
 
 /** Beranda hero + editorial section, with scroll-driven parallax */
-export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog, onOpenFinder }) => {
+export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog, onOpenFinder, onOpenCustom }) => {
   const reduceMotion = useReducedMotion();
   const heroRef = useRef<HTMLElement>(null);
   const editorialRef = useRef<HTMLElement>(null);
@@ -143,7 +144,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
       </section>
 
       {/* Partner: BJ Homemade */}
-      <PartnerSection onOpenCatalog={onOpenCatalog} />
+      <PartnerSection onOpenCatalog={onOpenCatalog} onOpenCustom={onOpenCustom} />
 
       {/* Editorial statement */}
       <section
