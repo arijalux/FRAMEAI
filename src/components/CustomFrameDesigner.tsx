@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useDeferredValue, useMemo, useState } from 'react';
 import { Download, ScanFace, Sparkles } from 'lucide-react';
 import { FaceAnalysisResult, FrameShape } from '../types';
 import { FaceScanPanel } from './FaceScanPanel';
@@ -27,6 +27,8 @@ const WOODS = [
 
 // Beyond this, each lens is shifted so far from its centre that it gets thick and heavy
 const MAX_DECENTRATION = 5;
+// Eyes outside the lens centres look odd and leave little room for edging, so the limit is tighter
+const MAX_OUTWARD_DECENTRATION = 2;
 
 const SLIDERS: { key: keyof typeof PARAM_LIMITS; label: string }[] = [
   { key: 'lensWidth', label: 'Lebar lensa' },
@@ -50,7 +52,9 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
   const [showScan, setShowScan] = useState(false);
   const [sizedFromScan, setSizedFromScan] = useState(Boolean(faceAnalysis));
 
-  const geometry = useMemo(() => buildFrameGeometry(params), [params]);
+  // Slider drags stay responsive; the outline catches up a frame later
+  const deferredParams = useDeferredValue(params);
+  const geometry = useMemo(() => buildFrameGeometry(deferredParams), [deferredParams]);
   const woodColor = WOODS.find((w) => w.id === wood)!.color;
   const decentration = faceAnalysis ? (framePd(params) - faceAnalysis.estimatedPd) / 2 : null;
 
@@ -123,6 +127,12 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
             <p className="text-sm text-body rounded-3xl bg-sand p-4">
               PD frame jauh lebih lebar dari PD kamu, jadi lensa harus digeser {decentration.toFixed(1)} mm per mata. Coba
               kecilkan lebar lensa atau bridge.
+            </p>
+          )}
+          {decentration !== null && decentration < -MAX_OUTWARD_DECENTRATION && (
+            <p className="text-sm text-body rounded-3xl bg-sand p-4">
+              PD frame lebih sempit dari PD kamu, jadi matamu ada di luar titik tengah lensa (
+              {Math.abs(decentration).toFixed(1)} mm per mata). Coba besarkan lebar lensa atau bridge.
             </p>
           )}
         </div>
