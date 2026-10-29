@@ -11,10 +11,13 @@ import {
   buildCutSvg,
   buildFrameGeometry,
   defaultLensHeight,
+  estimatedFaceWidth,
   framePd,
   frameTotalWidth,
+  maxRimWidth,
   paramsFromFace,
   sizeCode,
+  withChange,
 } from '../utils/frameGenerator';
 
 const SHAPES: FrameShape[] = ['Round', 'Oval', 'Square', 'Geometric', 'Aviator', 'Cat-Eye'];
@@ -29,6 +32,8 @@ const WOODS = [
 const MAX_DECENTRATION = 5;
 // Eyes outside the lens centres look odd and leave little room for edging, so the limit is tighter
 const MAX_OUTWARD_DECENTRATION = 2;
+// Frame wider or narrower than the face by more than this slips or pinches
+const MAX_WIDTH_OFF = 10;
 
 type Slider = { key: keyof typeof PARAM_LIMITS; label: string; unit: string };
 
@@ -72,11 +77,19 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
   const geometry = useMemo(() => buildFrameGeometry(deferredParams), [deferredParams]);
   const woodColor = WOODS.find((w) => w.id === wood)!.color;
   const decentration = faceAnalysis ? (framePd(params) - faceAnalysis.estimatedPd) / 2 : null;
+  const widthOff = faceAnalysis ? frameTotalWidth(params) - estimatedFaceWidth(faceAnalysis.estimatedPd) : null;
 
-  const update = (patch: Partial<CustomFrameParams>) => setParams((p) => ({ ...p, ...patch }));
+  const update = (patch: Partial<CustomFrameParams>) => setParams((p) => withChange(p, patch));
 
   const applyScan = (analysis: FaceAnalysisResult) => {
-    setParams((p) => ({ ...paramsFromFace(analysis), engraving: p.engraving }));
+    // The scan sets the sizes; the temple style and engraving the buyer chose are kept
+    setParams((p) => ({
+      ...paramsFromFace(analysis),
+      templeBend: p.templeBend,
+      templeDrop: p.templeDrop,
+      templeThickness: p.templeThickness,
+      engraving: p.engraving,
+    }));
     setSizedFromScan(true);
     setShowScan(false);
   };
@@ -142,6 +155,13 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
             <p className="text-sm text-body rounded-3xl bg-sand p-4">
               PD frame jauh lebih lebar dari PD kamu, jadi lensa harus digeser {decentration.toFixed(1)} mm per mata. Coba
               kecilkan lebar lensa atau bridge.
+            </p>
+          )}
+          {widthOff !== null && Math.abs(widthOff) > MAX_WIDTH_OFF && (
+            <p className="text-sm text-body rounded-3xl bg-sand p-4">
+              Lebar total frame {Math.round(frameTotalWidth(params))} mm, sekitar {Math.round(Math.abs(widthOff))} mm lebih{' '}
+              {widthOff > 0 ? 'lebar' : 'sempit'} dari perkiraan lebar wajahmu. Frame bisa{' '}
+              {widthOff > 0 ? 'melorot atau terlihat kebesaran' : 'terasa menjepit di pelipis'}.
             </p>
           )}
           {decentration !== null && decentration < -MAX_OUTWARD_DECENTRATION && (
@@ -250,7 +270,8 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
                   <input
                     type="range"
                     min={PARAM_LIMITS[key].min}
-                    max={PARAM_LIMITS[key].max}
+                    // A thick rim would close the nose opening on a narrow bridge
+                    max={key === 'rimWidth' ? maxRimWidth(params.bridgeWidth) : PARAM_LIMITS[key].max}
                     step={1}
                     value={params[key]}
                     onChange={(e) => update({ [key]: Number(e.target.value) })}
