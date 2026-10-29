@@ -49,6 +49,7 @@ const ROUNDNESS: Record<FrameShape, number> = {
 };
 
 const HINGE_TAB = 5; // how far the hinge block sticks out past the rim
+const HINGE_LIP = 1; // hinge face extends this far above and below the temple
 const CUT_COLOR = '#FF0000';
 const ENGRAVE_COLOR = '#000000';
 
@@ -56,6 +57,22 @@ const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(mi
 const round1 = (v: number) => Math.round(v * 10) / 10;
 
 export const defaultLensHeight = (shape: FrameShape, lensWidth: number) => Math.round(lensWidth * HEIGHT_RATIO[shape]);
+
+// Open space left between the two rims under the bridge, so the nose has room
+const NOSE_CLEARANCE = 4;
+
+/** Thickest rim that still leaves the nose opening at this bridge width */
+export const maxRimWidth = (bridgeWidth: number) =>
+  Math.max(PARAM_LIMITS.rimWidth.min, Math.min(PARAM_LIMITS.rimWidth.max, Math.floor((bridgeWidth - NOSE_CLEARANCE) / 2)));
+
+/** Applies a change and keeps dependent sizes valid (rim width is capped by the bridge) */
+export const withChange = (p: CustomFrameParams, patch: Partial<CustomFrameParams>): CustomFrameParams => {
+  const next = { ...p, ...patch };
+  return { ...next, rimWidth: Math.min(next.rimWidth, maxRimWidth(next.bridgeWidth)) };
+};
+
+/** Rough face width from PD; the scan has no absolute face width */
+export const estimatedFaceWidth = (pd: number) => pd * 2.2;
 
 /**
  * Sizes a frame from the face scan. There is no absolute face width in the scan, so the
@@ -65,7 +82,7 @@ export const paramsFromFace = (face: Pick<FaceAnalysisResult, 'estimatedPd' | 'r
   const shape = face.recommendedShapes[0] ?? 'Round';
   const pd = clamp(face.estimatedPd || 63, 54, 74);
   const bridgeWidth = 18;
-  const totalWidth = clamp(pd * 2.2, 124, 150);
+  const totalWidth = clamp(estimatedFaceWidth(pd), 124, 150);
   const rimWidth = 5;
   // Total = 2 lenses + bridge + outer rim on each side + hinge tabs
   const lensWidth = Math.round(
@@ -391,10 +408,15 @@ export const buildFrameGeometry = (p: CustomFrameParams): FrameGeometry => {
   // two hinge blocks, blended with fillets so the joints have no sharp inside corners.
   const bridgeHalfHeight = Math.max(3.5, r * 0.8);
   const bridgeY = -b * 0.45;
-  const hingeHalfHeight = 4.5;
+  // The hinge face is the temple's thickness plus a 1 mm lip above and below, so the
+  // temple always sits flush on it whatever thickness is chosen
+  const hingeHalfHeight = p.templeThickness / 2 + HINGE_LIP;
   const hingeY = -b * 0.55;
-  const hingeX = cx + a + r * 0.5 + HINGE_TAB / 2; // centre of the hinge block
-  const hingeHalfWidth = r * 0.5 + HINGE_TAB / 2;
+  // The block reaches well into the rim so it stays joined to it at any lens size or rim width
+  const hingeInner = cx + a * 0.7;
+  const hingeOuter = cx + a + r + HINGE_TAB;
+  const hingeX = (hingeInner + hingeOuter) / 2; // centre of the hinge block
+  const hingeHalfWidth = (hingeOuter - hingeInner) / 2;
 
   const field = (x: number, y: number) => {
     let d = Infinity;
@@ -409,7 +431,7 @@ export const buildFrameGeometry = (p: CustomFrameParams): FrameGeometry => {
     }
     d = smoothMin(d, boxDistance(x, y, 0, bridgeY, cx - a + r, bridgeHalfHeight, bridgeHalfHeight * 0.6), 4);
     for (const side of [-1, 1]) {
-      d = smoothMin(d, boxDistance(x, y, side * hingeX, hingeY, hingeHalfWidth, hingeHalfHeight, 1.5), 2.5);
+      d = smoothMin(d, boxDistance(x, y, side * hingeX, hingeY, hingeHalfWidth, hingeHalfHeight, HINGE_LIP), 2.5);
     }
     return d;
   };

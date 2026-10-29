@@ -11,6 +11,7 @@ import {
   frameTotalWidth,
   paramsFromFace,
   sizeCode,
+  withChange,
 } from './frameGenerator';
 
 const SHAPES: FrameShape[] = ['Round', 'Oval', 'Square', 'Geometric', 'Aviator', 'Cat-Eye'];
@@ -78,4 +79,37 @@ test('temple follows its bend, length and thickness settings', () => {
   assert.ok(Math.abs(thick.templeHeight - 7) < 0.2);
   // Reaches the full length when straight (plus the rounded tip)
   assert.ok(Math.abs(flat.templeWidth - DEFAULT_PARAMS.templeLength) < DEFAULT_PARAMS.templeThickness);
+});
+
+test('hinge stays joined to the rim and matches the temple thickness at slider extremes', () => {
+  const cases = [
+    { shape: 'Round' as const, lensWidth: 60, lensHeight: 26, rimWidth: 4, templeThickness: 3 },
+    { shape: 'Square' as const, lensWidth: 40, lensHeight: 56, rimWidth: 8, templeThickness: 7 },
+    { shape: 'Cat-Eye' as const, lensWidth: 60, lensHeight: 56, rimWidth: 4, templeThickness: 7 },
+  ];
+  for (const c of cases) {
+    const p = { ...DEFAULT_PARAMS, ...c };
+    const g = buildFrameGeometry(p);
+    // A detached hinge block would be dropped from the outline and shrink the width
+    assert.ok(Math.abs(g.width - frameTotalWidth(p)) < 1, `${c.shape} width`);
+    // Flat outer face of the hinge = temple thickness, so the temple sits flush
+    const face = g.outlines.front.filter(([x]) => x > g.width / 2 - 0.1).map(([, y]) => y);
+    assert.ok(Math.abs(Math.max(...face) - Math.min(...face) - c.templeThickness) < 1, `${c.shape} hinge face`);
+  }
+});
+
+test('rim width is capped by the bridge so the nose opening never closes', () => {
+  const narrow = withChange({ ...DEFAULT_PARAMS, rimWidth: 8 }, { bridgeWidth: 14 });
+  assert.equal(narrow.rimWidth, 5);
+  assert.equal(withChange(DEFAULT_PARAMS, { bridgeWidth: 24, rimWidth: 8 }).rimWidth, 8);
+  // Under the bridge, between the lenses, there is open space rather than wood
+  const g = buildFrameGeometry({ ...narrow, shape: 'Square', lensHeight: 56 });
+  const front = g.outlines.front;
+  let inside = false;
+  for (let i = 0, j = front.length - 1; i < front.length; j = i++) {
+    const [xi, yi] = front[i];
+    const [xj, yj] = front[j];
+    if (yi > 10 !== yj > 10 && 0 < ((xj - xi) * (10 - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  assert.equal(inside, false);
 });
