@@ -133,7 +133,8 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   const [autoTracking, setAutoTracking] = useState<boolean>(true);
   const [manualOffset, setManualOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [scaleMultiplier, setScaleMultiplier] = useState<number>(1.0);
-  const [showPdGuides, setShowPdGuides] = useState<boolean>(true);
+  // Off by default: the label would sit on top of the 3D frame
+  const [showPdGuides, setShowPdGuides] = useState<boolean>(false);
   // On phones the viewport is too short for every overlay, so calibration starts collapsed there
   const [showCalibrationMobile, setShowCalibrationMobile] = useState<boolean>(false);
   const isDragging = useRef<boolean>(false);
@@ -1137,12 +1138,19 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
       {/* Bottom Frame Switcher & Customization Drawer */}
       <div className="p-4 bg-soft border-t border-line">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3">
-          <div>
-            <h4 className="font-display text-lg font-medium text-ink tracking-wide">{activeFrame.name}</h4>
-            <p className="text-xs text-muted">
-              {frameShapeLabel(activeFrame.shape)} · {materialLabel(activeFrame.material)} · {formatRupiah(activeFrame.price)}
-            </p>
-          </div>
+          {renderMode === '3d' && overlayStatus === 'ready' ? (
+            <div>
+              <h4 className="font-display text-lg font-medium text-ink tracking-wide">Contoh model 3D kayu</h4>
+              <p className="text-xs text-muted">Bukan produk katalog. Pilih “Frame ini (2D)” untuk mencoba {activeFrame.name}.</p>
+            </div>
+          ) : (
+            <div>
+              <h4 className="font-display text-lg font-medium text-ink tracking-wide">{activeFrame.name}</h4>
+              <p className="text-xs text-muted">
+                {frameShapeLabel(activeFrame.shape)} · {materialLabel(activeFrame.material)} · {formatRupiah(activeFrame.price)}
+              </p>
+            </div>
+          )}
 
           {/* Color & Tint Controls */}
           <div className="flex flex-wrap items-center gap-3">
