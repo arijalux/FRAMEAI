@@ -1,16 +1,17 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { ArrowUpRight, Camera, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowUpRight, HandHeart, Leaf, ShieldCheck } from 'lucide-react';
 
-// All section copy in one place so it's easy to review and edit.
-// Don't name a specific partner here until there is a written agreement with them.
+// All partner copy in one place so it's easy to review and edit.
+// Facts from Green Network's interview with BJ Homemade (May 2023); collaboration agreed verbally.
 const PARTNER = {
-  eyebrow: 'Untuk brand lokal',
-  body: 'FrameAI membantu brand dan perajin kacamata lokal menjual secara online dengan lebih yakin: pembeli mengenali bentuk wajahnya dengan AI, mencoba frame secara virtual, lalu memesan dengan lensa yang sesuai resepnya.',
+  name: 'BJ Homemade',
+  eyebrow: 'Kolaborasi',
+  body: 'FrameAI berkolaborasi dengan BJ Homemade, usaha asal Semarang yang sejak 2017 membuat frame kacamata dari limbah kayu. Lewat FrameAI, frame buatan tangan mereka bisa dicoba secara virtual dan dipilih dengan bantuan AI dari mana saja.',
   points: [
-    { icon: Sparkles, title: 'Rekomendasi AI', text: 'Gemini memilihkan frame dari jawaban dan bentuk wajahmu.' },
-    { icon: Camera, title: 'Coba virtual', text: 'Lihat frame langsung di wajahmu lewat kamera.' },
-    { icon: ShieldCheck, title: 'Garansi pas 30 hari', text: 'Termasuk pembuatan ulang lensa jika kurang pas.' },
+    { icon: Leaf, title: 'Dari limbah kayu', text: 'Frame dibuat dari sisa kayu sonokeling dan jati.' },
+    { icon: HandHeart, title: 'Dibuat perajin difabel', text: 'Dikerjakan tangan bersama Komunitas Difabel Mandiri.' },
+    { icon: ShieldCheck, title: 'Garansi seumur hidup', text: 'Frame yang patah diperbaiki gratis oleh BJ Homemade.' },
   ],
 };
 
@@ -34,10 +35,11 @@ export const PartnerSection: React.FC<PartnerSectionProps> = ({ onOpenCatalog })
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 text-xs text-ink">
           {PARTNER.eyebrow}
         </span>
+        {/* Text wordmark until the partner's official logo file is added */}
         <h2 id="partner-title" className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.05] text-ink">
-          Dibuat untuk
+          FrameAI <span className="text-muted">×</span>
           <br />
-          brand kacamata lokal.
+          {PARTNER.name}
         </h2>
         <p className="text-lg text-body leading-relaxed max-w-lg">{PARTNER.body}</p>
         <button
