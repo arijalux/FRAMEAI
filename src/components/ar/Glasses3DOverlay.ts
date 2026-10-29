@@ -64,58 +64,11 @@ export class Glasses3DOverlay {
   }
 
   async load(url: string): Promise<void> {
-    const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-    const gltf = await loader.loadAsync(url);
-    const model = gltf.scene;
-    model.updateMatrixWorld(true);
-
-    // Lenses are the transparent material. Transmission needs the scene behind the glass,
-    // which here is the camera image outside WebGL, so use a thin tinted glass instead.
-    const lensBox = new THREE.Box3();
-    const solids: THREE.Mesh[] = [];
-    model.traverse((obj) => {
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      const material = mesh.material as THREE.MeshStandardMaterial;
-      if (material.transparent) {
-        const glass = new THREE.MeshPhysicalMaterial({
-          transparent: true,
-          roughness: 0.05,
-          metalness: 0,
-          envMapIntensity: 1.5,
-          depthWrite: false,
-        });
-        mesh.material = glass;
-        mesh.renderOrder = 2;
-        this.lensMaterials.push(glass);
-        lensBox.expandByObject(mesh);
-      } else {
-        solids.push(mesh);
-      }
-    });
-
-    const box = new THREE.Box3().setFromObject(model);
-    if (lensBox.isEmpty()) lensBox.copy(box);
-    const width = box.max.x - box.min.x;
-    const depth = box.max.z - box.min.z;
+    const loaded = await loadGlassesModel(url);
+    const { width, lensSize, templeInner } = loaded;
+    this.lensMaterials = loaded.lensMaterials;
     this.modelWidth = width;
-
-    // Inner edge of the temples: the narrowest |x| of the frame behind the front piece
-    let templeInner = width / 2;
-    const v = new THREE.Vector3();
-    const behindFront = box.max.z - depth * 0.3;
-    for (const mesh of solids) {
-      const pos = mesh.geometry.getAttribute('position');
-      for (let i = 0; i < pos.count; i++) {
-        v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
-        if (v.z < behindFront) templeInner = Math.min(templeInner, Math.abs(v.x));
-      }
-    }
-
-    // Origin at the middle of the lenses, on the front face of the frame
-    const lensCentre = lensBox.getCenter(new THREE.Vector3());
-    model.position.set(-lensCentre.x, -lensCentre.y, -box.max.z);
-    this.glasses.add(model);
+    this.glasses.add(loaded.model);
 
     // Head stand-in that only writes depth: as wide as the space between the temples, with
     // its face just behind the frame front, so the temples vanish behind it past the hinges
@@ -130,7 +83,6 @@ export class Glasses3DOverlay {
     this.glasses.add(occluder);
 
     // Soft shadow the rims cast on the face, just in front of the occluder
-    const lensSize = lensBox.getSize(new THREE.Vector3());
     const shadow = new THREE.Mesh(
       new THREE.PlaneGeometry(lensSize.x * 1.3, lensSize.y * 1.9),
       new THREE.MeshBasicMaterial({ map: rimShadowTexture(), transparent: true, depthWrite: false, opacity: 0.45 })
@@ -231,4 +183,82 @@ function rimShadowTexture(): THREE.CanvasTexture {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
+}
+
+export interface LoadedGlasses {
+  /** Model with its origin at the middle of the lenses, on the front face of the frame */
+  model: THREE.Object3D;
+  lensMaterials: THREE.MeshPhysicalMaterial[];
+  width: number;
+  /** Bounds of the positioned model */
+  box: THREE.Box3;
+  lensSize: THREE.Vector3;
+  /** Distance from the centre to the inside of the temples */
+  templeInner: number;
+}
+
+/**
+ * Loads a glTF pair of glasses (meshopt + WebP supported). Lenses are the transparent
+ * material; transmission needs the scene behind the glass, which here is a camera image
+ * outside WebGL, so they become a thin tinted glass instead.
+ */
+export async function loadGlassesModel(url: string): Promise<LoadedGlasses> {
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  const gltf = await loader.loadAsync(url);
+  const model = gltf.scene;
+  model.updateMatrixWorld(true);
+
+  const lensMaterials: THREE.MeshPhysicalMaterial[] = [];
+  const lensBox = new THREE.Box3();
+  const solids: THREE.Mesh[] = [];
+  model.traverse((obj) => {
+    const mesh = obj as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const material = mesh.material as THREE.MeshStandardMaterial;
+    if (material.transparent) {
+      const glass = new THREE.MeshPhysicalMaterial({
+        transparent: true,
+        roughness: 0.05,
+        metalness: 0,
+        envMapIntensity: 1.5,
+        depthWrite: false,
+        ...LENS_TINTS.clear,
+      });
+      mesh.material = glass;
+      mesh.renderOrder = 2;
+      lensMaterials.push(glass);
+      lensBox.expandByObject(mesh);
+    } else {
+      solids.push(mesh);
+    }
+  });
+
+  const box = new THREE.Box3().setFromObject(model);
+  if (lensBox.isEmpty()) lensBox.copy(box);
+  const width = box.max.x - box.min.x;
+  const depth = box.max.z - box.min.z;
+
+  // Inner edge of the temples: the narrowest |x| of the frame behind the front piece
+  let templeInner = width / 2;
+  const v = new THREE.Vector3();
+  const behindFront = box.max.z - depth * 0.3;
+  for (const mesh of solids) {
+    const pos = mesh.geometry.getAttribute('position');
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+      if (v.z < behindFront) templeInner = Math.min(templeInner, Math.abs(v.x));
+    }
+  }
+
+  const lensCentre = lensBox.getCenter(new THREE.Vector3());
+  const offset = new THREE.Vector3(-lensCentre.x, -lensCentre.y, -box.max.z);
+  model.position.copy(offset);
+  return {
+    model,
+    lensMaterials,
+    width,
+    box: box.clone().translate(offset),
+    lensSize: lensBox.getSize(new THREE.Vector3()),
+    templeInner,
+  };
 }
