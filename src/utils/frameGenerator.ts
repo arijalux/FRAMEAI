@@ -137,6 +137,8 @@ export interface FrameGeometry {
   lenses: [string, string];
   /** Side profile of one temple, starting at the hinge */
   temple: string;
+  /** The same outlines as closed point lists, for exporters */
+  outlines: { front: Pt[]; lenses: [Pt[], Pt[]]; temple: Pt[] };
   width: number;
   height: number;
   /** Highest point of the front (negative, above the lens centres) */
@@ -194,20 +196,23 @@ export const buildFrameGeometry = (p: CustomFrameParams): FrameGeometry => {
   const straight = p.templeLength - drop;
   const angle = (22 * Math.PI) / 180;
   const tip: Pt = [straight + drop * Math.cos(angle), drop * Math.sin(angle)];
-  const upper: Pt[] = [[0, -2.5], [straight, -2], [tip[0] + 1.75 * Math.sin(angle), tip[1] - 1.75 * Math.cos(angle)]];
-  const lower: Pt[] = [[tip[0] - 1.75 * Math.sin(angle), tip[1] + 1.75 * Math.cos(angle)], [straight - 1, 2], [0, 2.5]];
-  const temple =
-    `M${round1(upper[0][0])} ${upper[0][1]} L${round1(upper[1][0])} ${upper[1][1]} L${round1(upper[2][0])} ${round1(upper[2][1])}` +
-    ` A1.75 1.75 0 0 1 ${round1(lower[0][0])} ${round1(lower[0][1])}` +
-    ` L${round1(lower[1][0])} ${lower[1][1]} L${lower[2][0]} ${lower[2][1]} Z`;
+  const half = 1.75; // half thickness at the tip
+  const nx = Math.sin(angle);
+  const ny = -Math.cos(angle);
+  const templePts: Pt[] = [[0, -2.5], [straight, -2], [tip[0] + half * nx, tip[1] + half * ny]];
+  // Rounded tip: half circle around the tip from the upper edge to the lower edge
+  for (let i = 1; i < 8; i++) {
+    const t = Math.atan2(ny, nx) + (Math.PI * i) / 8;
+    templePts.push([tip[0] + half * Math.cos(t), tip[1] + half * Math.sin(t)]);
+  }
+  templePts.push([tip[0] - half * nx, tip[1] - half * ny], [straight - 1, 2], [0, 2.5]);
+  const lensPts: [Pt[], Pt[]] = [lensOutline(p.shape, -cx, a, b, -1), lensOutline(p.shape, cx, a, b, 1)];
 
   return {
     front: pathFrom(frontPts),
-    lenses: [
-      pathFrom(lensOutline(p.shape, -cx, a, b, -1)),
-      pathFrom(lensOutline(p.shape, cx, a, b, 1)),
-    ],
-    temple,
+    lenses: [pathFrom(lensPts[0]), pathFrom(lensPts[1])],
+    temple: pathFrom(templePts),
+    outlines: { front: frontPts, lenses: lensPts, temple: templePts },
     width: halfWidth * 2,
     height: maxY - minY,
     top: minY,
@@ -216,45 +221,121 @@ export const buildFrameGeometry = (p: CustomFrameParams): FrameGeometry => {
   };
 };
 
+export interface CutSheet {
+  width: number;
+  height: number;
+  /** Closed outlines in sheet coordinates (mm, y pointing down) */
+  cuts: { id: string; pts: Pt[] }[];
+  /** Engraving, positioned at its baseline */
+  texts: { x: number; y: number; size: number; text: string }[];
+}
+
+const ENGRAVE_SIZE = 2.4;
+
+/** Lays the pieces out on one sheet: front piece on top, two temples below */
+export const buildCutSheet = (p: CustomFrameParams): CutSheet => {
+  const g = buildFrameGeometry(p);
+  const margin = 6;
+  const gap = 8;
+  const width = Math.ceil(Math.max(g.width, g.templeWidth) + margin * 2);
+  const frontX = width / 2;
+  const frontY = margin - g.top;
+  // Temples start 2.5 mm above their centre line
+  const templeY1 = margin + g.height + gap + 2.5;
+  const templeY2 = templeY1 + g.templeHeight + gap;
+  const height = Math.ceil(templeY2 + g.templeHeight + margin);
+  const move = (pts: Pt[], dx: number, dy: number): Pt[] => pts.map(([x, y]) => [x + dx, y + dy]);
+  const engraving = p.engraving.trim().slice(0, 24);
+
+  return {
+    width,
+    height,
+    cuts: [
+      { id: 'front-outline', pts: move(g.outlines.front, frontX, frontY) },
+      { id: 'lens-left', pts: move(g.outlines.lenses[0], frontX, frontY) },
+      { id: 'lens-right', pts: move(g.outlines.lenses[1], frontX, frontY) },
+      { id: 'temple-left', pts: move(g.outlines.temple, margin, templeY1) },
+      { id: 'temple-right', pts: move(g.outlines.temple, margin, templeY2) },
+    ],
+    texts: [
+      { x: margin + 12, y: templeY1 + 0.9, size: ENGRAVE_SIZE, text: sizeCode(p) },
+      ...(engraving ? [{ x: margin + 12, y: templeY2 + 0.9, size: ENGRAVE_SIZE, text: engraving }] : []),
+    ],
+  };
+};
+
 const escapeXml = (s: string) =>
   s.replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' })[c]!);
 
 /**
- * Cutting sheet as SVG at true size (mm): front piece on top, two temples below.
+ * Cutting sheet as SVG at true size (mm).
  * Red hairlines are cuts, black text is engraving — the usual laser software convention.
  */
 export const buildCutSvg = (p: CustomFrameParams): string => {
-  const g = buildFrameGeometry(p);
-  const margin = 6;
-  const gap = 8;
-  const sheetWidth = Math.ceil(Math.max(g.width, g.templeWidth) + margin * 2);
-  const frontY = margin - g.top;
-  const templeY1 = margin + g.height + gap;
-  const templeY2 = templeY1 + g.templeHeight + gap;
-  const sheetHeight = Math.ceil(templeY2 + g.templeHeight + margin);
-  const frontX = sheetWidth / 2;
+  const sheet = buildCutSheet(p);
   const cut = `fill="none" stroke="${CUT_COLOR}" stroke-width="0.1"`;
   const text = `fill="${ENGRAVE_COLOR}" font-family="Arial, Helvetica, sans-serif"`;
-  const engraving = p.engraving.trim().slice(0, 24);
-
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${sheetWidth}mm" height="${sheetHeight}mm" viewBox="0 0 ${sheetWidth} ${sheetHeight}">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${sheet.width}mm" height="${sheet.height}mm" viewBox="0 0 ${sheet.width} ${sheet.height}">`,
     `<title>FrameAI × BJ Homemade ${sizeCode(p)}</title>`,
-    `<g id="front" transform="translate(${round1(frontX)} ${round1(frontY)})">`,
-    `<path id="front-outline" d="${g.front}" ${cut}/>`,
-    `<path id="lens-left" d="${g.lenses[0]}" ${cut}/>`,
-    `<path id="lens-right" d="${g.lenses[1]}" ${cut}/>`,
-    `</g>`,
-    `<g id="temple-left" transform="translate(${margin} ${round1(templeY1 + 3)})">`,
-    `<path d="${g.temple}" ${cut}/>`,
-    `<text x="12" y="0.9" font-size="2.4" ${text}>${escapeXml(sizeCode(p))}</text>`,
-    `</g>`,
-    `<g id="temple-right" transform="translate(${margin} ${round1(templeY2 + 3)})">`,
-    `<path d="${g.temple}" ${cut}/>`,
-    engraving ? `<text x="12" y="0.9" font-size="2.4" ${text}>${escapeXml(engraving)}</text>` : '',
-    `</g>`,
+    ...sheet.cuts.map((c) => `<path id="${c.id}" d="${pathFrom(c.pts)}" ${cut}/>`),
+    ...sheet.texts.map(
+      (t) => `<text x="${round1(t.x)}" y="${round1(t.y)}" font-size="${t.size}" ${text}>${escapeXml(t.text)}</text>`
+    ),
     `</svg>`,
-  ]
-    .filter(Boolean)
-    .join('\n');
+  ].join('\n');
+};
+
+// DXF R12 stores text in a code page; anything outside ASCII goes in as \U+XXXX
+const dxfText = (s: string) =>
+  [...s].map((c) => (c.charCodeAt(0) < 128 ? c : `\\U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`)).join('');
+
+/**
+ * Cutting sheet as DXF R12 in millimetres, for CNC / laser software that prefers DXF.
+ * Outlines are closed polylines on layer CUT (red); engraving is TEXT on layer ENGRAVE.
+ * DXF's y axis points up, so the sheet is flipped vertically.
+ */
+export const buildCutDxf = (p: CustomFrameParams): string => {
+  const sheet = buildCutSheet(p);
+  const out: (string | number)[] = [];
+  const pair = (code: number, value: string | number) => out.push(code, value);
+  const num = (v: number) => (Math.round(v * 1000) / 1000).toString();
+  const flip = (y: number) => num(sheet.height - y);
+
+  pair(0, 'SECTION'); pair(2, 'HEADER');
+  pair(9, '$ACADVER'); pair(1, 'AC1009');
+  pair(9, '$INSUNITS'); pair(70, 4); // millimetres
+  pair(9, '$EXTMIN'); pair(10, 0); pair(20, 0);
+  pair(9, '$EXTMAX'); pair(10, sheet.width); pair(20, sheet.height);
+  pair(0, 'ENDSEC');
+
+  pair(0, 'SECTION'); pair(2, 'TABLES');
+  pair(0, 'TABLE'); pair(2, 'LTYPE'); pair(70, 1);
+  pair(0, 'LTYPE'); pair(2, 'CONTINUOUS'); pair(70, 0); pair(3, 'Solid line'); pair(72, 65); pair(73, 0); pair(40, 0);
+  pair(0, 'ENDTAB');
+  pair(0, 'TABLE'); pair(2, 'LAYER'); pair(70, 2);
+  for (const [name, color] of [['CUT', 1], ['ENGRAVE', 7]] as const) {
+    pair(0, 'LAYER'); pair(2, name); pair(70, 0); pair(62, color); pair(6, 'CONTINUOUS');
+  }
+  pair(0, 'ENDTAB');
+  pair(0, 'ENDSEC');
+
+  pair(0, 'SECTION'); pair(2, 'ENTITIES');
+  for (const c of sheet.cuts) {
+    pair(0, 'POLYLINE'); pair(8, 'CUT'); pair(66, 1); pair(10, 0); pair(20, 0); pair(30, 0); pair(70, 1);
+    for (const [x, y] of c.pts) {
+      pair(0, 'VERTEX'); pair(8, 'CUT'); pair(10, num(x)); pair(20, flip(y)); pair(30, 0);
+    }
+    pair(0, 'SEQEND'); pair(8, 'CUT');
+  }
+  for (const t of sheet.texts) {
+    // DXF text height is the cap height, about 0.7 of the SVG font size
+    pair(0, 'TEXT'); pair(8, 'ENGRAVE'); pair(10, num(t.x)); pair(20, flip(t.y)); pair(30, 0); pair(40, num(t.size * 0.7)); pair(1, dxfText(t.text));
+  }
+  pair(0, 'ENDSEC');
+  pair(0, 'EOF');
+
+  const lines: string[] = [];
+  for (let i = 0; i < out.length; i += 2) lines.push(String(out[i]).padStart(3, ' '), String(out[i + 1]));
+  return lines.join('\r\n') + '\r\n';
 };

@@ -7,6 +7,7 @@ import {
   CustomFrameParams,
   DEFAULT_PARAMS,
   PARAM_LIMITS,
+  buildCutDxf,
   buildCutSvg,
   buildFrameGeometry,
   defaultLensHeight,
@@ -61,12 +62,15 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
     setShowScan(false);
   };
 
-  const download = () => {
-    const blob = new Blob([buildCutSvg(params)], { type: 'image/svg+xml' });
+  const download = (format: 'svg' | 'dxf') => {
+    const blob =
+      format === 'svg'
+        ? new Blob([buildCutSvg(params)], { type: 'image/svg+xml' })
+        : new Blob([buildCutDxf(params)], { type: 'application/dxf' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `frameai-bj-homemade-${sizeCode(params)}.svg`;
+    link.download = `frameai-bj-homemade-${sizeCode(params)}.${format}`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -240,16 +244,22 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
           </label>
 
           <div className="space-y-3">
-            <button
-              onClick={download}
-              className="w-full h-12 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              Unduh file potong (SVG)
-            </button>
+            <span className="text-sm text-ink">Unduh file potong</span>
+            <div className="grid grid-cols-2 gap-3">
+              {(['svg', 'dxf'] as const).map((format) => (
+                <button
+                  key={format}
+                  onClick={() => download(format)}
+                  className="h-12 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  {format.toUpperCase()}
+                </button>
+              ))}
+            </div>
             <p className="text-xs text-muted leading-relaxed">
-              Ukuran asli dalam milimeter. Garis merah untuk dipotong, teks hitam untuk diukir. Lubang lensa perlu
-              disesuaikan dengan alur lensa dari optik.
+              Ukuran asli dalam milimeter. SVG untuk software laser, DXF untuk CNC atau CAD. Garis potong merah (layer
+              CUT), ukiran hitam (layer ENGRAVE). Lubang lensa perlu disesuaikan dengan alur lensa dari optik.
             </p>
           </div>
         </div>

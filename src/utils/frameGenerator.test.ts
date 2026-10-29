@@ -4,6 +4,7 @@ import { FrameShape } from '../types';
 import {
   DEFAULT_PARAMS,
   PARAM_LIMITS,
+  buildCutDxf,
   buildCutSvg,
   buildFrameGeometry,
   framePd,
@@ -49,4 +50,20 @@ test('cut SVG is true size in millimetres and escapes the engraving', () => {
   assert.match(svg, /stroke="#FF0000"/);
   assert.ok(svg.includes('Ayu &amp; &lt;Budi&gt;'));
   assert.ok(svg.includes(sizeCode(DEFAULT_PARAMS)));
+});
+
+test('cut DXF is a millimetre R12 file with closed CUT polylines and ENGRAVE text', () => {
+  const dxf = buildCutDxf({ ...DEFAULT_PARAMS, engraving: 'Rifqi é' });
+  const lines = dxf.split('\r\n');
+  assert.equal(lines[lines.indexOf('$ACADVER') + 2], 'AC1009');
+  assert.equal(lines[lines.indexOf('$INSUNITS') + 2], '4');
+  // Front, two lenses and two temples
+  assert.equal(lines.filter((l) => l === 'POLYLINE').length, 5);
+  assert.equal(lines.filter((l) => l === 'SEQEND').length, 5);
+  assert.ok(lines.includes('Rifqi \\U+00E9'));
+  assert.ok(lines.includes(sizeCode(DEFAULT_PARAMS)));
+  assert.equal(lines.at(-2), 'EOF');
+  // Every coordinate is a finite number inside the sheet
+  const xs = lines.flatMap((l, i) => (l === ' 10' ? [Number(lines[i + 1])] : []));
+  assert.ok(xs.every((x) => Number.isFinite(x) && x >= 0));
 });
