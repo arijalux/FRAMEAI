@@ -21,7 +21,7 @@ import { LazyThreeFrameCanvas } from './components/LazyThreeFrameCanvas';
 import { LensConfiguratorModal } from './components/LensConfiguratorModal';
 import { ShoppingBagDrawer } from './components/ShoppingBagDrawer';
 import { UserSavedLooksModal } from './components/UserSavedLooksModal';
-import CircularCarousel from './components/CircularCarousel';
+import { LandingHero } from './components/LandingHero';
 
 // Secondary views are code-split so the catalog loads fast
 const ARFaceTryOn = lazy(() => import('./components/ARFaceTryOn').then((m) => ({ default: m.ARFaceTryOn })));
@@ -317,90 +317,17 @@ export default function App() {
         <Suspense fallback={<div className="py-24 text-center text-sm text-faint">Memuat...</div>}>
         {/* VIEW 0: Landing page */}
         {activeView === 'home' && (
-          <div className="space-y-24">
-            {/* Hero: catalog carousel on top, centred copy and actions below */}
-            <section className="flex flex-col items-center text-center gap-10 pt-2">
-              {/* 3D ring of catalog frames; clicking any card opens Koleksi */}
-              <div className="relative w-full h-[230px] sm:h-[400px] lg:h-[440px]">
-                <CircularCarousel
-                  items={frames.map((f) => ({
-                    src: f.imageUrl,
-                    alt: `${f.name}, ${materialLabel(f.material)}, ${formatRupiah(f.price)}`,
-                    title: f.name,
-                  }))}
-                  preset="cylinder"
-                  intro="rise"
-                  cardWidth={240}
-                  aspectRatio={0.8}
-                  speed={14}
-                  fadeColor="#ffffff"
-                  innerShade={0.85}
-                  cornerRadius={20}
-                  onItemClick={() => {
-                    setActiveView('catalog');
-                    window.scrollTo({ top: 0 });
-                  }}
-                />
-              </div>
-
-              <div className="max-w-4xl flex flex-col items-center gap-7">
-                <h1 className="text-[2.4rem] md:text-6xl font-normal tracking-[-0.045em] leading-[1.04] text-ink">
-                  Coba. Bandingkan. Pilih.
-                  <br />
-                  Kacamata yang pas, dibantu AI.
-                </h1>
-
-                <p className="text-lg text-muted leading-relaxed max-w-xl">
-                  Jawab beberapa pertanyaan, scan wajahmu, dan biarkan Gemini memilihkan frame yang paling cocok. Lalu coba
-                  langsung lewat kamera.
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <button
-                    onClick={() => {
-                      setAiQuery('');
-                      setActiveView('finder');
-                    }}
-                    className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center gap-2 transition-colors"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Cari dengan AI
-                  </button>
-                  <button
-                    onClick={() => setActiveView('catalog')}
-                    className="h-12 px-6 rounded-full border border-line hover:border-ink text-ink text-sm font-medium flex items-center gap-2 transition-colors"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                    Cari di katalog
-                  </button>
-                </div>
-
-                <p className="text-xs text-muted">Gratis ongkir ke seluruh Indonesia. Garansi pas 30 hari.</p>
-              </div>
-            </section>
-
-            {/* Editorial statement */}
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end border-t border-line pt-16">
-              <h2 className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.08] text-ink">
-                Lebih sedikit menebak.
-                <br />
-                Lebih banyak yang pas.
-              </h2>
-              <div className="space-y-6 max-w-md md:justify-self-end">
-                <p className="text-lg text-muted leading-relaxed">
-                  Setiap frame diberi skor kecocokan dengan bentuk wajahmu, diukur dalam milimeter, dan bisa dicoba
-                  langsung sebelum dipesan.
-                </p>
-                <button
-                  onClick={() => setActiveView('catalog')}
-                  className="h-12 px-6 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center gap-2 transition-colors"
-                >
-                  Lihat koleksi
-                  <ArrowUpRight className="w-4 h-4" />
-                </button>
-              </div>
-            </section>
-          </div>
+          <LandingHero
+            frames={frames}
+            onOpenCatalog={() => {
+              setActiveView('catalog');
+              window.scrollTo({ top: 0 });
+            }}
+            onOpenFinder={() => {
+              setAiQuery('');
+              setActiveView('finder');
+            }}
+          />
         )}
 
         {/* VIEW 1: Catalog, focused on choosing frames */}
