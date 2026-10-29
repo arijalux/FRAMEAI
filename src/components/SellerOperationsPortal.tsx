@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { OpticalFrame, Order, SellerInsights, OrderStatus } from '../types';
+import { OpticalFrame, Order, SellerInsights, OrderStatus, CustomDesignRequest, CustomDesignStatus } from '../types';
+import { CustomDesignInbox } from './CustomDesignInbox';
 import {
   TrendingUp,
   Package,
@@ -26,6 +27,8 @@ interface SellerOperationsPortalProps {
   onUpdateFrameStock: (frameId: string, newStock: number) => void;
   onAddNewFrame: (frame: OpticalFrame) => void;
   onUpdateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  customDesigns: CustomDesignRequest[];
+  onUpdateDesignStatus: (designId: string, status: CustomDesignStatus) => void;
 }
 
 export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
@@ -34,8 +37,10 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
   onUpdateFrameStock,
   onAddNewFrame,
   onUpdateOrderStatus,
+  customDesigns,
+  onUpdateDesignStatus,
 }) => {
-  const [activeTab, setActiveTab] = useState<'inventory' | 'orders' | 'ai_insights'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'orders' | 'custom' | 'ai_insights'>('inventory');
   const [aiInsights, setAiInsights] = useState<SellerInsights | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState<boolean>(false);
   const [insightsError, setInsightsError] = useState<string | null>(null);
@@ -207,6 +212,16 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
           }`}
         >
           Pesanan Pelanggan ({orders.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('custom')}
+          className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
+            activeTab === 'custom'
+              ? 'bg-ink text-white shadow-md'
+              : 'text-muted hover:text-ink hover:bg-white'
+          }`}
+        >
+          Desain Custom ({customDesigns.length})
         </button>
         <button
           onClick={() => {
@@ -396,7 +411,10 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
         </div>
       )}
 
-      {/* TAB 3: Gemini AI Store Intelligence */}
+      {/* TAB 3: Custom wooden frame designs sent to BJ Homemade */}
+      {activeTab === 'custom' && <CustomDesignInbox designs={customDesigns} onUpdateStatus={onUpdateDesignStatus} />}
+
+      {/* TAB 4: Gemini AI Store Intelligence */}
       {activeTab === 'ai_insights' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between p-6 rounded-3xl bg-white border border-line">

@@ -1,3 +1,4 @@
+import type { CustomFrameParams } from '../utils/frameGenerator';
 export type FaceShape = 'Oval' | 'Square' | 'Round' | 'Heart' | 'Diamond';
 export type FrameShape = 'Oval' | 'Square' | 'Round' | 'Geometric' | 'Aviator' | 'Cat-Eye';
 export type FrameMaterial = 'Italian Acetate' | 'Aerospace Titanium' | 'Eco-Polymer' | 'Mixed Titanium Acetate';
@@ -112,6 +113,24 @@ export interface Order {
   };
   createdAt: string;
   updatedAt: string;
+}
+
+export type CustomDesignStatus = 'new' | 'confirmed' | 'in_production' | 'done';
+
+/** A custom wooden frame design sent to BJ Homemade from the designer */
+export interface CustomDesignRequest {
+  id: string;
+  userId: string;
+  customerName: string;
+  contact: string; // WhatsApp number or email
+  note: string;
+  params: CustomFrameParams;
+  wood: string;
+  sizeCode: string;
+  faceShape: FaceShape | null;
+  estimatedPd: number | null;
+  status: CustomDesignStatus;
+  createdAt: string;
 }
 
 export interface SellerInsights {
