@@ -13,6 +13,11 @@ export interface TrackedLandmarks {
   angle: number; // in radians
   faceWidth: number;
   detected: boolean;
+  /**
+   * Head pose as a column-major 4×4 matrix (MediaPipe facial transformation, y up, z toward
+   * the camera), already mirrored to match a selfie view. Only the rotation is used.
+   */
+  pose?: number[];
 }
 
 type Point = { x: number; y: number };
@@ -58,6 +63,15 @@ export function mapNormalizedPoint(
   return { x: mirror ? dstW - x : x, y };
 }
 
+/**
+ * Mirrors a column-major 4×4 pose horizontally (S·M·S with S = diag(-1, 1, 1, 1)), so a head
+ * turning left in the camera image turns right in a selfie view.
+ */
+export function mirrorPose(m: ArrayLike<number>): number[] {
+  const sign = [-1, 1, 1, 1];
+  return Array.from({ length: 16 }, (_, i) => m[i] * sign[i % 4] * sign[Math.floor(i / 4)]);
+}
+
 /** Builds landmarks from two eye points, ordering them left-to-right on screen. */
 export function landmarksFromEyes(a: Point, b: Point, faceWidth: number, detected = true): TrackedLandmarks {
   const [leftEye, rightEye] = a.x <= b.x ? [a, b] : [b, a];
@@ -85,6 +99,7 @@ export function loadFaceLandmarker(): Promise<FaceLandmarker> {
           baseOptions: { modelAssetPath: MODEL_URL, delegate },
           runningMode: 'VIDEO',
           numFaces: 1,
+          outputFacialTransformationMatrixes: true,
         });
       try {
         return await create('GPU');
@@ -135,8 +150,11 @@ export class OpticalFaceTracker {
     this.lastTimestamp = now;
 
     let face;
+    let matrix: ArrayLike<number> | undefined;
     try {
-      face = this.landmarker.detectForVideo(source, now).faceLandmarks[0];
+      const result = this.landmarker.detectForVideo(source, now);
+      face = result.faceLandmarks[0];
+      matrix = result.facialTransformationMatrixes?.[0]?.data;
     } catch {
       return null;
     }
@@ -147,7 +165,9 @@ export class OpticalFaceTracker {
 
     const map = (i: number) => mapNormalizedPoint(face[i], srcW, srcH, dstW, dstH, mirror);
     const faceWidth = Math.hypot(map(CHEEK_B).x - map(CHEEK_A).x, map(CHEEK_B).y - map(CHEEK_A).y);
-    return this.smooth(landmarksFromEyes(map(IRIS_A), map(IRIS_B), faceWidth));
+    const landmarks = landmarksFromEyes(map(IRIS_A), map(IRIS_B), faceWidth);
+    if (matrix && matrix.length === 16) landmarks.pose = mirror ? mirrorPose(matrix) : Array.from(matrix);
+    return this.smooth(landmarks);
   }
 
   private smooth(current: TrackedLandmarks): TrackedLandmarks {
@@ -166,6 +186,8 @@ export class OpticalFaceTracker {
       angle: mix(current.angle, prev.angle),
       faceWidth: mix(current.faceWidth, prev.faceWidth),
       detected: true,
+      // Rotation is smoothed by the 3D overlay (quaternion slerp), not element by element
+      pose: current.pose,
     };
     this.prevResult = smoothed;
     return smoothed;

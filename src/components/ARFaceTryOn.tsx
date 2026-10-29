@@ -22,6 +22,15 @@ import {
 } from 'lucide-react';
 import { saveTryOnLookToFirestore } from '../lib/firebase';
 import { OpticalFaceTracker, TrackedLandmarks, landmarksFromEyes, coverTransform } from '../utils/faceTracker';
+import type { Glasses3DOverlay } from './ar/Glasses3DOverlay';
+
+// Sample 3D frame (CC BY 4.0) until BJ Homemade's own models are available
+const GLASSES_MODEL_URL = '/models/wood-glasses.glb';
+const GLASSES_MODEL_CREDIT = {
+  title: 'Glasses',
+  author: 'Marius.Eder',
+  url: 'https://sketchfab.com/3d-models/glasses-007651a9450746a5b6c5a126d484cd52',
+};
 import { formatRupiah, frameShapeLabel, materialLabel, faceShapeLabel } from '../utils/format';
 
 /** Line illustration: a face in a viewfinder wearing glasses, with a camera badge */
@@ -94,6 +103,8 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const demoImageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const glCanvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<Glasses3DOverlay | null>(null);
   const trackerRef = useRef<OpticalFaceTracker | null>(null);
   // Last good face position: used while locked, and to bridge brief detection dropouts
   const lastLandmarksRef = useRef<TrackedLandmarks | null>(null);
@@ -114,6 +125,9 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   const [selectedDemoIndex, setSelectedDemoIndex] = useState<number>(0);
   const [activeColor, setActiveColor] = useState<FrameColorOption>(activeFrame.colors[0]);
   const [lensTint, setLensTint] = useState<'clear' | 'sun' | 'blue_light'>('clear');
+  // 3D wooden sample frame, or the selected catalog frame drawn in 2D
+  const [renderMode, setRenderMode] = useState<'3d' | '2d'>('3d');
+  const [overlayStatus, setOverlayStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
   // Interactive manual adjustment
   const [autoTracking, setAutoTracking] = useState<boolean>(true);
@@ -151,6 +165,34 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
       });
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  // Load the 3D overlay (three.js + model) on demand; fall back to 2D if WebGL or the model fails
+  useEffect(() => {
+    let cancelled = false;
+    let overlay: Glasses3DOverlay | null = null;
+    (async () => {
+      try {
+        const { Glasses3DOverlay } = await import('./ar/Glasses3DOverlay');
+        if (cancelled || !glCanvasRef.current) return;
+        overlay = new Glasses3DOverlay(glCanvasRef.current);
+        await overlay.load(GLASSES_MODEL_URL);
+        if (cancelled) return;
+        overlayRef.current = overlay;
+        setOverlayStatus('ready');
+      } catch (err) {
+        console.warn('3D glasses failed to load:', err);
+        if (!cancelled) {
+          setOverlayStatus('error');
+          setRenderMode('2d');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      overlayRef.current = null;
+      overlay?.dispose();
     };
   }, []);
 
@@ -311,6 +353,9 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         setIsFaceDetected(detectedNow);
       }
 
+      const overlay = renderMode === '3d' && overlayStatus === 'ready' ? overlayRef.current : null;
+      if (!landmarks || !overlay) overlayRef.current?.clear();
+
       if (!landmarks) {
         animId = requestAnimationFrame(renderAR);
         return;
@@ -369,6 +414,23 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         ctx.fillText(`PD ${userPd}mm · Terkalibrasi`, centerX, centerY - 34);
 
         ctx.restore();
+      }
+
+      if (overlay) {
+        // Real-world scale from the pupils (userPd mm apart) and the frame's total width
+        const pxPerMm3d = (eyeDistance / userPd) * scaleMultiplier;
+        overlay.render({
+          width,
+          height,
+          center: { x: centerX, y: centerY },
+          angle,
+          // Locked or dragged frames keep the eye-line roll only
+          pose: autoTracking ? landmarks.pose : undefined,
+          frameWidthPx: activeFrame.dimensions.totalWidth * pxPerMm3d,
+          lensTint,
+        });
+        animId = requestAnimationFrame(renderAR);
+        return;
       }
 
       // Render Virtual Haute Eyewear
@@ -586,6 +648,8 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
     lensTint,
     selectedDemoIndex,
     userPd,
+    renderMode,
+    overlayStatus,
   ]);
 
   // Touch / Mouse Drag handlers for manual positioning
@@ -636,6 +700,10 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
 
     const finalize = () => {
       ctx.drawImage(canvas, 0, 0);
+      const glCanvas = glCanvasRef.current;
+      if (renderMode === '3d' && overlayStatus === 'ready' && glCanvas) {
+        ctx.drawImage(glCanvas, 0, 0, offscreen.width, offscreen.height);
+      }
       drawWatermark(ctx, offscreen.width, offscreen.height);
       setCapturedSnapshot(offscreen.toDataURL('image/jpeg', 0.95));
       setIsCapturing(false);
@@ -673,7 +741,11 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
 
     ctx.fillStyle = '#6E6E6E';
     ctx.font = `${12 * k}px "Instrument Sans", sans-serif`;
-    ctx.fillText(`${activeFrame.name} · ${activeColor.name}`, 24 * k, h - 18 * k);
+    const caption =
+      renderMode === '3d' && overlayStatus === 'ready'
+        ? `Contoh model 3D kayu · ${GLASSES_MODEL_CREDIT.author} (CC BY 4.0)`
+        : `${activeFrame.name} · ${activeColor.name}`;
+    ctx.fillText(caption, 24 * k, h - 18 * k);
 
     ctx.fillStyle = '#5F7846';
     ctx.font = `500 ${12 * k}px "Instrument Sans", sans-serif`;
@@ -804,6 +876,19 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
           className="absolute inset-0 w-full h-full z-10 cursor-move"
           title="Geser langsung untuk menyesuaikan posisi kacamata"
         />
+
+        {/* 3D glasses, drawn above the guides; drag events go to the canvas below */}
+        <canvas ref={glCanvasRef} className="absolute inset-0 w-full h-full z-[11] pointer-events-none" />
+        {renderMode === '3d' && overlayStatus === 'ready' && (cameraActive || demoMode) && (
+          <a
+            href={GLASSES_MODEL_CREDIT.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute left-3 bottom-3 z-20 px-2.5 py-1 rounded-full bg-white/80 text-[10px] text-body hover:text-ink"
+          >
+            Contoh model 3D: “{GLASSES_MODEL_CREDIT.title}” oleh {GLASSES_MODEL_CREDIT.author} · CC BY 4.0
+          </a>
+        )}
 
         {/* Shutter Animation */}
         {isCapturing && <div className="absolute inset-0 bg-white z-40 animate-out fade-out duration-300" />}
@@ -1061,21 +1146,46 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
 
           {/* Color & Tint Controls */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Color Swatches */}
-            <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-line">
-              {activeFrame.colors.map((c) => (
-                <button
-                  key={c.name}
-                  onClick={() => setActiveColor(c)}
-                  title={c.name}
-                  aria-label={`Pilih warna frame ${c.name}`}
-                  className={`w-6 h-6 rounded-full transition-all border ${
-                    activeColor.name === c.name ? 'ring-2 ring-ink scale-110' : 'opacity-80 hover:opacity-100'
-                  }`}
-                  style={{ backgroundColor: c.hex, borderColor: 'rgba(255,255,255,0.2)' }}
-                />
-              ))}
-            </div>
+            {/* 3D sample frame or the selected catalog frame in 2D */}
+            {overlayStatus !== 'error' && (
+              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-line text-xs">
+                {(
+                  [
+                    ['3d', overlayStatus === 'loading' ? 'Memuat 3D...' : '3D kayu'],
+                    ['2d', 'Frame ini (2D)'],
+                  ] as const
+                ).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    onClick={() => setRenderMode(mode)}
+                    aria-pressed={renderMode === mode}
+                    className={`px-2.5 py-1 rounded-full transition-all ${
+                      renderMode === mode ? 'bg-ink text-white font-medium' : 'text-muted'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Color Swatches (the 3D sample has its own wood finish) */}
+            {renderMode === '2d' && (
+              <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-line">
+                {activeFrame.colors.map((c) => (
+                  <button
+                    key={c.name}
+                    onClick={() => setActiveColor(c)}
+                    title={c.name}
+                    aria-label={`Pilih warna frame ${c.name}`}
+                    className={`w-6 h-6 rounded-full transition-all border ${
+                      activeColor.name === c.name ? 'ring-2 ring-ink scale-110' : 'opacity-80 hover:opacity-100'
+                    }`}
+                    style={{ backgroundColor: c.hex, borderColor: 'rgba(255,255,255,0.2)' }}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Lens Tint Toggles */}
             <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-line text-xs">
