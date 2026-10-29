@@ -88,46 +88,202 @@ export const frameTotalWidth = (p: CustomFrameParams) => 2 * p.lensWidth + p.bri
 /** Frame PD (lens centre to lens centre); lenses get decentred inward when it exceeds the wearer's PD */
 export const framePd = (p: Pick<CustomFrameParams, 'lensWidth' | 'bridgeWidth'>) => p.lensWidth + p.bridgeWidth;
 
-/**
- * Vertical extent of one lens shape at horizontal offset x from its centre.
- * `outward` is +1 when positive x points away from the nose (right lens), -1 for the left lens.
- * Returns null outside the shape. SVG y grows downward, so top < bottom.
- */
-const lensSpan = (shape: FrameShape, a: number, b: number, x: number, outward: 1 | -1) => {
-  const t = Math.abs(x) / a;
-  if (t > 1) return null;
-  const n = ROUNDNESS[shape];
-  const h = b * Math.pow(1 - Math.pow(t, n), 1 / n);
-  const side = (x * outward) / a; // -1 at the nose, +1 at the temple
-  let top = -h;
-  let bottom = h;
-  if (shape === 'Aviator') {
-    // Teardrop: flat brow, deep drop toward the nose
-    top = -h * 0.85;
-    bottom = h * (1.15 - 0.2 * side);
-  } else if (shape === 'Cat-Eye') {
-    // Upswept outer corner
-    top = -h - b * 0.28 * Math.max(0, side) ** 2;
-    bottom = h * (1 - 0.12 * Math.max(0, side));
-  }
-  return { top, bottom };
-};
-
 type Pt = [number, number];
 
 const pathFrom = (pts: Pt[]) =>
   pts.map(([x, y], i) => `${i ? 'L' : 'M'}${round1(x)} ${round1(y)}`).join(' ') + ' Z';
 
-const lensOutline = (shape: FrameShape, cx: number, a: number, b: number, outward: 1 | -1, step = 0.5): Pt[] => {
-  const top: Pt[] = [];
-  const bottom: Pt[] = [];
-  for (let x = -a; x <= a + 1e-6; x += step) {
-    const s = lensSpan(shape, a, b, x, outward);
-    if (!s) continue;
-    top.push([cx + x, s.top]);
-    bottom.push([cx + x, s.bottom]);
+const round2 = (v: number) => Math.round(v * 100) / 100;
+
+/**
+ * Smooth closed SVG path through the points (Catmull-Rom converted to cubic Béziers),
+ * so the outline is made of real curves instead of short straight segments.
+ */
+export const smoothPathFrom = (pts: Pt[]) => {
+  const n = pts.length;
+  const at = (i: number) => pts[(i + n) % n];
+  let d = `M${round2(pts[0][0])} ${round2(pts[0][1])}`;
+  for (let i = 0; i < n; i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    const c1: Pt = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2: Pt = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C${round2(c1[0])} ${round2(c1[1])} ${round2(c2[0])} ${round2(c2[1])} ${round2(p2[0])} ${round2(p2[1])}`;
   }
-  return [...top, ...bottom.reverse()];
+  return d + ' Z';
+};
+
+/** Resamples a closed outline to evenly spaced points */
+const resample = (pts: Pt[], spacing: number): Pt[] => {
+  const closed = [...pts, pts[0]];
+  const lengths = [0];
+  for (let i = 1; i < closed.length; i++) {
+    lengths.push(lengths[i - 1] + Math.hypot(closed[i][0] - closed[i - 1][0], closed[i][1] - closed[i - 1][1]));
+  }
+  const total = lengths[lengths.length - 1];
+  const count = Math.max(12, Math.round(total / spacing));
+  const out: Pt[] = [];
+  let seg = 1;
+  for (let k = 0; k < count; k++) {
+    const target = (k / count) * total;
+    while (lengths[seg] < target) seg++;
+    const t = (target - lengths[seg - 1]) / (lengths[seg] - lengths[seg - 1] || 1);
+    out.push([
+      closed[seg - 1][0] + (closed[seg][0] - closed[seg - 1][0]) * t,
+      closed[seg - 1][1] + (closed[seg][1] - closed[seg - 1][1]) * t,
+    ]);
+  }
+  return out;
+};
+
+/**
+ * One lens shape around (cx, 0). `outward` is +1 when positive x points away from the
+ * nose (right lens), -1 for the left lens. SVG y grows downward.
+ */
+const lensOutline = (shape: FrameShape, cx: number, a: number, b: number, outward: 1 | -1, spacing = 0.4): Pt[] => {
+  const n = ROUNDNESS[shape];
+  const raw: Pt[] = [];
+  const steps = 720;
+  for (let i = 0; i < steps; i++) {
+    const t = (i / steps) * Math.PI * 2;
+    const c = Math.cos(t);
+    const s = Math.sin(t);
+    let x = a * Math.sign(c) * Math.abs(c) ** (2 / n);
+    let y = b * Math.sign(s) * Math.abs(s) ** (2 / n);
+    const side = (x * outward) / a; // -1 at the nose, +1 at the temple
+    const yn = y / b; // -1 at the top, +1 at the bottom
+    // Shape tweaks use squared terms so the outline stays smooth where they fade out
+    if (shape === 'Aviator') {
+      // Teardrop: flatter brow, deeper drop toward the nose
+      y *= 1 + 0.15 * yn - 0.2 * side * Math.max(0, yn) ** 2;
+    } else if (shape === 'Cat-Eye') {
+      // Upswept outer corner, slightly narrower at the bottom outside
+      const lift = Math.max(0, side) ** 2;
+      const upper = Math.max(0, -yn);
+      y -= b * 0.3 * lift * upper ** 1.5;
+      y *= 1 - 0.12 * Math.max(0, side) * Math.max(0, yn) ** 2;
+      x += outward * a * 0.06 * lift * upper ** 2;
+    }
+    raw.push([cx + x, y]);
+  }
+  return resample(raw, spacing);
+};
+
+/** Signed distance to a closed polygon (negative inside) */
+const polygonDistance = (pts: Pt[], x: number, y: number) => {
+  let best = Infinity;
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i];
+    const [xj, yj] = pts[j];
+    const dx = xi - xj;
+    const dy = yi - yj;
+    const t = Math.max(0, Math.min(1, ((x - xj) * dx + (y - yj) * dy) / (dx * dx + dy * dy || 1)));
+    const ex = x - (xj + dx * t);
+    const ey = y - (yj + dy * t);
+    best = Math.min(best, ex * ex + ey * ey);
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside ? -Math.sqrt(best) : Math.sqrt(best);
+};
+
+/** Signed distance to a rounded rectangle centred at (cx, cy) */
+const boxDistance = (x: number, y: number, cx: number, cy: number, hw: number, hh: number, radius: number) => {
+  const qx = Math.abs(x - cx) - hw + radius;
+  const qy = Math.abs(y - cy) - hh + radius;
+  return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - radius;
+};
+
+/** Smooth union: blends two shapes with a fillet of roughly radius k */
+const smoothMin = (d1: number, d2: number, k: number) => {
+  const h = Math.max(k - Math.abs(d1 - d2), 0) / k;
+  return Math.min(d1, d2) - (h * h * k) / 4;
+};
+
+/**
+ * Traces the zero contour of a distance field with marching squares and returns the
+ * longest closed loop. Edge crossings are interpolated, so the outline follows the field
+ * closely rather than the grid.
+ */
+const traceContour = (field: (x: number, y: number) => number, x0: number, y0: number, x1: number, y1: number, h: number): Pt[] => {
+  const nx = Math.ceil((x1 - x0) / h) + 1;
+  const ny = Math.ceil((y1 - y0) / h) + 1;
+  // Coarse pass first; a distance field changes no faster than the distance moved, so fine
+  // samples are only evaluated in the narrow band where the coarse values say the edge can be.
+  const step = 4;
+  const cnx = Math.ceil((nx - 1) / step) + 1;
+  const cny = Math.ceil((ny - 1) / step) + 1;
+  const coarse = new Float64Array(cnx * cny);
+  for (let j = 0; j < cny; j++) for (let i = 0; i < cnx; i++) coarse[j * cnx + i] = field(x0 + i * step * h, y0 + j * step * h);
+  const band = step * h * 1.5;
+  const v = new Float64Array(nx * ny);
+  for (let j = 0; j < ny; j++) {
+    for (let i = 0; i < nx; i++) {
+      const ci = Math.min(Math.floor(i / step), cnx - 2);
+      const cj = Math.min(Math.floor(j / step), cny - 2);
+      const c = [coarse[cj * cnx + ci], coarse[cj * cnx + ci + 1], coarse[(cj + 1) * cnx + ci], coarse[(cj + 1) * cnx + ci + 1]];
+      const sameSign = c.every((d) => d > band) || c.every((d) => d < -band);
+      v[j * nx + i] = sameSign ? c[0] : field(x0 + i * h, y0 + j * h);
+    }
+  }
+
+  // Edge ids: horizontal edge (i,j)→(i+1,j) = j*nx+i; vertical edge (i,j)→(i,j+1) = H + j*nx+i
+  const H = nx * ny;
+  const point = (id: number): Pt => {
+    const vertical = id >= H;
+    const k = vertical ? id - H : id;
+    const i = k % nx;
+    const j = Math.floor(k / nx);
+    const a = v[k];
+    const b = vertical ? v[k + nx] : v[k + 1];
+    const t = a / (a - b);
+    return vertical ? [x0 + i * h, y0 + (j + t) * h] : [x0 + (i + t) * h, y0 + j * h];
+  };
+  const links = new Map<number, number[]>();
+  const link = (e1: number, e2: number) => {
+    (links.get(e1) ?? links.set(e1, []).get(e1)!).push(e2);
+    (links.get(e2) ?? links.set(e2, []).get(e2)!).push(e1);
+  };
+  for (let j = 0; j < ny - 1; j++) {
+    for (let i = 0; i < nx - 1; i++) {
+      const k = j * nx + i;
+      const tl = v[k] < 0, tr = v[k + 1] < 0, br = v[k + nx + 1] < 0, bl = v[k + nx] < 0;
+      const top = k, bottom = k + nx, left = H + k, right = H + k + 1;
+      const code = (tl ? 8 : 0) | (tr ? 4 : 0) | (br ? 2 : 0) | (bl ? 1 : 0);
+      switch (code) {
+        case 1: case 14: link(left, bottom); break;
+        case 2: case 13: link(bottom, right); break;
+        case 3: case 12: link(left, right); break;
+        case 4: case 11: link(top, right); break;
+        case 6: case 9: link(top, bottom); break;
+        case 7: case 8: link(left, top); break;
+        case 5: case 10: {
+          // Saddle: decide from the cell centre
+          const centre = (v[k] + v[k + 1] + v[k + nx] + v[k + nx + 1]) / 4 < 0;
+          if ((code === 5) === centre) { link(left, top); link(bottom, right); }
+          else { link(left, bottom); link(top, right); }
+          break;
+        }
+      }
+    }
+  }
+  let longest: Pt[] = [];
+  const seen = new Set<number>();
+  for (const start of links.keys()) {
+    if (seen.has(start)) continue;
+    const loop: Pt[] = [];
+    let prev = -1;
+    let cur = start;
+    while (!seen.has(cur)) {
+      seen.add(cur);
+      loop.push(point(cur));
+      const next = links.get(cur)!.find((e) => e !== prev && !seen.has(e));
+      if (next === undefined) break;
+      prev = cur;
+      cur = next;
+    }
+    if (loop.length > longest.length) longest = loop;
+  }
+  return longest;
 };
 
 export interface FrameGeometry {
@@ -153,40 +309,45 @@ export const buildFrameGeometry = (p: CustomFrameParams): FrameGeometry => {
   const b = p.lensHeight / 2;
   const r = p.rimWidth;
   const cx = a + p.bridgeWidth / 2; // lens centre offset from the bridge
-  const outerA = a + r;
-  const outerB = b + r;
-  const halfWidth = cx + outerA + HINGE_TAB;
+  const lensPts: [Pt[], Pt[]] = [lensOutline(p.shape, -cx, a, b, -1), lensOutline(p.shape, cx, a, b, 1)];
+  // Coarser copies for the distance field; the chord error at 1.5 mm spacing is a few hundredths of a mm
+  const coarse = lensPts.map((pts) => resample(pts, 1.5));
+  const lensBox = lensPts.map((pts) => {
+    const xs = pts.map(([x]) => x);
+    const ys = pts.map(([, y]) => y);
+    return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+  });
 
-  // The front is x-monotone: every vertical slice is one interval, so its outline is the
-  // top envelope left → right followed by the bottom envelope right → left.
-  const bridgeTop = -outerB * 0.55;
-  const bridgeBottom = bridgeTop + Math.max(7, r + 3);
-  const hingeTop = -outerB * 0.62;
-  const hingeBottom = hingeTop + 9;
+  // Front piece as one smooth solid: rim of uniform width r around each lens, a bridge and
+  // two hinge blocks, blended with fillets so the joints have no sharp inside corners.
+  const bridgeHalfHeight = Math.max(3.5, r * 0.8);
+  const bridgeY = -b * 0.45;
+  const hingeHalfHeight = 4.5;
+  const hingeY = -b * 0.55;
+  const hingeX = cx + a + r * 0.5 + HINGE_TAB / 2; // centre of the hinge block
+  const hingeHalfWidth = r * 0.5 + HINGE_TAB / 2;
 
-  const top: Pt[] = [];
-  const bottom: Pt[] = [];
-  const step = 0.5;
-  for (let x = -halfWidth; x <= halfWidth + 1e-6; x += step) {
-    let lo = Infinity;
-    let hi = -Infinity;
-    const add = (t: number, btm: number) => {
-      lo = Math.min(lo, t);
-      hi = Math.max(hi, btm);
-    };
-    for (const side of [-1, 1] as const) {
-      const s = lensSpan(p.shape, outerA, outerB, x - side * cx, side);
-      if (s) add(s.top, s.bottom);
-      // Hinge block on the outer edge, overlapping the rim so the slice stays continuous
-      const edge = side * (cx + outerA);
-      if (side * (x - edge) >= -r && side * (x - edge) <= HINGE_TAB) add(hingeTop, hingeBottom);
+  const field = (x: number, y: number) => {
+    let d = Infinity;
+    for (let i = 0; i < 2; i++) {
+      const box = lensBox[i];
+      // Far from a lens the exact distance doesn't matter, only that it's clearly outside
+      const bx = Math.max(box.x0 - x, x - box.x1, 0);
+      const by = Math.max(box.y0 - y, y - box.y1, 0);
+      const far = Math.hypot(bx, by);
+      const rim = far > r + 6 ? far - r : polygonDistance(coarse[i], x, y) - r;
+      d = smoothMin(d, rim, 3);
     }
-    if (Math.abs(x) <= cx - outerA + r * 1.5) add(bridgeTop, bridgeBottom);
-    if (lo === Infinity) continue;
-    top.push([x, lo]);
-    bottom.push([x, hi]);
-  }
-  const frontPts = [...top, ...bottom.reverse()];
+    d = smoothMin(d, boxDistance(x, y, 0, bridgeY, cx - a + r, bridgeHalfHeight, bridgeHalfHeight * 0.6), 4);
+    for (const side of [-1, 1]) {
+      d = smoothMin(d, boxDistance(x, y, side * hingeX, hingeY, hingeHalfWidth, hingeHalfHeight, 1.5), 2.5);
+    }
+    return d;
+  };
+
+  const halfWidth = cx + a + r + HINGE_TAB;
+  const reach = Math.max(...lensBox.map((box) => Math.max(-box.y0, box.y1))) + r + 2;
+  const frontPts = resample(traceContour(field, -halfWidth - 2, -reach, halfWidth + 2, reach, 0.35), 0.4);
   const ys = frontPts.map(([, y]) => y);
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
@@ -206,14 +367,13 @@ export const buildFrameGeometry = (p: CustomFrameParams): FrameGeometry => {
     templePts.push([tip[0] + half * Math.cos(t), tip[1] + half * Math.sin(t)]);
   }
   templePts.push([tip[0] - half * nx, tip[1] - half * ny], [straight - 1, 2], [0, 2.5]);
-  const lensPts: [Pt[], Pt[]] = [lensOutline(p.shape, -cx, a, b, -1), lensOutline(p.shape, cx, a, b, 1)];
 
   return {
-    front: pathFrom(frontPts),
-    lenses: [pathFrom(lensPts[0]), pathFrom(lensPts[1])],
+    front: smoothPathFrom(resample(frontPts, 1)),
+    lenses: [smoothPathFrom(resample(lensPts[0], 1)), smoothPathFrom(resample(lensPts[1], 1))],
     temple: pathFrom(templePts),
     outlines: { front: frontPts, lenses: lensPts, temple: templePts },
-    width: halfWidth * 2,
+    width: Math.max(...frontPts.map(([x]) => x)) - Math.min(...frontPts.map(([x]) => x)),
     height: maxY - minY,
     top: minY,
     templeWidth: tip[0] + 2,
@@ -278,7 +438,11 @@ export const buildCutSvg = (p: CustomFrameParams): string => {
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${sheet.width}mm" height="${sheet.height}mm" viewBox="0 0 ${sheet.width} ${sheet.height}">`,
     `<title>FrameAI × BJ Homemade ${sizeCode(p)}</title>`,
-    ...sheet.cuts.map((c) => `<path id="${c.id}" d="${pathFrom(c.pts)}" ${cut}/>`),
+    ...sheet.cuts.map((c) => {
+      // Curved outlines become Bézier curves; the temple keeps its straight edges
+      const d = c.id.startsWith('temple') ? pathFrom(c.pts) : smoothPathFrom(resample(c.pts, 1));
+      return `<path id="${c.id}" d="${d}" ${cut}/>`;
+    }),
     ...sheet.texts.map(
       (t) => `<text x="${round1(t.x)}" y="${round1(t.y)}" font-size="${t.size}" ${text}>${escapeXml(t.text)}</text>`
     ),
