@@ -30,12 +30,27 @@ const MAX_DECENTRATION = 5;
 // Eyes outside the lens centres look odd and leave little room for edging, so the limit is tighter
 const MAX_OUTWARD_DECENTRATION = 2;
 
-const SLIDERS: { key: keyof typeof PARAM_LIMITS; label: string }[] = [
-  { key: 'lensWidth', label: 'Lebar lensa' },
-  { key: 'lensHeight', label: 'Tinggi lensa' },
-  { key: 'bridgeWidth', label: 'Lebar bridge' },
-  { key: 'templeLength', label: 'Panjang gagang' },
-  { key: 'rimWidth', label: 'Tebal bingkai' },
+type Slider = { key: keyof typeof PARAM_LIMITS; label: string; unit: string };
+
+const SLIDER_GROUPS: { title: string; sliders: Slider[] }[] = [
+  {
+    title: 'Bingkai depan',
+    sliders: [
+      { key: 'lensWidth', label: 'Lebar lensa', unit: 'mm' },
+      { key: 'lensHeight', label: 'Tinggi lensa', unit: 'mm' },
+      { key: 'bridgeWidth', label: 'Lebar bridge', unit: 'mm' },
+      { key: 'rimWidth', label: 'Tebal bingkai', unit: 'mm' },
+    ],
+  },
+  {
+    title: 'Gagang',
+    sliders: [
+      { key: 'templeLength', label: 'Panjang gagang', unit: 'mm' },
+      { key: 'templeDrop', label: 'Panjang tekukan', unit: 'mm' },
+      { key: 'templeBend', label: 'Sudut tekukan', unit: '°' },
+      { key: 'templeThickness', label: 'Tebal gagang', unit: 'mm' },
+    ],
+  },
 ];
 
 interface CustomFrameDesignerProps {
@@ -100,7 +115,7 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
               <path d={`${geometry.front} ${geometry.lenses.join(' ')}`} fill={woodColor} fillRule="evenodd" />
             </svg>
             <svg
-              viewBox={`-2 ${-4} ${geometry.templeWidth + 4} ${geometry.templeHeight + 4}`}
+              viewBox={`-2 ${geometry.templeTop - 2} ${geometry.templeWidth + 4} ${geometry.templeHeight + 4}`}
               className="w-full h-auto max-h-24"
               role="img"
               aria-label="Pratinjau gagang"
@@ -220,26 +235,31 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
             </div>
           </section>
 
-          <section className="space-y-5">
-            <h2 className="text-sm text-ink">Ukuran (mm)</h2>
-            {SLIDERS.map(({ key, label }) => (
-              <label key={key} className="block space-y-2">
-                <span className="flex justify-between text-sm">
-                  <span className="text-body">{label}</span>
-                  <span className="text-ink tabular-nums">{params[key]} mm</span>
-                </span>
-                <input
-                  type="range"
-                  min={PARAM_LIMITS[key].min}
-                  max={PARAM_LIMITS[key].max}
-                  step={1}
-                  value={params[key]}
-                  onChange={(e) => update({ [key]: Number(e.target.value) })}
-                  className="w-full accent-ink"
-                />
-              </label>
-            ))}
-          </section>
+          {SLIDER_GROUPS.map((group) => (
+            <section key={group.title} className="space-y-5">
+              <h2 className="text-sm text-ink">{group.title}</h2>
+              {group.sliders.map(({ key, label, unit }) => (
+                <label key={key} className="block space-y-2">
+                  <span className="flex justify-between text-sm">
+                    <span className="text-body">{label}</span>
+                    <span className="text-ink tabular-nums">
+                      {params[key]}
+                      {unit === '°' ? unit : ` ${unit}`}
+                    </span>
+                  </span>
+                  <input
+                    type="range"
+                    min={PARAM_LIMITS[key].min}
+                    max={PARAM_LIMITS[key].max}
+                    step={1}
+                    value={params[key]}
+                    onChange={(e) => update({ [key]: Number(e.target.value) })}
+                    className="w-full accent-ink"
+                  />
+                </label>
+              ))}
+            </section>
+          ))}
 
           <label className="block space-y-2">
             <span className="text-sm text-ink">Ukiran di gagang</span>

@@ -10,6 +10,9 @@ export interface CustomFrameParams {
   lensHeight: number; // B: lens height
   bridgeWidth: number; // DBL: distance between lenses
   templeLength: number; // hinge to tip
+  templeBend: number; // degrees the tip drops behind the ear
+  templeDrop: number; // length of the part behind the ear
+  templeThickness: number; // arm height at the hinge; tapers to 70% at the tip
   rimWidth: number; // wood around each lens
   engraving: string; // engraved on the inside of the right temple
 }
@@ -19,6 +22,9 @@ export const PARAM_LIMITS = {
   lensHeight: { min: 26, max: 56 },
   bridgeWidth: { min: 14, max: 24 },
   templeLength: { min: 130, max: 150 },
+  templeBend: { min: 0, max: 35 },
+  templeDrop: { min: 20, max: 40 },
+  templeThickness: { min: 3, max: 7 },
   rimWidth: { min: 4, max: 8 },
 } as const;
 
@@ -72,6 +78,9 @@ export const paramsFromFace = (face: Pick<FaceAnalysisResult, 'estimatedPd' | 'r
     lensHeight: defaultLensHeight(shape, lensWidth),
     bridgeWidth,
     templeLength,
+    templeBend: 22,
+    templeDrop: 30,
+    templeThickness: 5,
     rimWidth,
     engraving: '',
   };
@@ -89,9 +98,6 @@ export const frameTotalWidth = (p: CustomFrameParams) => 2 * p.lensWidth + p.bri
 export const framePd = (p: Pick<CustomFrameParams, 'lensWidth' | 'bridgeWidth'>) => p.lensWidth + p.bridgeWidth;
 
 type Pt = [number, number];
-
-const pathFrom = (pts: Pt[]) =>
-  pts.map(([x, y], i) => `${i ? 'L' : 'M'}${round1(x)} ${round1(y)}`).join(' ') + ' Z';
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
 
@@ -286,6 +292,67 @@ const traceContour = (field: (x: number, y: number) => number, x0: number, y0: n
   return longest;
 };
 
+/**
+ * Side profile of a temple: straight arm from the hinge at (0, 0), a rounded bend behind
+ * the ear, then the drop to a rounded tip. The arm tapers from full thickness to 70%.
+ */
+const templeOutline = (p: CustomFrameParams): Pt[] => {
+  const angle = (p.templeBend * Math.PI) / 180;
+  const straight = p.templeLength - p.templeDrop;
+  const bendRadius = 14; // how gently the arm turns into the drop
+  const k = Math.min(bendRadius, straight * 0.5, p.templeDrop * 0.6);
+
+  // Centre line: line, quadratic curve through the bend, line
+  const p0: Pt = [straight - k, 0];
+  const p1: Pt = [straight, 0];
+  const p2: Pt = [straight + k * Math.cos(angle), k * Math.sin(angle)];
+  const end: Pt = [straight + p.templeDrop * Math.cos(angle), p.templeDrop * Math.sin(angle)];
+  const centre: Pt[] = [];
+  for (let x = 0; x < p0[0]; x += 1) centre.push([x, 0]);
+  for (let i = 0; i <= 20; i++) {
+    const t = i / 20;
+    const u = 1 - t;
+    centre.push([u * u * p0[0] + 2 * u * t * p1[0] + t * t * p2[0], u * u * p0[1] + 2 * u * t * p1[1] + t * t * p2[1]]);
+  }
+  const rest = Math.hypot(end[0] - p2[0], end[1] - p2[1]);
+  for (let d = 1; d <= rest; d += 1) {
+    const t = d / rest;
+    centre.push([p2[0] + (end[0] - p2[0]) * t, p2[1] + (end[1] - p2[1]) * t]);
+  }
+  if (centre[centre.length - 1][0] !== end[0]) centre.push(end);
+
+  // Offset both sides along the normal, tapering toward the tip
+  const half = (i: number) => (p.templeThickness / 2) * (1 - 0.3 * (i / (centre.length - 1)));
+  const normal = (i: number): Pt => {
+    const a = centre[Math.max(0, i - 1)];
+    const b = centre[Math.min(centre.length - 1, i + 1)];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    return [-(b[1] - a[1]) / len, (b[0] - a[0]) / len];
+  };
+  const upper: Pt[] = [];
+  const lower: Pt[] = [];
+  centre.forEach(([x, y], i) => {
+    const [nx, ny] = normal(i);
+    upper.push([x - nx * half(i), y - ny * half(i)]);
+    lower.push([x + nx * half(i), y + ny * half(i)]);
+  });
+
+  // Rounded tip around the end of the centre line
+  const tipR = half(centre.length - 1);
+  const [tnx, tny] = normal(centre.length - 1);
+  const start = Math.atan2(-tny, -tnx);
+  const tip: Pt[] = [];
+  for (let i = 1; i < 12; i++) {
+    const t = start + (Math.PI * i) / 12;
+    tip.push([end[0] + tipR * Math.cos(t), end[1] + tipR * Math.sin(t)]);
+  }
+
+  // Hinge end stays flat, with small corner radii so the smoothing doesn't bulge it
+  const h = p.templeThickness / 2;
+  const hinge: Pt[] = [[0.6, h - 0.1], [0.15, h - 0.4], [0, h - 1], [0, -h + 1], [0.15, -h + 0.4], [0.6, -h + 0.1]];
+  return resample([...hinge.slice(3), ...upper.slice(1), ...tip, ...lower.reverse().slice(0, -1), ...hinge.slice(0, 3)], 0.4);
+};
+
 export interface FrameGeometry {
   /** Outer contour of the front piece */
   front: string;
@@ -301,6 +368,8 @@ export interface FrameGeometry {
   top: number;
   templeWidth: number;
   templeHeight: number;
+  /** Highest point of the temple (negative, above its centre line at the hinge) */
+  templeTop: number;
 }
 
 /** Builds the cut paths, centred on the bridge at x = 0 and lens centres at y = 0 */
@@ -352,32 +421,21 @@ export const buildFrameGeometry = (p: CustomFrameParams): FrameGeometry => {
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
 
-  // Temple side profile: straight arm, then a 22° drop behind the ear, tapering 5 → 3.5 mm
-  const drop = 30;
-  const straight = p.templeLength - drop;
-  const angle = (22 * Math.PI) / 180;
-  const tip: Pt = [straight + drop * Math.cos(angle), drop * Math.sin(angle)];
-  const half = 1.75; // half thickness at the tip
-  const nx = Math.sin(angle);
-  const ny = -Math.cos(angle);
-  const templePts: Pt[] = [[0, -2.5], [straight, -2], [tip[0] + half * nx, tip[1] + half * ny]];
-  // Rounded tip: half circle around the tip from the upper edge to the lower edge
-  for (let i = 1; i < 8; i++) {
-    const t = Math.atan2(ny, nx) + (Math.PI * i) / 8;
-    templePts.push([tip[0] + half * Math.cos(t), tip[1] + half * Math.sin(t)]);
-  }
-  templePts.push([tip[0] - half * nx, tip[1] - half * ny], [straight - 1, 2], [0, 2.5]);
+  const templePts = templeOutline(p);
+  const txs = templePts.map(([x]) => x);
+  const tys = templePts.map(([, y]) => y);
 
   return {
     front: smoothPathFrom(resample(frontPts, 1)),
     lenses: [smoothPathFrom(resample(lensPts[0], 1)), smoothPathFrom(resample(lensPts[1], 1))],
-    temple: pathFrom(templePts),
+    temple: smoothPathFrom(templePts),
     outlines: { front: frontPts, lenses: lensPts, temple: templePts },
     width: Math.max(...frontPts.map(([x]) => x)) - Math.min(...frontPts.map(([x]) => x)),
     height: maxY - minY,
     top: minY,
-    templeWidth: tip[0] + 2,
-    templeHeight: tip[1] + 5,
+    templeWidth: Math.max(...txs),
+    templeHeight: Math.max(...tys) - Math.min(...tys),
+    templeTop: Math.min(...tys),
   };
 };
 
@@ -400,12 +458,14 @@ export const buildCutSheet = (p: CustomFrameParams): CutSheet => {
   const width = Math.ceil(Math.max(g.width, g.templeWidth) + margin * 2);
   const frontX = width / 2;
   const frontY = margin - g.top;
-  // Temples start 2.5 mm above their centre line
-  const templeY1 = margin + g.height + gap + 2.5;
+  // Temples are placed by their centre line at the hinge, which sits below their top edge
+  const templeY1 = margin + g.height + gap - g.templeTop;
   const templeY2 = templeY1 + g.templeHeight + gap;
   const height = Math.ceil(templeY2 + g.templeHeight + margin);
   const move = (pts: Pt[], dx: number, dy: number): Pt[] => pts.map(([x, y]) => [x + dx, y + dy]);
   const engraving = p.engraving.trim().slice(0, 24);
+  // Keep the engraving inside thin temples
+  const textSize = Math.min(ENGRAVE_SIZE, p.templeThickness * 0.5);
 
   return {
     width,
@@ -418,8 +478,8 @@ export const buildCutSheet = (p: CustomFrameParams): CutSheet => {
       { id: 'temple-right', pts: move(g.outlines.temple, margin, templeY2) },
     ],
     texts: [
-      { x: margin + 12, y: templeY1 + 0.9, size: ENGRAVE_SIZE, text: sizeCode(p) },
-      ...(engraving ? [{ x: margin + 12, y: templeY2 + 0.9, size: ENGRAVE_SIZE, text: engraving }] : []),
+      { x: margin + 12, y: templeY1 + textSize * 0.36, size: textSize, text: sizeCode(p) },
+      ...(engraving ? [{ x: margin + 12, y: templeY2 + textSize * 0.36, size: textSize, text: engraving }] : []),
     ],
   };
 };
@@ -439,8 +499,8 @@ export const buildCutSvg = (p: CustomFrameParams): string => {
     `<svg xmlns="http://www.w3.org/2000/svg" width="${sheet.width}mm" height="${sheet.height}mm" viewBox="0 0 ${sheet.width} ${sheet.height}">`,
     `<title>FrameAI × BJ Homemade ${sizeCode(p)}</title>`,
     ...sheet.cuts.map((c) => {
-      // Curved outlines become Bézier curves; the temple keeps its straight edges
-      const d = c.id.startsWith('temple') ? pathFrom(c.pts) : smoothPathFrom(resample(c.pts, 1));
+      // Outlines become Bézier curves through evenly spaced points
+      const d = smoothPathFrom(resample(c.pts, 1));
       return `<path id="${c.id}" d="${d}" ${cut}/>`;
     }),
     ...sheet.texts.map(
