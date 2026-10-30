@@ -34,10 +34,8 @@ const FRAME_SHAPE_LABELS: Record<FrameShape, string> = {
 };
 
 const MATERIAL_LABELS: Record<FrameMaterial, string> = {
-  'Italian Acetate': 'Asetat Italia',
-  'Aerospace Titanium': 'Titanium Aerospace',
-  'Eco-Polymer': 'Eko-Polimer',
-  'Mixed Titanium Acetate': 'Kombinasi Titanium & Asetat',
+  Sonokeling: 'Kayu Sonokeling',
+  Jati: 'Kayu Jati',
 };
 
 const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {

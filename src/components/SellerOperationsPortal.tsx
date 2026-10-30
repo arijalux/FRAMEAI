@@ -49,7 +49,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
   // New frame form state
   const [newFrameName, setNewFrameName] = useState<string>('');
   const [newFrameShape, setNewFrameShape] = useState<OpticalFrame['shape']>('Geometric');
-  const [newFrameMaterial, setNewFrameMaterial] = useState<OpticalFrame['material']>('Aerospace Titanium');
+  const [newFrameMaterial, setNewFrameMaterial] = useState<OpticalFrame['material']>('Sonokeling');
   const [newFramePrice, setNewFramePrice] = useState<number>(5_000_000);
   const [newFrameStock, setNewFrameStock] = useState<number>(20);
   const [newFrameDesc, setNewFrameDesc] = useState<string>('Frame buatan tangan dengan siluet khas.');
@@ -91,7 +91,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
     const frame: OpticalFrame = {
       id: 'frame-' + Date.now(),
       name: newFrameName,
-      brand: 'FrameAI Atelier',
+      brand: 'BJ Homemade',
       shape: newFrameShape,
       material: newFrameMaterial,
       price: Number(newFramePrice),
@@ -100,14 +100,15 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
       fitFaceShapes: ['Oval', 'Round', 'Heart'],
       description: newFrameDesc,
       isPolarized: false,
-      rating: 5.0,
-      reviewsCount: 1,
+      rating: 0,
+      reviewsCount: 0,
       isNew: true,
       imageUrl: 'https://images.unsplash.com/photo-1591076482161-42ce6da69f67?auto=format&fit=crop&w=800&q=80',
       model3dPreset: 'geometric',
       colors: [
-        { name: 'Brushed Titanium', hex: '#8F9194', acetateTexture: 'metallic' },
-        { name: 'Matte Obsidian', hex: '#1C1C1E', acetateTexture: 'matte' },
+        newFrameMaterial === 'Jati'
+          ? { name: 'Jati alami', hex: '#8B5A2B', acetateTexture: 'matte' }
+          : { name: 'Sonokeling alami', hex: '#3B2418', acetateTexture: 'matte' },
       ],
       dimensions: {
         lensWidth: 51,
@@ -158,7 +159,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
             <Package className="w-4 h-4 text-sage" />
           </div>
           <div className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">{frames.length} Model</div>
-          <div className="text-[11px] text-muted">Titanium, Asetat, Eko-Polimer</div>
+          <div className="text-[11px] text-muted">Kayu sonokeling dan jati</div>
         </div>
 
         <div className="p-5 rounded-2xl bg-white border border-line space-y-1">
@@ -544,7 +545,7 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="cth. Monaco Sculpted Acetate"
+                  placeholder="cth. Sonokeling Flat-Top"
                   value={newFrameName}
                   onChange={(e) => setNewFrameName(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-soft border border-line text-xs text-ink focus:outline-none focus:border-ink"
@@ -574,10 +575,8 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
                     onChange={(e) => setNewFrameMaterial(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl bg-soft border border-line text-xs text-ink"
                   >
-                    <option value="Aerospace Titanium">Titanium Aerospace</option>
-                    <option value="Italian Acetate">Asetat Italia</option>
-                    <option value="Eco-Polymer">Eko-Polimer</option>
-                    <option value="Mixed Titanium Acetate">Kombinasi Titanium & Asetat</option>
+                    <option value="Sonokeling">Kayu Sonokeling</option>
+                    <option value="Jati">Kayu Jati</option>
                   </select>
                 </div>
               </div>

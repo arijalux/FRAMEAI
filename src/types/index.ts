@@ -1,7 +1,9 @@
 import type { CustomFrameParams } from '../utils/frameGenerator';
 export type FaceShape = 'Oval' | 'Square' | 'Round' | 'Heart' | 'Diamond';
 export type FrameShape = 'Oval' | 'Square' | 'Round' | 'Geometric' | 'Aviator' | 'Cat-Eye';
-export type FrameMaterial = 'Italian Acetate' | 'Aerospace Titanium' | 'Eco-Polymer' | 'Mixed Titanium Acetate';
+export type FrameMaterial = 'Sonokeling' | 'Jati';
+/** Overall look, matched against the AI questionnaire's style question */
+export type FrameStyle = 'minimalist' | 'bold' | 'retro';
 
 export interface FrameDimensions {
   lensWidth: number; // mm e.g. 52
@@ -22,6 +24,7 @@ export interface OpticalFrame {
   name: string;
   brand: string;
   shape: FrameShape;
+  style?: FrameStyle;
   material: FrameMaterial;
   price: number;
   colors: FrameColorOption[];
