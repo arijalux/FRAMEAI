@@ -122,11 +122,12 @@ export async function checkIsAdmin(user: User | null): Promise<boolean> {
 export async function fetchCatalogFrames(): Promise<OpticalFrame[]> {
   try {
     const snap = await getDocs(collection(db, 'frames'));
-    // Firestore holds admin edits and additions; overlay them on the built-in catalog by id
+    // Firestore holds admin edits and additions; overlay them on the built-in catalog by id.
+    // Only BJ Homemade frames are sold, so frames saved from the old demo catalog stay hidden.
     const byId = new Map(INITIAL_FRAMES.map((f) => [f.id, f]));
     snap.forEach((d) => {
       const frame = d.data() as OpticalFrame;
-      byId.set(frame.id, frame);
+      if (frame.brand === 'BJ Homemade') byId.set(frame.id, frame);
     });
     return [...byId.values()];
   } catch {

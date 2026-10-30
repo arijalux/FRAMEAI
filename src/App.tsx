@@ -60,7 +60,6 @@ import {
   Store,
   Plus,
   Shield,
-  Sun,
   Flame,
 } from 'lucide-react';
 
@@ -81,7 +80,6 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [shapeFilter, setShapeFilter] = useState<string>('All');
   const [materialFilter, setMaterialFilter] = useState<string>('All');
-  const [polarizedOnly, setPolarizedOnly] = useState<boolean>(false);
   // Unknown until the visitor picks a shape, runs the AI face scan or completes Cari dengan AI;
   // match scores are hidden until then rather than assuming a face shape
   const [userFaceShape, setUserFaceShape] = useState<FaceShape | null>(null);
@@ -140,8 +138,7 @@ export default function App() {
         f.material.toLowerCase().includes(searchQuery.toLowerCase());
       const matchShape = shapeFilter === 'All' || f.shape === shapeFilter;
       const matchMat = materialFilter === 'All' || f.material === materialFilter;
-      const matchPolarized = !polarizedOnly || f.isPolarized;
-      return matchSearch && matchShape && matchMat && matchPolarized;
+      return matchSearch && matchShape && matchMat;
     })
     .sort((a, b) => {
       // Best match first once we know the face shape; otherwise keep catalog order
@@ -412,12 +409,12 @@ export default function App() {
                     className="shrink-0 h-10 px-4 rounded-full bg-soft text-sm text-ink focus:outline-none"
                   >
                     <option value="All">Semua bentuk</option>
-                    <option value="Geometric">Geometris</option>
-                    <option value="Square">Kotak</option>
-                    <option value="Round">Bulat</option>
-                    <option value="Aviator">Aviator</option>
-                    <option value="Cat-Eye">Cat-Eye</option>
-                    <option value="Oval">Oval</option>
+                    {/* Only the shapes the catalog actually has */}
+                    {[...new Set(frames.map((f) => f.shape))].map((shape) => (
+                      <option key={shape} value={shape}>
+                        {frameShapeLabel(shape)}
+                      </option>
+                    ))}
                   </select>
                   <select
                     aria-label="Filter frame berdasarkan material"
@@ -426,20 +423,9 @@ export default function App() {
                     className="shrink-0 h-10 px-4 rounded-full bg-soft text-sm text-ink focus:outline-none"
                   >
                     <option value="All">Semua material</option>
-                    <option value="Aerospace Titanium">Titanium Aerospace</option>
-                    <option value="Italian Acetate">Asetat Italia</option>
-                    <option value="Eco-Polymer">Eko-Polimer</option>
-                    <option value="Mixed Titanium Acetate">Kombinasi Titanium & Asetat</option>
+                    <option value="Sonokeling">Kayu Sonokeling</option>
+                    <option value="Jati">Kayu Jati</option>
                   </select>
-                  <button
-                    onClick={() => setPolarizedOnly((p) => !p)}
-                    className={`shrink-0 h-10 px-4 rounded-full text-sm flex items-center gap-1.5 whitespace-nowrap transition-colors ${
-                      polarizedOnly ? 'bg-ink text-white' : 'bg-soft text-ink hover:bg-soft-strong'
-                    }`}
-                  >
-                    <Sun className="w-4 h-4" />
-                    Sun polarized
-                  </button>
                 </div>
               </div>
 
@@ -586,7 +572,7 @@ export default function App() {
               <div>
                 <h2 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">Inspeksi Optik 3D Presisi</h2>
                 <p className="text-xs text-muted">
-                  Putar 360°, periksa engsel titanium, ganti lapisan lensa, dan lihat dimensi dalam milimeter.
+                  Putar 360°, periksa bentuk frame kayu, ganti lapisan lensa, dan lihat dimensi dalam milimeter.
                 </p>
               </div>
               <button

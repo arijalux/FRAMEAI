@@ -40,33 +40,31 @@ const QUESTIONS: {
     hint: 'Menentukan bobot frame, kebutuhan filter blue light, dan kenyamanan seharian.',
     options: [
       { id: 'digital', title: 'Kerja digital & remote', desc: 'Berjam-jam di depan layar, butuh frame ringan dan filter blue light.' },
-      { id: 'fashion', title: 'Eksekutif & fashion', desc: 'Siluet tegas dan khas yang menonjolkan gayamu.' },
-      { id: 'outdoor', title: 'Outdoor & aktif', desc: 'Lensa polarized anti-silau dan frame yang tidak mudah melorot.' },
-      { id: 'all_day', title: 'Dipakai seharian', desc: 'Nyaman dipakai hingga 16 jam sehari.' },
+      { id: 'fashion', title: 'Tampil & bergaya', desc: 'Siluet tegas dan khas yang menonjolkan gayamu.' },
+      { id: 'outdoor', title: 'Aktif di luar ruang', desc: 'Frame kayu yang kokoh dan tidak mudah melorot.' },
+      { id: 'all_day', title: 'Dipakai seharian', desc: 'Ringan dan nyaman dari pagi sampai malam.' },
     ],
   },
   {
     step: 'aesthetic',
     key: 'aesthetic',
     title: 'Gaya seperti apa yang paling kamu suka?',
-    hint: 'Menentukan garis siluet, bentuk bridge, dan karakter frame.',
+    hint: 'Menentukan siluet dan karakter frame kayumu.',
     options: [
-      { id: 'minimalist', title: 'Minimalis', desc: 'Geometri tegas, kawat tipis, bersih dan fungsional.' },
-      { id: 'bold', title: 'Berani & mencolok', desc: 'Asetat tebal dengan warna pekat dan tampilan menonjol.' },
-      { id: 'retro', title: 'Klasik abadi', desc: 'Aviator ikonik, bridge keyhole, dan frame bulat vintage.' },
-      { id: 'sculptural', title: 'Elegan & mewah', desc: 'Cat-eye terangkat, warna emas champagne, finishing mengilap.' },
+      { id: 'minimalist', title: 'Klasik & rapi', desc: 'Persegi panjang ramping yang cocok untuk sehari-hari.' },
+      { id: 'bold', title: 'Tebal & tegas', desc: 'Alis datar atau kotak besar yang langsung menarik perhatian.' },
+      { id: 'retro', title: 'Retro', desc: 'Siluet pilot membulat bergaya vintage.' },
     ],
   },
   {
     step: 'material',
     key: 'materialPref',
-    title: 'Material apa yang kamu suka?',
-    hint: 'Menyeimbangkan bobot, kenyamanan, dan kekokohan frame.',
+    title: 'Kayu apa yang kamu suka?',
+    hint: 'Semua frame dibuat tangan dari limbah kayu oleh BJ Homemade.',
     options: [
-      { id: 'titanium', title: 'Titanium', desc: 'Super ringan, hipoalergenik, tahan karat.' },
-      { id: 'acetate', title: 'Asetat Italia', desc: 'Terasa hangat dan alami, warna lebih kaya.' },
-      { id: 'eco', title: 'Bio-polimer', desc: 'Ringan dan ramah lingkungan, finishing matte.' },
-      { id: 'hybrid', title: 'Kombinasi', desc: 'Bagian depan asetat dengan gagang titanium.' },
+      { id: 'sonokeling', title: 'Sonokeling', desc: 'Cokelat gelap hampir hitam, kesan elegan dan tegas.' },
+      { id: 'jati', title: 'Jati', desc: 'Cokelat hangat dengan serat kayu yang terlihat jelas.' },
+      { id: 'any', title: 'Bebas', desc: 'Pilihkan saja yang paling cocok untukku.' },
     ],
   },
 ];
@@ -84,28 +82,17 @@ function rankLocally(frames: OpticalFrame[], answers: Answers, faceShape: FaceSh
     .map((f) => {
       const match = faceShape ? calculateFaceFrameMatchScore(faceShape, f.shape) : null;
       let score = match?.score ?? 75;
-      if (answers.materialPref === 'titanium' && f.material.includes('Titanium')) score += 10;
-      if (answers.materialPref === 'acetate' && f.material.includes('Acetate')) score += 10;
-      if (answers.materialPref === 'eco' && f.material.includes('Eco')) score += 10;
-      if (answers.materialPref === 'hybrid' && f.material.startsWith('Mixed')) score += 10;
-      if (answers.lifestyle === 'digital' && f.weightGrams < 20) score += 6;
-      if (answers.lifestyle === 'outdoor' && f.isPolarized) score += 8;
-      if (answers.aesthetic === 'bold' && f.shape === 'Square') score += 5;
-      if (answers.aesthetic === 'minimalist' && f.shape === 'Geometric') score += 5;
-      if (answers.aesthetic === 'retro' && (f.shape === 'Aviator' || f.shape === 'Round')) score += 5;
-      if (answers.aesthetic === 'sculptural' && f.shape === 'Cat-Eye') score += 5;
+      const woodMatch = answers.materialPref === f.material.toLowerCase();
+      const light = f.weightGrams <= 22;
+      if (woodMatch) score += 10;
+      if ((answers.lifestyle === 'digital' || answers.lifestyle === 'all_day') && light) score += 6;
+      if (answers.aesthetic && answers.aesthetic === f.style) score += 8;
       // Build a reason from the attributes that actually matched this visitor's answers
       const notes: string[] = [];
-      if (answers.lifestyle === 'digital' && f.weightGrams < 20)
-        notes.push(`ringan (${f.weightGrams.toLocaleString('id-ID')} g) untuk berjam-jam di depan layar`);
-      if (answers.lifestyle === 'outdoor' && f.isPolarized) notes.push('lensa polarized untuk aktivitas luar ruang');
-      if (
-        (answers.materialPref === 'titanium' && f.material.includes('Titanium')) ||
-        (answers.materialPref === 'acetate' && f.material.includes('Acetate')) ||
-        (answers.materialPref === 'eco' && f.material.includes('Eco')) ||
-        (answers.materialPref === 'hybrid' && f.material.startsWith('Mixed'))
-      )
-        notes.push(`material ${materialLabel(f.material).toLowerCase()} sesuai pilihanmu`);
+      if ((answers.lifestyle === 'digital' || answers.lifestyle === 'all_day') && light)
+        notes.push(`ringan (sekitar ${f.weightGrams.toLocaleString('id-ID')} g) untuk dipakai lama`);
+      if (answers.aesthetic && answers.aesthetic === f.style) notes.push('gayanya sesuai pilihanmu');
+      if (woodMatch) notes.push(`${materialLabel(f.material).toLowerCase()} sesuai pilihanmu`);
       const head = match ? `Bentuk ${frameShapeLabel(f.shape).toLowerCase()} cocok ${match.score}% untuk wajah ${faceShapeLabel(faceShape!).toLowerCase()}` : `Siluet ${frameShapeLabel(f.shape).toLowerCase()}`;
       const reason = notes.length ? `${head}, ${notes.join(', ')}.` : `${head}. ${match?.guidance ?? ''}`.trim();
       return { frame: f, reason, score };
