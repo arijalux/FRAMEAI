@@ -1,6 +1,6 @@
 import { OpticalFrame } from '../types';
 
-// BJ Homemade's handmade wooden frames (Semarang), photographed by the maker.
+// BJ Homemade's handmade wooden frames (Semarang), one entry per product photo from the maker.
 // Sizes and weights are estimates for typical frames of each style and the price is the
 // frame-only range BJ Homemade publishes (Rp300–350 rb) — replace with measured values.
 // Frames are made to order, so stock is the number that can be taken on at once.
@@ -31,6 +31,27 @@ export const INITIAL_FRAMES: OpticalFrame[] = [
     reviewsCount: 0,
   },
   {
+    id: 'bj-flat-top-02',
+    name: 'Sonokeling Flat-Top 02',
+    brand: BRAND,
+    shape: 'Geometric',
+    style: 'bold',
+    material: 'Sonokeling',
+    price: 350_000,
+    colors: [SONOKELING],
+    dimensions: { lensWidth: 54, bridgeWidth: 18, templeLength: 145, lensHeight: 42, totalWidth: 144 },
+    weightGrams: 26,
+    fitFaceShapes: ['Oval', 'Round', 'Heart'],
+    description:
+      'Varian alis datar dengan lensa sedikit melebar ke bawah, kayu sonokeling. Buatan tangan BJ Homemade, Semarang.',
+    isPolarized: false,
+    imageUrl: '/frames/bj-flat-top-02.jpg',
+    model3dPreset: 'geometric',
+    stock: 10,
+    rating: 0,
+    reviewsCount: 0,
+  },
+  {
     id: 'bj-square-oversize',
     name: 'Sonokeling Square Oversize',
     brand: BRAND,
@@ -52,6 +73,27 @@ export const INITIAL_FRAMES: OpticalFrame[] = [
     reviewsCount: 0,
   },
   {
+    id: 'bj-square-oversize-02',
+    name: 'Sonokeling Square Oversize 02',
+    brand: BRAND,
+    shape: 'Square',
+    style: 'bold',
+    material: 'Sonokeling',
+    price: 350_000,
+    colors: [SONOKELING],
+    dimensions: { lensWidth: 56, bridgeWidth: 18, templeLength: 145, lensHeight: 52, totalWidth: 146 },
+    weightGrams: 24,
+    fitFaceShapes: ['Round', 'Oval', 'Heart'],
+    description:
+      'Varian kotak besar dengan gagang bergaris kayu terang, kayu sonokeling. Buatan tangan BJ Homemade, Semarang.',
+    isPolarized: false,
+    imageUrl: '/frames/bj-square-oversize-02.jpg',
+    model3dPreset: 'wayfarer',
+    stock: 10,
+    rating: 0,
+    reviewsCount: 0,
+  },
+  {
     id: 'bj-rectangle-jati',
     name: 'Jati Classic Rectangle',
     brand: BRAND,
@@ -67,6 +109,27 @@ export const INITIAL_FRAMES: OpticalFrame[] = [
       'Persegi panjang klasik dengan serat kayu jati yang hangat, cocok untuk dipakai seharian. Buatan tangan BJ Homemade, Semarang.',
     isPolarized: false,
     imageUrl: '/frames/bj-rectangle-jati.jpg',
+    model3dPreset: 'wayfarer',
+    stock: 10,
+    rating: 0,
+    reviewsCount: 0,
+  },
+  {
+    id: 'bj-rectangle-jati-02',
+    name: 'Jati Classic Rectangle 02',
+    brand: BRAND,
+    shape: 'Square',
+    style: 'minimalist',
+    material: 'Jati',
+    price: 350_000,
+    colors: [JATI],
+    dimensions: { lensWidth: 52, bridgeWidth: 18, templeLength: 145, lensHeight: 38, totalWidth: 138 },
+    weightGrams: 20,
+    fitFaceShapes: ['Round', 'Oval', 'Diamond'],
+    description:
+      'Varian persegi panjang dengan alis lebih lurus dan serat jati yang tegas. Buatan tangan BJ Homemade, Semarang.',
+    isPolarized: false,
+    imageUrl: '/frames/bj-rectangle-jati-02.jpg',
     model3dPreset: 'wayfarer',
     stock: 10,
     rating: 0,
