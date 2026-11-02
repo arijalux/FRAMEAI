@@ -73,7 +73,7 @@ export const PrinciplesSection: React.FC = () => {
     <section aria-labelledby="principles-title" className="space-y-14">
       <div className="space-y-3 max-w-3xl">
         <motion.span {...anim(0)} className="block text-sm text-muted">
-          Prinsip kami
+          Dampaknya
         </motion.span>
         <motion.h2
           {...anim(1)}
@@ -83,7 +83,7 @@ export const PrinciplesSection: React.FC = () => {
           Kacamata yang pas sejak pertama, supaya tidak ada energi yang terbuang.
         </motion.h2>
         <motion.p {...anim(2)} className="text-lg text-muted leading-relaxed max-w-2xl">
-          Empat prinsip yang kami pegang, dan enam hal yang kami kerjakan untuk mewujudkannya.
+          Frame yang pas sejak pertama berarti lebih sedikit retur, lebih sedikit kayu terbuang, dan pesanan yang terus mengalir untuk perajin lokal. Ini prinsip yang kami pegang.
         </motion.p>
       </div>
 

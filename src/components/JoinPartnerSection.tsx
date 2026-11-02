@@ -46,7 +46,7 @@ export const JoinPartnerSection: React.FC = () => {
           Punya produk kacamata? Tampilkan di FrameAI.
         </motion.h2>
         <motion.p {...anim(2)} className="text-lg text-muted leading-relaxed max-w-md">
-          Seperti BJ Homemade, frame buatanmu bisa dicoba pembeli dari mana saja sebelum dipesan.
+          Dampak ini bisa lebih besar dengan lebih banyak perajin. Seperti BJ Homemade, frame buatanmu bisa dicoba pembeli dari mana saja sebelum dipesan.
         </motion.p>
         <motion.a
           {...anim(3)}

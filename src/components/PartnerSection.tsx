@@ -7,8 +7,8 @@ import { ArrowUpRight, HandHeart, Leaf, ShieldCheck } from 'lucide-react';
 const PARTNER = {
   name: 'BJ Homemade',
   logo: '/partners/bj-homemade-logo.jpg',
-  eyebrow: 'Kolaborasi',
-  body: 'FrameAI berkolaborasi dengan BJ Homemade, usaha asal Semarang yang sejak 2017 membuat frame kacamata dari limbah kayu. Lewat FrameAI, frame buatan tangan mereka bisa dicoba secara virtual dan dipilih dengan bantuan AI dari mana saja.',
+  eyebrow: 'Siapa yang membuatnya',
+  body: 'Setiap frame di FrameAI dikerjakan oleh BJ Homemade, usaha asal Semarang yang sejak 2017 membuat frame kacamata dari limbah kayu. FrameAI membawa karya tangan mereka ke pembeli di seluruh Indonesia: dicoba secara virtual, dipilih dengan bantuan AI, lalu dibuat sesuai pesanan.',
   points: [
     { icon: Leaf, title: 'Dari limbah kayu', text: 'Frame dibuat dari sisa kayu sonokeling dan jati.' },
     { icon: HandHeart, title: 'Dibuat perajin difabel', text: 'Dikerjakan tangan bersama Komunitas Difabel Mandiri.' },
