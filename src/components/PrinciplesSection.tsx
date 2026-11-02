@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 
-// Hackathon ITS 2026 proposal principles, each with how FrameAI meets it
+// The principles FrameAI is built on, each with how the app meets it
 const PRINCIPLES = [
   {
     title: 'Sustainable',
@@ -21,7 +21,7 @@ const PRINCIPLES = [
   },
 ];
 
-// Hackathon ITS 2026 idea checklist
+// What FrameAI does to put the principles into practice
 const CHECKLIST = [
   {
     title: 'Celah energi',
@@ -58,8 +58,8 @@ const rise = {
   }),
 };
 
-/** How FrameAI fits the Hackathon ITS 2026 proposal principles and idea checklist */
-export const HackathonFitSection: React.FC = () => {
+/** FrameAI's principles and how the app puts them into practice */
+export const PrinciplesSection: React.FC = () => {
   const still = Boolean(useReducedMotion());
   const anim = (i: number) => ({
     variants: rise,
@@ -70,20 +70,20 @@ export const HackathonFitSection: React.FC = () => {
   });
 
   return (
-    <section aria-labelledby="hackathon-title" className="space-y-14">
+    <section aria-labelledby="principles-title" className="space-y-14">
       <div className="space-y-3 max-w-3xl">
         <motion.span {...anim(0)} className="block text-sm text-muted">
-          Hackathon ITS 2026
+          Prinsip kami
         </motion.span>
         <motion.h2
           {...anim(1)}
-          id="hackathon-title"
+          id="principles-title"
           className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.08] text-ink"
         >
           Kacamata yang pas sejak pertama, supaya tidak ada energi yang terbuang.
         </motion.h2>
         <motion.p {...anim(2)} className="text-lg text-muted leading-relaxed max-w-2xl">
-          Begini FrameAI memenuhi prinsip proposal dan daftar periksa ide Hackathon ITS 2026.
+          Empat prinsip yang kami pegang, dan enam hal yang kami kerjakan untuk mewujudkannya.
         </motion.p>
       </div>
 
@@ -99,7 +99,7 @@ export const HackathonFitSection: React.FC = () => {
 
       {/* Idea checklist */}
       <div className="space-y-8 border-t border-line pt-12">
-        <h3 className="text-sm text-sage">Daftar periksa ide</h3>
+        <h3 className="text-sm text-sage">Cara kami mewujudkannya</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
           {CHECKLIST.map((c, i) => (
             <motion.div key={c.title} {...anim(i % 2)} className="flex gap-4">

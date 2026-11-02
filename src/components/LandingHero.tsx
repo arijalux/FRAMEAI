@@ -4,7 +4,7 @@ import { ArrowUpRight, LayoutGrid, Sparkles } from 'lucide-react';
 import { RotatingCards } from './RotatingCards';
 import { PartnerSection } from './PartnerSection';
 import { ProblemSection } from './ProblemSection';
-import { HackathonFitSection } from './HackathonFitSection';
+import { PrinciplesSection } from './PrinciplesSection';
 import { OpticalFrame } from '../types';
 import { formatRupiah, materialLabel } from '../utils/format';
 
@@ -148,7 +148,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
       {/* What the app solves */}
       <ProblemSection />
 
-      <HackathonFitSection />
+      <PrinciplesSection />
 
       {/* Partner: BJ Homemade */}
       <PartnerSection onOpenCatalog={onOpenCatalog} onOpenCustom={onOpenCustom} />
