@@ -242,7 +242,8 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-canvas text-ink flex flex-col font-sans">
+    // overflow-x-clip: the hero cards spread past the screen edge as they fade out on scroll
+    <div className="min-h-screen bg-canvas text-ink flex flex-col font-sans overflow-x-clip">
       {/* Main Navigation Header */}
       <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-line">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
