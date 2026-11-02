@@ -8,6 +8,8 @@ const REVIEWS = [
   { src: '/reviews/kebesaran.png', text: 'frame nya kebesaran.. pas pasang kaca jd gak pas', stars: 3, rotate: 2.5 },
   { src: '/reviews/kekecilan-wajah-xl.png', text: 'kekecilan gak cocok di wajah XL', stars: 3, rotate: 2 },
   { src: '/reviews/terlalu-besar.png', text: 'Produk terlalu besar', stars: 1, rotate: -2.5 },
+  // Not about size: the frame didn't match what the buyer wanted, which AI recommendations address
+  { src: '/reviews/tidak-sesuai.png', text: 'Yang di ingin kan jauh dari kata sesuai', stars: 1, rotate: 1.5 },
 ];
 
 // Pop in like bubbles: grow from nothing with a slight overshoot, staggered with a little
@@ -95,7 +97,7 @@ export const ProblemSection: React.FC = () => {
           initial={still ? false : 'hidden'}
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
         >
           {REVIEWS.map((r, i) => (
             <motion.li
