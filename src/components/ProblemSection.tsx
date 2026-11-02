@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { animate, motion, useInView, useReducedMotion } from 'motion/react';
 
 // Real buyer reviews of glasses bought online: marketplace screenshots, names blurred.
 // Each card lands slightly tilted, like notes pinned to a board.
@@ -39,13 +39,15 @@ const PROBLEMS = [
 // Published Indonesian figures behind the problem; the sources are linked under the numbers
 const DATA = [
   {
-    value: '48%',
+    count: 48,
+    suffix: '%',
     text: 'konsumen marketplace pernah menerima barang yang tidak sesuai ekspektasi.',
     source: 'Survei kumparan, 800 konsumen e-commerce di 6 kota termasuk Semarang, Juli–Agustus 2025',
     url: 'https://kumparan.com/kumparantech/survei-6-dari-10-konsumen-e-commerce-ri-alami-kendala-di-fase-pasca-pembelian-25mbl2zuF2k',
   },
   {
-    value: '202 juta ton',
+    count: 202,
+    suffix: ' juta ton',
     text: 'CO₂e dari sektor transportasi pada 2024, sekitar 25% emisi sektor energi nasional. Setiap retur menambah perjalanan ini.',
     source: 'IESR, Indonesia Sustainable Mobility Outlook 2025',
     url: 'https://indonesiabusinesspost.com/4737/society-environment-and-culture/iesr-calls-for-decarbonization-as-ri-s-transport-emissions-hit-202-m-tons-co-in-2024',
@@ -59,6 +61,25 @@ const rise = {
     y: 0,
     transition: { duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] as const },
   }),
+};
+
+/** Counts from 0 up to the figure the first time it scrolls into view */
+const CountUp: React.FC<{ to: number; still: boolean }> = ({ to, still }) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.6 });
+  const [value, setValue] = useState(still ? to : 0);
+
+  useEffect(() => {
+    if (!inView || still) return;
+    const controls = animate(0, to, {
+      duration: 1.6,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (v) => setValue(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [inView, still, to]);
+
+  return <span ref={ref}>{value}</span>;
 };
 
 /** The problem FrameAI solves, with real reviews and published figures */
@@ -122,8 +143,16 @@ export const ProblemSection: React.FC = () => {
       {/* Data behind the problem */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
         {DATA.map((d, i) => (
-          <motion.div key={d.value} {...anim(i)} className="space-y-2">
-            <p className="text-4xl md:text-5xl font-normal tracking-[-0.04em] text-ink tabular-nums">{d.value}</p>
+          <motion.div key={d.source} {...anim(i)} className="space-y-3">
+            <p className="whitespace-nowrap text-6xl md:text-8xl font-normal tracking-[-0.05em] leading-none text-ink tabular-nums">
+              <CountUp to={d.count} still={still} />
+              {/* A word unit sits smaller beside the number so it stays on one line */}
+              {d.suffix.length > 1 ? (
+                <span className="ml-2 md:ml-3 text-3xl md:text-5xl tracking-[-0.04em]">{d.suffix.trim()}</span>
+              ) : (
+                d.suffix
+              )}
+            </p>
             <p className="text-base text-body leading-relaxed max-w-md">{d.text}</p>
             <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted underline underline-offset-2 hover:text-ink">
               {d.source}
