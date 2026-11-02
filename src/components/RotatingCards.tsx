@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useReducedMotion } from 'motion/react';
+import { useReducedMotion, type MotionValue } from 'motion/react';
 
 export interface RotatingCard {
   src: string;
@@ -17,6 +17,8 @@ interface RotatingCardsProps {
   /** Ring tilt in degrees; negative looks down onto the ring */
   tilt?: number;
   onCardClick?: (index: number) => void;
+  /** Multiplies the ring radius, e.g. driven by scroll to push the cards apart (1 = normal) */
+  spread?: MotionValue<number>;
 }
 
 const DRAG_THRESHOLD = 6;
@@ -35,6 +37,7 @@ export const RotatingCards: React.FC<RotatingCardsProps> = ({
   speed = 12,
   tilt = -8,
   onCardClick,
+  spread,
 }) => {
   const reduceMotion = useReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -95,8 +98,10 @@ export const RotatingCards: React.FC<RotatingCardsProps> = ({
       if (ring) ring.style.transform = `rotateX(${tilt}deg) rotateY(${s.angle}deg)`;
 
       // Dim and shrink cards as they turn away from the viewer
+      const ringRadius = radius * (spread?.get() ?? 1);
       cardRefs.current.forEach((card, i) => {
         if (!card) return;
+        card.style.transform = `rotateY(${i * step}deg) translateZ(${ringRadius}px)`;
         const world = ((((i * step + s.angle) % 360) + 540) % 360) - 180;
         const facing = (Math.cos(world * TO_RAD) + 1) / 2; // 1 = front, 0 = back
         card.style.opacity = String(0.18 + facing * 0.82);
@@ -108,7 +113,7 @@ export const RotatingCards: React.FC<RotatingCardsProps> = ({
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [reduceMotion, speed, step, tilt]);
+  }, [reduceMotion, speed, step, tilt, radius, spread]);
 
   const onPointerDown = (e: React.PointerEvent) => {
     const s = motionState.current;
