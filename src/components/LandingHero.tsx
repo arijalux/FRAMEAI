@@ -106,8 +106,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
             custom={2}
             className="text-lg text-muted leading-relaxed max-w-xl"
           >
-            Jawab beberapa pertanyaan, scan wajahmu, dan biarkan Gemini memilihkan frame yang paling cocok. Lalu coba
-            langsung lewat kamera.
+            Jawab beberapa pertanyaan, scan wajahmu, dan biarkan Gemini memilihkan frame kayu buatan perajin Semarang
+            yang paling cocok. Lalu coba langsung lewat kamera.
           </motion.p>
 
           <motion.div
@@ -144,26 +144,25 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
             custom={4}
             className="text-xs text-muted"
           >
-            Gratis ongkir ke seluruh Indonesia. Garansi pas 30 hari.
+            Frame kayu buatan tangan BJ Homemade, dengan garansi perbaikan seumur hidup.
           </motion.p>
         </motion.div>
       </section>
 
+      {/* The story: the problem, how FrameAI answers it, who makes the frames, why it matters,
+          an invitation to other makers, then back to the buyer */}
+      <ProblemSection />
+
       {/* The wooden frame in 3D, sliding beside how FrameAI works */}
       <ModelStorySection />
 
-      {/* What the app solves */}
-      <ProblemSection />
+      <PartnerSection onOpenCatalog={onOpenCatalog} onOpenCustom={onOpenCustom} />
 
       <PrinciplesSection />
 
-      {/* Partner: BJ Homemade */}
-      <PartnerSection onOpenCatalog={onOpenCatalog} onOpenCustom={onOpenCustom} />
-
-      {/* Invite other makers to list their frames */}
       <JoinPartnerSection />
 
-      {/* Editorial statement */}
+      {/* Closing: back to the buyer */}
       <section
         ref={editorialRef}
         className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end border-t border-line pt-16 pb-8"
@@ -190,8 +189,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
           className="space-y-6 max-w-md md:justify-self-end"
         >
           <p className="text-lg text-muted leading-relaxed">
-            Setiap frame diberi skor kecocokan dengan bentuk wajahmu, diukur dalam milimeter, dan bisa dicoba langsung
-            sebelum dipesan.
+            Mulai dari wajahmu: dapatkan skor kecocokan tiap frame, lihat ukurannya dalam milimeter, dan coba langsung
+            sebelum perajin mulai membuatnya.
           </p>
           <button
             onClick={onOpenCatalog}

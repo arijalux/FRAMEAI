@@ -112,6 +112,12 @@ export const ProblemSection: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Hand-over to how FrameAI answers it */}
+      <motion.p {...anim(0)} className="text-2xl md:text-3xl font-normal tracking-[-0.03em] leading-snug text-ink max-w-3xl">
+        Semuanya berawal dari satu hal: kecocokan baru ketahuan setelah frame sampai.{' '}
+        <span className="text-muted">FrameAI memindahkannya ke awal, sebelum frame dibuat.</span>
+      </motion.p>
     </section>
   );
 };

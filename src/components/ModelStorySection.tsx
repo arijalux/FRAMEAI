@@ -64,15 +64,28 @@ export const ModelStorySection: React.FC = () => {
       className={`space-y-3 ${className}`}
     >
       <span className="block text-xl text-sage tabular-nums">0{i + 1}</span>
-      <h2 className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.08] text-ink">{s.title}</h2>
+      <h3 className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.08] text-ink">{s.title}</h3>
       <p className="text-lg text-muted leading-relaxed max-w-md">{s.text}</p>
     </motion.div>
+  );
+
+  const intro = (
+    <div className="space-y-3 max-w-3xl">
+      <span className="block text-sm text-muted">Cara kerjanya</span>
+      <h2 id="how-title" className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.08] text-ink">
+        Pastikan pas dulu, baru dibuat.
+      </h2>
+      <p className="text-lg text-muted leading-relaxed max-w-2xl">
+        Tiga langkah dari wajahmu sampai frame kayu yang dibuat khusus untukmu.
+      </p>
+    </div>
   );
 
   // Phones: no pinning, the model sits above the steps
   if (!desktop) {
     return (
-      <section ref={ref} aria-label="Cara kerja FrameAI" className="space-y-10">
+      <section ref={ref} aria-labelledby="how-title" className="space-y-10">
+        {intro}
         <div className="h-[45vh]">{viewer}</div>
         <ol className="space-y-10">
           {STEPS.map((s, i) => (
@@ -84,7 +97,9 @@ export const ModelStorySection: React.FC = () => {
   }
 
   return (
-    <section ref={ref} aria-label="Cara kerja FrameAI" className="relative" style={{ height: `${STEPS.length * 100}vh` }}>
+    <div className="space-y-6">
+      {intro}
+      <section ref={ref} aria-labelledby="how-title" className="relative" style={{ height: `${STEPS.length * 100}vh` }}>
       {/* Pinned model layer */}
       <div className="sticky top-0 h-screen flex items-center">
         <motion.div style={{ x: still ? '25%' : x }} className="w-full h-[70vh] will-change-transform">
@@ -103,6 +118,7 @@ export const ModelStorySection: React.FC = () => {
           </li>
         ))}
       </ol>
-    </section>
+      </section>
+    </div>
   );
 };
