@@ -19,35 +19,19 @@ const PROBLEMS = [
   { title: 'Perajin sulit menjual', text: 'Perajin lokal kuat di produk, tapi pemasaran dan pesanannya tidak stabil.' },
 ];
 
-// Published figures behind the problem, Indonesian sources first; the sources are linked under the numbers
+// Published Indonesian figures behind the problem; the sources are linked under the numbers
 const DATA = [
   {
-    region: 'Indonesia',
     value: '48%',
     text: 'konsumen marketplace pernah menerima barang yang tidak sesuai ekspektasi.',
     source: 'Survei kumparan, 800 konsumen e-commerce di 6 kota termasuk Semarang, Juli–Agustus 2025',
     url: 'https://kumparan.com/kumparantech/survei-6-dari-10-konsumen-e-commerce-ri-alami-kendala-di-fase-pasca-pembelian-25mbl2zuF2k',
   },
   {
-    region: 'Indonesia',
     value: '202 juta ton',
     text: 'CO₂e dari sektor transportasi pada 2024, sekitar 25% emisi sektor energi nasional. Setiap retur menambah perjalanan ini.',
     source: 'IESR, Indonesia Sustainable Mobility Outlook 2025',
     url: 'https://indonesiabusinesspost.com/4737/society-environment-and-culture/iesr-calls-for-decarbonization-as-ri-s-transport-emissions-hit-202-m-tons-co-in-2024',
-  },
-  {
-    region: 'Global',
-    value: '29%',
-    text: 'pembeli kacamata online tidak puas dengan kecocokan dan kenyamanan frame-nya.',
-    source: 'Survei 85 pembeli kacamata online di India (jurnal di PMC)',
-    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11822552/',
-  },
-  {
-    region: 'Global',
-    value: '±27 juta ton',
-    text: 'CO₂ per tahun dari pemrosesan dan pengiriman barang retur di Amerika Serikat.',
-    source: 'Estimasi Optoro, perusahaan logistik retur',
-    url: 'https://www.optoro.com/environmental-impact/',
   },
 ];
 
@@ -111,10 +95,9 @@ export const ProblemSection: React.FC = () => {
       <p className="-mt-10 text-xs text-muted">Ulasan pembeli kacamata di marketplace, nama disamarkan.</p>
 
       {/* Data behind the problem */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
         {DATA.map((d, i) => (
-          <motion.div key={d.value} {...anim(i % 2)} className="space-y-2">
-            <p className="text-xs text-muted">{d.region}</p>
+          <motion.div key={d.value} {...anim(i)} className="space-y-2">
             <p className="text-4xl md:text-5xl font-normal tracking-[-0.04em] text-ink tabular-nums">{d.value}</p>
             <p className="text-base text-body leading-relaxed max-w-md">{d.text}</p>
             <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted underline underline-offset-2 hover:text-ink">
