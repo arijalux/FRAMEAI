@@ -13,11 +13,31 @@ const PROBLEMS = [
   { title: 'Tidak bisa dicoba', text: 'Pembeli hanya melihat foto, lalu menebak apakah frame cocok di wajahnya.' },
   { title: 'Ukuran meleset', text: 'Terlalu kecil atau terlalu besar baru ketahuan setelah barang sampai.' },
   { title: 'Perajin sulit menjual', text: 'Perajin lokal kuat di produk, tapi pemasaran dan pesanannya tidak stabil.' },
+  {
+    title: 'Retur boros energi',
+    text: 'Frame yang tidak pas dikirim balik dan dibuat ulang: bahan bakar pengiriman ulang dan bahan baku baru ikut terbuang.',
+  },
+];
+
+// Published figures behind the problem; the sources are linked under the numbers
+const DATA = [
+  {
+    value: '29%',
+    text: 'pembeli kacamata online tidak puas dengan kecocokan dan kenyamanan frame-nya.',
+    source: 'Survei 85 pembeli kacamata online di India (jurnal di PMC)',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11822552/',
+  },
+  {
+    value: '±27 juta ton',
+    text: 'CO₂ per tahun dari pemrosesan dan pengiriman barang retur di Amerika Serikat.',
+    source: 'Estimasi Optoro, perusahaan logistik retur',
+    url: 'https://www.optoro.com/environmental-impact/',
+  },
 ];
 
 const SOLUTIONS = [
   { title: 'Scan wajah', text: 'AI membaca bentuk wajah dan jarak pupil, lalu merekomendasikan frame.' },
-  { title: 'Coba di wajah', text: 'AR 3D di kamera dengan ukuran sebenarnya, tanpa instal aplikasi.' },
+  { title: 'Coba di wajah', text: 'AR 3D di kamera dengan ukuran sebenarnya, jadi lebih sedikit frame salah ukuran yang diretur.' },
   { title: 'Dibuat perajin', text: 'Desain custom jadi file potong yang langsung dikerjakan BJ Homemade.' },
 ];
 
@@ -69,6 +89,19 @@ export const ProblemSection: React.FC = () => {
         ))}
       </div>
       <p className="-mt-10 text-xs text-muted">Ulasan pembeli kacamata di marketplace, nama disamarkan.</p>
+
+      {/* Data behind the problem */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        {DATA.map((d, i) => (
+          <motion.div key={d.value} {...anim(i)} className="space-y-2">
+            <p className="text-4xl md:text-5xl font-normal tracking-[-0.04em] text-ink tabular-nums">{d.value}</p>
+            <p className="text-base text-body leading-relaxed max-w-md">{d.text}</p>
+            <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted underline underline-offset-2 hover:text-ink">
+              {d.source}
+            </a>
+          </motion.div>
+        ))}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 border-t border-line pt-12">
         <div className="space-y-8">
