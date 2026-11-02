@@ -1,0 +1,117 @@
+import React from 'react';
+import { motion, useReducedMotion } from 'motion/react';
+
+// Hackathon ITS 2026 proposal principles, each with how FrameAI meets it
+const PRINCIPLES = [
+  {
+    title: 'Sustainable',
+    text: 'Frame dari limbah kayu sonokeling dan jati, dibuat hanya saat dipesan, dan dicoba dulu sebelum diproduksi supaya retur berkurang.',
+  },
+  {
+    title: 'AI Driven',
+    text: 'Gemini membaca foto wajah dan menyarankan frame, dan MediaPipe melacak wajah agar frame 3D ikut bergerak di kamera.',
+  },
+  {
+    title: 'Innovative',
+    text: 'Desain custom langsung jadi file SVG/DXF untuk mesin CNC/laser perajin, plus kartu cetak untuk melihat frame di ukuran aslinya.',
+  },
+  {
+    title: 'Local',
+    text: 'Dikerjakan bersama BJ Homemade di Semarang dan perajin difabel, dengan bahasa Indonesia dan harga dalam Rupiah.',
+  },
+];
+
+// Hackathon ITS 2026 idea checklist
+const CHECKLIST = [
+  {
+    title: 'Celah energi',
+    text: 'Frame salah ukuran dikirim balik dan dibuat ulang. Energi pengiriman ulang dan bahan baku baru itulah yang terbuang.',
+  },
+  {
+    title: 'Model bisnis',
+    text: 'Komisi dari tiap pesanan frame dan desain custom, jasa scan wajah 3D, lalu langganan untuk perajin lain.',
+  },
+  {
+    title: 'Efisiensi',
+    text: 'Ukur dan coba sebelum produksi, buat sesuai pesanan tanpa stok menumpuk, dan file potong dibuat otomatis.',
+  },
+  {
+    title: 'Dampak lokal',
+    text: 'Pesanan dan pekerjaan baru untuk BJ Homemade serta perajin difabel yang membuat frame-nya.',
+  },
+  {
+    title: 'Digitalisasi',
+    text: 'AI dan AR berjalan di browser tanpa instal aplikasi, dan desain dikirim ke perajin sebagai file digital.',
+  },
+  {
+    title: 'Dirancang bersama',
+    text: 'Dikembangkan bersama BJ Homemade selama pilot: masukan perajin untuk katalog dan uji file potong di mesin mereka.',
+  },
+];
+
+const rise = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] as const },
+  }),
+};
+
+/** How FrameAI fits the Hackathon ITS 2026 proposal principles and idea checklist */
+export const HackathonFitSection: React.FC = () => {
+  const still = Boolean(useReducedMotion());
+  const anim = (i: number) => ({
+    variants: rise,
+    initial: still ? false : ('hidden' as const),
+    whileInView: 'visible' as const,
+    viewport: { once: true, amount: 0.4 },
+    custom: i,
+  });
+
+  return (
+    <section aria-labelledby="hackathon-title" className="space-y-14">
+      <div className="space-y-3 max-w-3xl">
+        <motion.span {...anim(0)} className="block text-sm text-muted">
+          Hackathon ITS 2026
+        </motion.span>
+        <motion.h2
+          {...anim(1)}
+          id="hackathon-title"
+          className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.08] text-ink"
+        >
+          Kacamata yang pas sejak pertama, supaya tidak ada energi yang terbuang.
+        </motion.h2>
+        <motion.p {...anim(2)} className="text-lg text-muted leading-relaxed max-w-2xl">
+          Begini FrameAI memenuhi prinsip proposal dan daftar periksa ide Hackathon ITS 2026.
+        </motion.p>
+      </div>
+
+      {/* Proposal principles */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 border-t border-line pt-12">
+        {PRINCIPLES.map((p, i) => (
+          <motion.div key={p.title} {...anim(i)} className="space-y-2">
+            <p className="text-xl text-ink">{p.title}</p>
+            <p className="text-base text-muted leading-relaxed">{p.text}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Idea checklist */}
+      <div className="space-y-8 border-t border-line pt-12">
+        <h3 className="text-sm text-sage">Daftar periksa ide</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
+          {CHECKLIST.map((c, i) => (
+            <motion.div key={c.title} {...anim(i % 2)} className="flex gap-4">
+              <span className="shrink-0 text-xl text-sage tabular-nums">0{i + 1}</span>
+              <div className="space-y-1">
+                <p className="text-xl text-ink">{c.title}</p>
+                <p className="text-base text-muted leading-relaxed">{c.text}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};

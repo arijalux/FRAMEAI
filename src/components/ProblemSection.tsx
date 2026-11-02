@@ -10,13 +10,13 @@ const REVIEWS = [
 ];
 
 const PROBLEMS = [
-  { title: 'Tidak bisa dicoba', text: 'Pembeli hanya melihat foto, lalu menebak apakah frame cocok di wajahnya.' },
-  { title: 'Ukuran meleset', text: 'Terlalu kecil atau terlalu besar baru ketahuan setelah barang sampai.' },
-  { title: 'Perajin sulit menjual', text: 'Perajin lokal kuat di produk, tapi pemasaran dan pesanannya tidak stabil.' },
   {
     title: 'Retur boros energi',
     text: 'Frame yang tidak pas dikirim balik dan dibuat ulang: bahan bakar pengiriman ulang dan bahan baku baru ikut terbuang.',
   },
+  { title: 'Tidak bisa dicoba', text: 'Pembeli hanya melihat foto, lalu menebak apakah frame cocok di wajahnya.' },
+  { title: 'Ukuran meleset', text: 'Terlalu kecil atau terlalu besar baru ketahuan setelah barang sampai.' },
+  { title: 'Perajin sulit menjual', text: 'Perajin lokal kuat di produk, tapi pemasaran dan pesanannya tidak stabil.' },
 ];
 
 // Published figures behind the problem; the sources are linked under the numbers
@@ -72,8 +72,12 @@ export const ProblemSection: React.FC = () => {
           id="problem-title"
           className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.08] text-ink"
         >
-          Membeli kacamata online masih penuh tebakan.
+          Membeli kacamata online masih penuh tebakan, dan setiap tebakan yang salah membuang energi.
         </motion.h2>
+        <motion.p {...anim(2)} className="text-lg text-muted leading-relaxed max-w-2xl">
+          Frame yang tidak pas dikirim balik, diproses, lalu dibuat ulang dari bahan baku baru. Energi pengiriman dan
+          produksi itulah celah yang ingin FrameAI tutup.
+        </motion.p>
       </div>
 
       {/* Real reviews as evidence */}
