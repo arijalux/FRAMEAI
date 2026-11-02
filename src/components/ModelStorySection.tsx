@@ -1,8 +1,8 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
+import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
 
 // three.js + react-three are heavy, so the viewer loads only when this section renders
-const ModelViewer = lazy(() => import('../vendor/react-bits/ModelViewer'));
+const ScrollGlasses = lazy(() => import('./ScrollGlasses'));
 
 const MODEL_URL = '/models/wood-glasses.glb';
 
@@ -38,25 +38,20 @@ export const ModelStorySection: React.FC = () => {
   // 0 when the section's top reaches the bottom of the screen, 1 when its end does;
   // step i is centred on screen at (i + 1) / 3
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end end'] });
-  const x = useTransform(
-    scrollYProgress,
-    [0.1, 0.3, 0.42, 0.58, 0.75, 0.9],
-    ['0%', '25%', '25%', '-25%', '-25%', '25%']
-  );
+  // Each step has a fixed spot and angle; the model only moves while passing between steps.
+  // It turns towards the text, and the last step shows the wooden temple side-on.
+  const keys = [0.1, 0.3, 0.42, 0.58, 0.75, 0.9];
+  const x = useTransform(scrollYProgress, keys, ['0%', '25%', '25%', '-25%', '-25%', '25%']);
+  const scrollYaw = useSpring(useTransform(scrollYProgress, keys, [0, -30, -30, 30, 30, -70]), {
+    stiffness: 120,
+    damping: 30,
+  });
+  const fixedYaw = useMotionValue(-30);
+  const yaw = desktop && !still ? scrollYaw : fixedYaw;
 
   const viewer = (
     <Suspense fallback={null}>
-      <ModelViewer
-        url={MODEL_URL}
-        width="100%"
-        height="100%"
-        environment="studio"
-        autoRotate
-        zoom={false}
-        fit={desktop ? 0.62 : 0.8}
-        startAngle={-25}
-        tilt={8}
-      />
+      <ScrollGlasses url={MODEL_URL} yaw={yaw} fit={desktop ? 0.62 : 0.8} />
     </Suspense>
   );
 
