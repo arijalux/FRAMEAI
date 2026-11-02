@@ -4,6 +4,7 @@ import { ArrowUpRight, LayoutGrid, Sparkles } from 'lucide-react';
 import { RotatingCards } from './RotatingCards';
 import { PartnerSection } from './PartnerSection';
 import { ProblemSection } from './ProblemSection';
+import { ModelStorySection } from './ModelStorySection';
 import { PrinciplesSection } from './PrinciplesSection';
 import { JoinPartnerSection } from './JoinPartnerSection';
 import { OpticalFrame } from '../types';
@@ -147,6 +148,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
           </motion.p>
         </motion.div>
       </section>
+
+      {/* The wooden frame in 3D, sliding beside how FrameAI works */}
+      <ModelStorySection />
 
       {/* What the app solves */}
       <ProblemSection />

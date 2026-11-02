@@ -35,12 +35,6 @@ const DATA = [
   },
 ];
 
-const SOLUTIONS = [
-  { title: 'Scan wajah', text: 'AI membaca bentuk wajah dan jarak pupil, lalu merekomendasikan frame.' },
-  { title: 'Coba di wajah', text: 'AR 3D di kamera dengan ukuran sebenarnya, jadi lebih sedikit frame salah ukuran yang diretur.' },
-  { title: 'Dibuat perajin', text: 'Desain custom jadi file potong yang langsung dikerjakan BJ Homemade.' },
-];
-
 const rise = {
   hidden: { opacity: 0, y: 24 },
   visible: (i: number = 0) => ({
@@ -50,7 +44,7 @@ const rise = {
   }),
 };
 
-/** What FrameAI solves: the problem (with real reviews) and how the app answers it */
+/** The problem FrameAI solves, with real reviews and published figures */
 export const ProblemSection: React.FC = () => {
   const still = Boolean(useReducedMotion());
   const anim = (i: number) => ({
@@ -107,25 +101,13 @@ export const ProblemSection: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 border-t border-line pt-12">
-        <div className="space-y-8">
-          <h3 className="text-sm text-muted">Masalahnya</h3>
+      <div className="space-y-8 border-t border-line pt-12">
+        <h3 className="text-sm text-muted">Masalahnya</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
           {PROBLEMS.map((p, i) => (
-            <motion.div key={p.title} {...anim(i)} className="space-y-1">
+            <motion.div key={p.title} {...anim(i % 2)} className="space-y-1">
               <p className="text-xl text-ink">{p.title}</p>
               <p className="text-base text-muted leading-relaxed">{p.text}</p>
-            </motion.div>
-          ))}
-        </div>
-        <div className="space-y-8">
-          <h3 className="text-sm text-sage">Jawaban FrameAI</h3>
-          {SOLUTIONS.map((s, i) => (
-            <motion.div key={s.title} {...anim(i)} className="flex gap-4">
-              <span className="shrink-0 text-xl text-sage tabular-nums">0{i + 1}</span>
-              <div className="space-y-1">
-                <p className="text-xl text-ink">{s.title}</p>
-                <p className="text-base text-muted leading-relaxed">{s.text}</p>
-              </div>
             </motion.div>
           ))}
         </div>
