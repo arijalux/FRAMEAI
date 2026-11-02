@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { animate, motion, useInView, useReducedMotion } from 'motion/react';
+import { Glasses, Ruler, Store, Truck } from 'lucide-react';
 
 // Real buyer reviews of glasses bought online: marketplace screenshots, names blurred.
 // Each card lands slightly tilted, like notes pinned to a board.
@@ -28,12 +29,13 @@ const pop = {
 
 const PROBLEMS = [
   {
+    icon: Truck,
     title: 'Retur boros energi',
     text: 'Frame yang tidak pas dikirim balik dan dibuat ulang: bahan bakar pengiriman ulang dan bahan baku baru ikut terbuang.',
   },
-  { title: 'Tidak bisa dicoba', text: 'Pembeli hanya melihat foto, lalu menebak apakah frame cocok di wajahnya.' },
-  { title: 'Ukuran meleset', text: 'Terlalu kecil atau terlalu besar baru ketahuan setelah barang sampai.' },
-  { title: 'Perajin sulit menjual', text: 'Perajin lokal kuat di produk, tapi pemasaran dan pesanannya tidak stabil.' },
+  { icon: Glasses, title: 'Tidak bisa dicoba', text: 'Pembeli hanya melihat foto, lalu menebak apakah frame cocok di wajahnya.' },
+  { icon: Ruler, title: 'Ukuran meleset', text: 'Terlalu kecil atau terlalu besar baru ketahuan setelah barang sampai.' },
+  { icon: Store, title: 'Perajin sulit menjual', text: 'Perajin lokal kuat di produk, tapi pemasaran dan pesanannya tidak stabil.' },
 ];
 
 // Published Indonesian figures behind the problem; the sources are linked under the numbers
@@ -94,8 +96,8 @@ export const ProblemSection: React.FC = () => {
   });
 
   return (
-    <section aria-labelledby="problem-title" className="space-y-14">
-      <div className="space-y-3 max-w-3xl">
+    <section aria-labelledby="problem-title" className="space-y-14 text-center">
+      <div className="space-y-3 max-w-3xl mx-auto">
         <motion.span {...anim(0)} className="block text-sm text-muted">
           Masalah yang kami selesaikan
         </motion.span>
@@ -106,7 +108,7 @@ export const ProblemSection: React.FC = () => {
         >
           Membeli kacamata online masih penuh tebakan, dan setiap tebakan yang salah membuang energi.
         </motion.h2>
-        <motion.p {...anim(2)} className="text-lg text-muted leading-relaxed max-w-2xl">
+        <motion.p {...anim(2)} className="text-lg text-muted leading-relaxed max-w-2xl mx-auto">
           Frame yang tidak pas dikirim balik, diproses, lalu dibuat ulang dari bahan baku baru. Energi pengiriman dan
           produksi itulah celah yang ingin FrameAI tutup.
         </motion.p>
@@ -118,7 +120,7 @@ export const ProblemSection: React.FC = () => {
           initial={still ? false : 'hidden'}
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
+          className="flex flex-wrap justify-center gap-6 sm:gap-8"
         >
           {REVIEWS.map((r, i) => (
             <motion.li
@@ -126,7 +128,7 @@ export const ProblemSection: React.FC = () => {
               variants={pop}
               custom={i}
               style={still ? { rotate: r.rotate } : undefined}
-              className="rounded-3xl bg-soft p-3 will-change-transform"
+              className="w-full sm:w-[calc(50%-1rem)] lg:w-[calc((100%-4rem)/3)] rounded-3xl bg-soft p-3 will-change-transform"
             >
               <img
                 src={r.src}
@@ -141,7 +143,7 @@ export const ProblemSection: React.FC = () => {
       </div>
 
       {/* Data behind the problem */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 sm:gap-8 max-w-5xl mx-auto">
         {DATA.map((d, i) => (
           <motion.div key={d.source} {...anim(i)} className="space-y-3">
             <p className="whitespace-nowrap text-6xl md:text-8xl font-normal tracking-[-0.05em] leading-none text-ink tabular-nums">
@@ -153,7 +155,7 @@ export const ProblemSection: React.FC = () => {
                 d.suffix
               )}
             </p>
-            <p className="text-base text-body leading-relaxed max-w-md">{d.text}</p>
+            <p className="text-base text-body leading-relaxed max-w-md mx-auto">{d.text}</p>
             <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted underline underline-offset-2 hover:text-ink">
               {d.source}
             </a>
@@ -163,9 +165,12 @@ export const ProblemSection: React.FC = () => {
 
       <div className="space-y-8 border-t border-line pt-12">
         <h3 className="text-sm text-muted">Masalahnya</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8 max-w-4xl mx-auto">
           {PROBLEMS.map((p, i) => (
             <motion.div key={p.title} {...anim(i % 2)} className="space-y-1">
+              <span className="mx-auto mb-3 w-12 h-12 rounded-full bg-sage-tint text-sage flex items-center justify-center">
+                <p.icon className="w-5 h-5" aria-hidden />
+              </span>
               <p className="text-xl text-ink">{p.title}</p>
               <p className="text-base text-muted leading-relaxed">{p.text}</p>
             </motion.div>
@@ -174,7 +179,7 @@ export const ProblemSection: React.FC = () => {
       </div>
 
       {/* Hand-over to how FrameAI answers it */}
-      <motion.p {...anim(0)} className="text-2xl md:text-3xl font-normal tracking-[-0.03em] leading-snug text-ink max-w-3xl">
+      <motion.p {...anim(0)} className="text-2xl md:text-3xl font-normal tracking-[-0.03em] leading-snug text-ink max-w-3xl mx-auto">
         Semuanya berawal dari satu hal: kecocokan baru ketahuan setelah frame sampai.{' '}
         <span className="text-muted">FrameAI memindahkannya ke awal, sebelum frame dibuat.</span>
       </motion.p>

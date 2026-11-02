@@ -1,21 +1,26 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { Leaf, Lightbulb, MapPin, Sparkles } from 'lucide-react';
 
 // The principles FrameAI is built on, each with how the app meets it
 const PRINCIPLES = [
   {
+    icon: Leaf,
     title: 'Sustainable',
     text: 'Frame dari limbah kayu sonokeling dan jati, dibuat hanya saat dipesan, dan dicoba dulu sebelum diproduksi supaya retur berkurang.',
   },
   {
+    icon: Sparkles,
     title: 'AI Driven',
     text: 'Gemini membaca foto wajah dan menyarankan frame, dan MediaPipe melacak wajah agar frame 3D ikut bergerak di kamera.',
   },
   {
+    icon: Lightbulb,
     title: 'Innovative',
     text: 'Desain custom langsung jadi file SVG/DXF untuk mesin CNC/laser perajin, plus kartu cetak untuk melihat frame di ukuran aslinya.',
   },
   {
+    icon: MapPin,
     title: 'Local',
     text: 'Dikerjakan bersama BJ Homemade di Semarang dan perajin difabel, dengan bahasa Indonesia dan harga dalam Rupiah.',
   },
@@ -70,8 +75,8 @@ export const PrinciplesSection: React.FC = () => {
   });
 
   return (
-    <section aria-labelledby="principles-title" className="space-y-14">
-      <div className="space-y-3 max-w-3xl">
+    <section aria-labelledby="principles-title" className="space-y-14 text-center">
+      <div className="space-y-3 max-w-3xl mx-auto">
         <motion.span {...anim(0)} className="block text-sm text-muted">
           Dampaknya
         </motion.span>
@@ -82,7 +87,7 @@ export const PrinciplesSection: React.FC = () => {
         >
           Kacamata yang pas sejak pertama, supaya tidak ada energi yang terbuang.
         </motion.h2>
-        <motion.p {...anim(2)} className="text-lg text-muted leading-relaxed max-w-2xl">
+        <motion.p {...anim(2)} className="text-lg text-muted leading-relaxed max-w-2xl mx-auto">
           Frame yang pas sejak pertama berarti lebih sedikit retur, lebih sedikit kayu terbuang, dan pesanan yang terus mengalir untuk perajin lokal. Ini prinsip yang kami pegang.
         </motion.p>
       </div>
@@ -91,6 +96,9 @@ export const PrinciplesSection: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 border-t border-line pt-12">
         {PRINCIPLES.map((p, i) => (
           <motion.div key={p.title} {...anim(i)} className="space-y-2">
+            <span className="mx-auto mb-3 w-12 h-12 rounded-full bg-sage-tint text-sage flex items-center justify-center">
+              <p.icon className="w-5 h-5" aria-hidden />
+            </span>
             <p className="text-xl text-ink">{p.title}</p>
             <p className="text-base text-muted leading-relaxed">{p.text}</p>
           </motion.div>
@@ -100,10 +108,10 @@ export const PrinciplesSection: React.FC = () => {
       {/* Idea checklist */}
       <div className="space-y-8 border-t border-line pt-12">
         <h3 className="text-sm text-sage">Cara kami mewujudkannya</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10 max-w-4xl mx-auto">
           {CHECKLIST.map((c, i) => (
-            <motion.div key={c.title} {...anim(i % 2)} className="flex gap-4">
-              <span className="shrink-0 text-xl text-sage tabular-nums">0{i + 1}</span>
+            <motion.div key={c.title} {...anim(i % 2)} className="space-y-2">
+              <span className="block text-xl text-sage tabular-nums">0{i + 1}</span>
               <div className="space-y-1">
                 <p className="text-xl text-ink">{c.title}</p>
                 <p className="text-base text-muted leading-relaxed">{c.text}</p>

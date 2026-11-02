@@ -70,12 +70,12 @@ export const ModelStorySection: React.FC = () => {
   );
 
   const intro = (
-    <div className="space-y-3 max-w-3xl">
+    <div className="space-y-3 max-w-3xl mx-auto text-center">
       <span className="block text-sm text-muted">Cara kerjanya</span>
       <h2 id="how-title" className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.08] text-ink">
         Pastikan pas dulu, baru dibuat.
       </h2>
-      <p className="text-lg text-muted leading-relaxed max-w-2xl">
+      <p className="text-lg text-muted leading-relaxed max-w-2xl mx-auto">
         Tiga langkah dari wajahmu sampai frame kayu yang dibuat khusus untukmu.
       </p>
     </div>
