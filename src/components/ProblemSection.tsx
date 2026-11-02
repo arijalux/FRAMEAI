@@ -1,13 +1,28 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 
-// Real buyer reviews of glasses bought online (marketplace, names withheld)
+// Real buyer reviews of glasses bought online: marketplace screenshots, names blurred.
+// Each card lands slightly tilted, like notes pinned to a board.
 const REVIEWS = [
-  'Bagus tapi sayang terlalu kecil dan sempit di muka',
-  'Frame-nya kebesaran, pas pasang kaca jadi gak pas',
-  'Kekecilan, gak cocok di wajah XL',
-  'Produk terlalu besar',
+  { src: '/reviews/terlalu-kecil.png', text: 'Kacamata sdh sampai, bagus tapi sayang terlalu kecil dan sempit dimuka', stars: 2, rotate: -3 },
+  { src: '/reviews/kebesaran.png', text: 'frame nya kebesaran.. pas pasang kaca jd gak pas', stars: 3, rotate: 2.5 },
+  { src: '/reviews/kekecilan-wajah-xl.png', text: 'kekecilan gak cocok di wajah XL', stars: 3, rotate: 2 },
+  { src: '/reviews/terlalu-besar.png', text: 'Produk terlalu besar', stars: 1, rotate: -2.5 },
 ];
+
+// Pop in like bubbles: grow from nothing with a slight overshoot, staggered with a little
+// jitter so they don't land in lockstep
+const jitter = REVIEWS.map(() => Math.random() * 0.1 - 0.05);
+const pop = {
+  hidden: { opacity: 0, scale: 0, rotate: 0 },
+  visible: (i: number) => ({
+    opacity: 1,
+    scale: 1,
+    rotate: REVIEWS[i].rotate,
+    transition: { duration: 0.5, delay: Math.max(0, i * 0.12 + jitter[i]), ease: [0.34, 1.56, 0.64, 1] as const },
+  }),
+};
+
 
 const PROBLEMS = [
   {
@@ -75,18 +90,32 @@ export const ProblemSection: React.FC = () => {
       </div>
 
       {/* Real reviews as evidence */}
-      <div className="flex flex-wrap gap-3">
-        {REVIEWS.map((r, i) => (
-          <motion.p
-            key={r}
-            {...anim(i)}
-            className="px-5 py-3 rounded-full bg-soft text-sm md:text-base text-body"
-          >
-            “{r}”
-          </motion.p>
-        ))}
+      <div className="space-y-4">
+        <motion.ul
+          initial={still ? false : 'hidden'}
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl"
+        >
+          {REVIEWS.map((r, i) => (
+            <motion.li
+              key={r.src}
+              variants={pop}
+              custom={i}
+              style={still ? { rotate: r.rotate } : undefined}
+              className="rounded-3xl bg-soft p-3 will-change-transform"
+            >
+              <img
+                src={r.src}
+                alt={`Ulasan bintang ${r.stars}: “${r.text}”`}
+                loading="lazy"
+                className="w-full rounded-2xl bg-white"
+              />
+            </motion.li>
+          ))}
+        </motion.ul>
+        <p className="text-xs text-muted">Ulasan pembeli kacamata di marketplace, nama disamarkan.</p>
       </div>
-      <p className="-mt-10 text-xs text-muted">Ulasan pembeli kacamata di marketplace, nama disamarkan.</p>
 
       {/* Data behind the problem */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
