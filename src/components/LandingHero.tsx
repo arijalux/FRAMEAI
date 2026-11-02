@@ -39,10 +39,11 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
   // Smooth the raw scroll value so the layers glide instead of tracking every wheel tick
   const hero = useSpring(heroProgress, { stiffness: 120, damping: 24, mass: 0.4 });
 
-  // Background layer (carousel) moves slower than the page and recedes; copy moves faster
-  const carouselY = useTransform(hero, [0, 1], [0, 160]);
-  const carouselScale = useTransform(hero, [0, 1], [1, 0.86]);
-  const carouselOpacity = useTransform(hero, [0, 0.8], [1, 0.25]);
+  // Background layer (carousel) moves slower than the page; as it scrolls away the ring
+  // opens up, pushing the cards apart, and fades out. Copy moves faster.
+  const carouselY = useTransform(hero, [0, 1], [0, 120]);
+  const ringSpread = useTransform(hero, [0, 0.7], [1, 2.4]);
+  const carouselOpacity = useTransform(hero, [0.1, 0.65], [1, 0]);
   const copyY = useTransform(hero, [0, 1], [0, -60]);
   const copyOpacity = useTransform(hero, [0.35, 0.9], [1, 0]);
 
@@ -60,7 +61,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
       <section ref={heroRef} className="relative flex flex-col items-center text-center gap-10 pt-2">
         <motion.div
           // The carousel has its own "rise" intro, so this layer only reacts to scroll
-          style={still ? undefined : { y: carouselY, scale: carouselScale, opacity: carouselOpacity }}
+          style={still ? undefined : { y: carouselY, opacity: carouselOpacity }}
           className="relative w-full h-[230px] sm:h-[400px] lg:h-[440px] will-change-transform"
         >
           {/* Draggable 3D ring of catalog frames; clicking a card opens Koleksi */}
@@ -74,6 +75,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
             speed={12}
             tilt={-8}
             onCardClick={onOpenCatalog}
+            spread={still ? undefined : ringSpread}
           />
         </motion.div>
 
