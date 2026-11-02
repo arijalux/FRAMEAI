@@ -1,21 +1,26 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { Leaf, Lightbulb, MapPin, Sparkles } from 'lucide-react';
 
 // The principles FrameAI is built on, each with how the app meets it
 const PRINCIPLES = [
   {
+    icon: Leaf,
     title: 'Sustainable',
     text: 'Frame dari limbah kayu sonokeling dan jati, dibuat hanya saat dipesan, dan dicoba dulu sebelum diproduksi supaya retur berkurang.',
   },
   {
+    icon: Sparkles,
     title: 'AI Driven',
     text: 'Gemini membaca foto wajah dan menyarankan frame, dan MediaPipe melacak wajah agar frame 3D ikut bergerak di kamera.',
   },
   {
+    icon: Lightbulb,
     title: 'Innovative',
     text: 'Desain custom langsung jadi file SVG/DXF untuk mesin CNC/laser perajin, plus kartu cetak untuk melihat frame di ukuran aslinya.',
   },
   {
+    icon: MapPin,
     title: 'Local',
     text: 'Dikerjakan bersama BJ Homemade di Semarang dan perajin difabel, dengan bahasa Indonesia dan harga dalam Rupiah.',
   },
@@ -91,6 +96,9 @@ export const PrinciplesSection: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 border-t border-line pt-12">
         {PRINCIPLES.map((p, i) => (
           <motion.div key={p.title} {...anim(i)} className="space-y-2">
+            <span className="mx-auto mb-3 w-12 h-12 rounded-full bg-sage-tint text-sage flex items-center justify-center">
+              <p.icon className="w-5 h-5" aria-hidden />
+            </span>
             <p className="text-xl text-ink">{p.title}</p>
             <p className="text-base text-muted leading-relaxed">{p.text}</p>
           </motion.div>

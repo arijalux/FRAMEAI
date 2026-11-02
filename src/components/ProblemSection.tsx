@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { animate, motion, useInView, useReducedMotion } from 'motion/react';
+import { ImageOff, Ruler, Store, Truck } from 'lucide-react';
 
 // Real buyer reviews of glasses bought online: marketplace screenshots, names blurred.
 // Each card lands slightly tilted, like notes pinned to a board.
@@ -28,12 +29,13 @@ const pop = {
 
 const PROBLEMS = [
   {
+    icon: Truck,
     title: 'Retur boros energi',
     text: 'Frame yang tidak pas dikirim balik dan dibuat ulang: bahan bakar pengiriman ulang dan bahan baku baru ikut terbuang.',
   },
-  { title: 'Tidak bisa dicoba', text: 'Pembeli hanya melihat foto, lalu menebak apakah frame cocok di wajahnya.' },
-  { title: 'Ukuran meleset', text: 'Terlalu kecil atau terlalu besar baru ketahuan setelah barang sampai.' },
-  { title: 'Perajin sulit menjual', text: 'Perajin lokal kuat di produk, tapi pemasaran dan pesanannya tidak stabil.' },
+  { icon: ImageOff, title: 'Tidak bisa dicoba', text: 'Pembeli hanya melihat foto, lalu menebak apakah frame cocok di wajahnya.' },
+  { icon: Ruler, title: 'Ukuran meleset', text: 'Terlalu kecil atau terlalu besar baru ketahuan setelah barang sampai.' },
+  { icon: Store, title: 'Perajin sulit menjual', text: 'Perajin lokal kuat di produk, tapi pemasaran dan pesanannya tidak stabil.' },
 ];
 
 // Published Indonesian figures behind the problem; the sources are linked under the numbers
@@ -166,6 +168,9 @@ export const ProblemSection: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8 max-w-4xl mx-auto">
           {PROBLEMS.map((p, i) => (
             <motion.div key={p.title} {...anim(i % 2)} className="space-y-1">
+              <span className="mx-auto mb-3 w-12 h-12 rounded-full bg-sage-tint text-sage flex items-center justify-center">
+                <p.icon className="w-5 h-5" aria-hidden />
+              </span>
               <p className="text-xl text-ink">{p.title}</p>
               <p className="text-base text-muted leading-relaxed">{p.text}</p>
             </motion.div>
