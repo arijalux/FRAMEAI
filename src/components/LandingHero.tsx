@@ -3,6 +3,8 @@ import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'mo
 import { ArrowUpRight, LayoutGrid, Sparkles } from 'lucide-react';
 import { RotatingCards } from './RotatingCards';
 import { PartnerSection } from './PartnerSection';
+import { ProblemSection } from './ProblemSection';
+import { PrinciplesSection } from './PrinciplesSection';
 import { OpticalFrame } from '../types';
 import { formatRupiah, materialLabel } from '../utils/format';
 
@@ -47,11 +49,11 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
   const copyY = useTransform(hero, [0, 1], [0, -60]);
   const copyOpacity = useTransform(hero, [0.35, 0.9], [1, 0]);
 
-  // Editorial: the two columns rise at different speeds as the section passes through
-  // (vertical only, so nothing gets clipped or causes sideways scrolling)
-  const { scrollYProgress: editorialProgress } = useScroll({ target: editorialRef, offset: ['start end', 'end start'] });
-  const headlineY = useTransform(editorialProgress, [0, 1], [40, -40]);
-  const bodyY = useTransform(editorialProgress, [0, 1], [90, -60]);
+  // Editorial: the two columns rise at different speeds and settle level once the section is
+  // fully in view, since it sits at the end of the page (vertical only, so nothing gets clipped)
+  const { scrollYProgress: editorialProgress } = useScroll({ target: editorialRef, offset: ['start end', 'end end'] });
+  const headlineY = useTransform(editorialProgress, [0, 1], [40, 0]);
+  const bodyY = useTransform(editorialProgress, [0, 1], [90, 0]);
 
   const still = Boolean(reduceMotion);
 
@@ -145,13 +147,18 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
         </motion.div>
       </section>
 
+      {/* What the app solves */}
+      <ProblemSection />
+
+      <PrinciplesSection />
+
       {/* Partner: BJ Homemade */}
       <PartnerSection onOpenCatalog={onOpenCatalog} onOpenCustom={onOpenCustom} />
 
       {/* Editorial statement */}
       <section
         ref={editorialRef}
-        className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end border-t border-line pt-16"
+        className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end border-t border-line pt-16 pb-8"
       >
         <motion.h2
           style={still ? undefined : { y: headlineY }}

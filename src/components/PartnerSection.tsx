@@ -6,6 +6,7 @@ import { ArrowUpRight, HandHeart, Leaf, ShieldCheck } from 'lucide-react';
 // Facts from Green Network's interview with BJ Homemade (May 2023); collaboration agreed verbally.
 const PARTNER = {
   name: 'BJ Homemade',
+  logo: '/partners/bj-homemade-logo.jpg',
   eyebrow: 'Kolaborasi',
   body: 'FrameAI berkolaborasi dengan BJ Homemade, usaha asal Semarang yang sejak 2017 membuat frame kacamata dari limbah kayu. Lewat FrameAI, frame buatan tangan mereka bisa dicoba secara virtual dan dipilih dengan bantuan AI dari mana saja.',
   points: [
@@ -33,10 +34,18 @@ export const PartnerSection: React.FC<PartnerSectionProps> = ({ onOpenCatalog, o
       className="rounded-[32px] bg-sand p-8 md:p-12 grid grid-cols-1 lg:grid-cols-12 gap-10"
     >
       <div className="lg:col-span-6 space-y-6">
-        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 text-xs text-ink">
-          {PARTNER.eyebrow}
-        </span>
-        {/* Text wordmark until the partner's official logo file is added */}
+        <div className="flex items-center gap-4">
+          <img
+            src={PARTNER.logo}
+            alt={`Logo ${PARTNER.name}`}
+            width={96}
+            height={96}
+            className="w-24 h-24 rounded-2xl object-cover"
+          />
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 text-xs text-ink">
+            {PARTNER.eyebrow}
+          </span>
+        </div>
         <h2 id="partner-title" className="text-4xl md:text-5xl font-normal tracking-[-0.04em] leading-[1.05] text-ink">
           FrameAI <span className="text-muted">×</span>
           <br />
