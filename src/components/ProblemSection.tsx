@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { animate, motion, useInView, useReducedMotion } from 'motion/react';
-import { ImageOff, Ruler, Store, Truck } from 'lucide-react';
+import { Glasses, Ruler, Store, Truck } from 'lucide-react';
 
 // Real buyer reviews of glasses bought online: marketplace screenshots, names blurred.
 // Each card lands slightly tilted, like notes pinned to a board.
@@ -33,7 +33,7 @@ const PROBLEMS = [
     title: 'Retur boros energi',
     text: 'Frame yang tidak pas dikirim balik dan dibuat ulang: bahan bakar pengiriman ulang dan bahan baku baru ikut terbuang.',
   },
-  { icon: ImageOff, title: 'Tidak bisa dicoba', text: 'Pembeli hanya melihat foto, lalu menebak apakah frame cocok di wajahnya.' },
+  { icon: Glasses, title: 'Tidak bisa dicoba', text: 'Pembeli hanya melihat foto, lalu menebak apakah frame cocok di wajahnya.' },
   { icon: Ruler, title: 'Ukuran meleset', text: 'Terlalu kecil atau terlalu besar baru ketahuan setelah barang sampai.' },
   { icon: Store, title: 'Perajin sulit menjual', text: 'Perajin lokal kuat di produk, tapi pemasaran dan pesanannya tidak stabil.' },
 ];
