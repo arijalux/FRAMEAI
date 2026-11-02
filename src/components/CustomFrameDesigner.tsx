@@ -19,6 +19,7 @@ import {
   sizeCode,
   withChange,
 } from '../utils/frameGenerator';
+import { whatsappLink } from '../utils/contact';
 
 const SHAPES: FrameShape[] = ['Round', 'Oval', 'Square', 'Geometric', 'Aviator', 'Cat-Eye'];
 
@@ -58,9 +59,6 @@ const SLIDER_GROUPS: { title: string; sliders: Slider[] }[] = [
   },
 ];
 
-// BJ Homemade's WhatsApp (digits only, e.g. 628123456789). Without it, chat opens their Instagram DM.
-const WHATSAPP = (import.meta.env.VITE_BJ_HOMEMADE_WHATSAPP ?? '').replace(/\D/g, '');
-const INSTAGRAM_DM = 'https://ig.me/m/bj.homamede';
 
 interface CustomFrameDesignerProps {
   faceAnalysis: FaceAnalysisResult | null;
@@ -129,8 +127,8 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
     }
   };
 
-  const chatMessage = `Halo BJ Homemade, saya mau tanya custom frame kayu ${frameShapeLabel(params.shape).toLowerCase()} ${woodLabel.toLowerCase()} ukuran ${sizeCode(params)} dari FrameAI.`;
-  const chatHref = WHATSAPP ? `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(chatMessage)}` : INSTAGRAM_DM;
+  const chatMessage = `Halo FrameAI, saya mau tanya custom frame kayu ${frameShapeLabel(params.shape).toLowerCase()} ${woodLabel.toLowerCase()} ukuran ${sizeCode(params)} dari BJ Homemade.`;
+  const chatHref = whatsappLink(chatMessage);
 
   const pad = 6;
   const frontBox = `${-geometry.width / 2 - pad} ${geometry.top - pad} ${geometry.width + pad * 2} ${geometry.height + pad * 2}`;

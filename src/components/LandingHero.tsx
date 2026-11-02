@@ -5,6 +5,7 @@ import { RotatingCards } from './RotatingCards';
 import { PartnerSection } from './PartnerSection';
 import { ProblemSection } from './ProblemSection';
 import { PrinciplesSection } from './PrinciplesSection';
+import { JoinPartnerSection } from './JoinPartnerSection';
 import { OpticalFrame } from '../types';
 import { formatRupiah, materialLabel } from '../utils/format';
 
@@ -154,6 +155,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
 
       {/* Partner: BJ Homemade */}
       <PartnerSection onOpenCatalog={onOpenCatalog} onOpenCustom={onOpenCustom} />
+
+      {/* Invite other makers to list their frames */}
+      <JoinPartnerSection />
 
       {/* Editorial statement */}
       <section
