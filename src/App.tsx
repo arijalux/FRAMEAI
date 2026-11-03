@@ -50,7 +50,7 @@ import {
   Eye,
   Sliders,
   Check,
-  Bookmark,
+  Heart,
   Search,
   Filter,
   User as UserIcon,
@@ -507,8 +507,8 @@ export default function App() {
                       savedOnly ? 'bg-ink text-white' : 'bg-soft text-ink'
                     }`}
                   >
-                    <Bookmark className={`w-4 h-4 ${savedOnly ? 'fill-current' : ''}`} />
-                    Disimpan ({bookmarkedIds.length})
+                    <Heart className={`w-4 h-4 ${savedOnly ? 'fill-current' : ''}`} />
+                    Favorit ({bookmarkedIds.length})
                   </button>
                 </div>
               </div>
@@ -538,30 +538,29 @@ export default function App() {
                       className="group rounded-3xl border border-line bg-white overflow-hidden flex flex-col transition-shadow hover:shadow-float cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
                     >
                       <div className={`relative ${tint} p-5 pb-0`}>
-                        <div className="flex items-start justify-between gap-3 mb-4 min-h-10">
-                          {match ? (
-                            <span className="px-2.5 py-1 rounded-full bg-white/90 text-xs text-ink">Cocok {match.score}%</span>
-                          ) : (
-                            <span />
-                          )}
+                        {match && (
+                          <span className="inline-block mb-4 px-2.5 py-1 rounded-full bg-white/90 text-xs text-ink">
+                            Cocok {match.score}%
+                          </span>
+                        )}
+                        <div className="relative aspect-[4/3] rounded-t-2xl overflow-hidden shadow-card">
+                          <img
+                            src={frame.imageUrl}
+                            alt={frame.name}
+                            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                          />
+                          {/* Favourite, like marketplaces: a heart on the photo, red once saved */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleBookmark(frame.id);
                             }}
                             aria-pressed={saved}
-                            aria-label={saved ? `Hapus ${frame.name} dari simpanan` : `Simpan ${frame.name}`}
-                            className="w-10 h-10 rounded-full bg-white/90 hover:bg-white text-ink flex items-center justify-center transition-colors"
+                            aria-label={saved ? `Hapus ${frame.name} dari favorit` : `Tambah ${frame.name} ke favorit`}
+                            className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-card flex items-center justify-center transition-colors"
                           >
-                            <Bookmark className={`w-4 h-4 ${saved ? 'fill-current' : ''}`} />
+                            <Heart className={`w-4 h-4 ${saved ? 'fill-red-500 text-red-500' : 'text-ink'}`} />
                           </button>
-                        </div>
-                        <div className="aspect-[4/3] rounded-t-2xl overflow-hidden shadow-card">
-                          <img
-                            src={frame.imageUrl}
-                            alt={frame.name}
-                            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                          />
                         </div>
                       </div>
 

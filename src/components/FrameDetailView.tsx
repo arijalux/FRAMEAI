@@ -6,7 +6,7 @@ import { calculateFaceFrameMatchScore, computeDecentration } from '../utils/opti
 import { faceShapeLabel, formatRupiah, frameShapeLabel, materialLabel } from '../utils/format';
 import {
   ArrowLeft,
-  Bookmark,
+  Heart,
   Camera,
   Check,
   Eye,
@@ -198,13 +198,13 @@ export const FrameDetailView: React.FC<FrameDetailViewProps> = ({
                 type="button"
                 onClick={() => onToggleBookmark(frame)}
                 aria-pressed={isBookmarked}
-                aria-label={isBookmarked ? 'Hapus dari simpanan' : 'Simpan frame ini'}
-                title={isBookmarked ? 'Disimpan' : 'Simpan'}
+                aria-label={isBookmarked ? 'Hapus dari favorit' : 'Tambah ke favorit'}
+                title={isBookmarked ? 'Favorit' : 'Tambah ke favorit'}
                 className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${
-                  isBookmarked ? 'border-ink bg-ink text-white' : 'border-line hover:border-ink text-ink'
+                  isBookmarked ? 'border-red-200 bg-red-50 text-red-500' : 'border-line hover:border-ink text-ink'
                 }`}
               >
-                <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
+                <Heart className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
               </button>
             </div>
           </div>
