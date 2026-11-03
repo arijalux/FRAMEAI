@@ -9,6 +9,8 @@ import {
   saveFrameToDb,
   updateOrderStatusInDb,
   checkIsAdmin,
+  isSuperAdmin,
+  saveUserProfile,
   refreshCurrentUser,
   resendVerification,
   auth,
@@ -134,6 +136,7 @@ export default function App() {
   // Admin access and admin data follow the signed-in user
   const applyUser = async (usr: User | null) => {
     setCurrentUser(usr);
+    if (usr) void saveUserProfile(usr);
     const admin = await checkIsAdmin(usr);
     setIsAdmin(admin);
     setAllOrders(admin ? await fetchAllOrders().catch(() => []) : []);
@@ -891,6 +894,7 @@ export default function App() {
             onUpdateOrderStatus={handleUpdateOrderStatus}
             customDesigns={customDesigns}
             onUpdateDesignStatus={handleUpdateDesignStatus}
+            isSuperAdmin={isSuperAdmin(currentUser)}
           />
         )}
         </Suspense>

@@ -12,6 +12,8 @@ import {
   orderBy,
   onSnapshot,
   updateDoc,
+  deleteDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import {
   getAuth,
@@ -140,20 +142,76 @@ export async function logoutUser(): Promise<void> {
   await signOut(auth);
 }
 
-// Keep in sync with isAdmin() in firestore.rules. This only decides what UI to show;
+// Keep in sync with isSuperAdmin()/isAdmin() in firestore.rules. This only decides what UI to show;
 // the rules are what actually protect admin data.
-const ADMIN_EMAIL = 'arijalibnujati@gmail.com';
+// The superadmin is fixed here and in the rules, never stored in Firestore, so nobody can grant it to
+// themselves. Store admins are documents in `admins`, which only the superadmin can write.
+export const SUPERADMIN_EMAIL = 'arijalibnujati@gmail.com';
+
+/** A password account can be opened with any address, so the email only counts once verified */
+export const isSuperAdmin = (user: User | null) =>
+  Boolean(user && user.email?.toLowerCase() === SUPERADMIN_EMAIL && user.emailVerified);
 
 export async function checkIsAdmin(user: User | null): Promise<boolean> {
   if (!user) return false;
-  // A password account can be opened with any address, so the admin email only counts once verified
-  if (user.email === ADMIN_EMAIL && user.emailVerified) return true;
+  if (isSuperAdmin(user)) return true;
   try {
     const snap = await getDocFromServer(doc(db, 'admins', user.uid));
     return snap.exists();
   } catch {
     return false;
   }
+}
+
+// Every signed-in user keeps a small profile so the superadmin can find them by email
+// (the client SDK can't look up other accounts)
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+}
+
+export async function saveUserProfile(user: User): Promise<void> {
+  if (!user.email) return;
+  await setDoc(
+    doc(db, 'users', user.uid),
+    {
+      uid: user.uid,
+      email: user.email.toLowerCase(),
+      displayName: user.displayName ?? '',
+      lastSignInAt: serverTimestamp(),
+    },
+    { merge: true }
+  ).catch(() => undefined);
+}
+
+export async function findUserByEmail(email: string): Promise<UserProfile | null> {
+  const snap = await getDocs(query(collection(db, 'users'), where('email', '==', email.trim().toLowerCase())));
+  return snap.empty ? null : (snap.docs[0].data() as UserProfile);
+}
+
+export interface StoreAdmin extends UserProfile {
+  addedBy: string;
+}
+
+export async function fetchStoreAdmins(): Promise<StoreAdmin[]> {
+  const snap = await getDocs(collection(db, 'admins'));
+  return snap.docs.map((d) => d.data() as StoreAdmin);
+}
+
+export async function addStoreAdmin(profile: UserProfile): Promise<StoreAdmin> {
+  const admin: StoreAdmin = {
+    uid: profile.uid,
+    email: profile.email,
+    displayName: profile.displayName,
+    addedBy: auth.currentUser?.email ?? '',
+  };
+  await setDoc(doc(db, 'admins', profile.uid), { ...admin, addedAt: serverTimestamp() });
+  return admin;
+}
+
+export async function removeStoreAdmin(uid: string): Promise<void> {
+  await deleteDoc(doc(db, 'admins', uid));
 }
 
 // Optical Frames Store Services
