@@ -118,6 +118,20 @@ export async function registerWithEmail(name: string, email: string, password: s
   return result.user;
 }
 
+/** Re-reads the signed-in user and refreshes their token, e.g. after they verify their email */
+export async function refreshCurrentUser(): Promise<User | null> {
+  const user = auth.currentUser;
+  if (!user) return null;
+  await user.reload();
+  // The Firestore rules read email_verified from the token, so get a fresh one
+  await user.getIdToken(true);
+  return auth.currentUser;
+}
+
+export async function resendVerification(): Promise<void> {
+  if (auth.currentUser) await sendEmailVerification(auth.currentUser);
+}
+
 export async function resetPassword(email: string): Promise<void> {
   await sendPasswordResetEmail(auth, email.trim());
 }
