@@ -6,6 +6,7 @@ import { calculateFaceFrameMatchScore, computeDecentration } from '../utils/opti
 import { faceShapeLabel, formatRupiah, frameShapeLabel, materialLabel } from '../utils/format';
 import {
   ArrowLeft,
+  Heart,
   Camera,
   Check,
   Eye,
@@ -23,6 +24,7 @@ interface FrameDetailViewProps {
   userFaceShape: FaceShape | null;
   userPd?: number;
   isCompared: boolean;
+  isBookmarked: boolean;
   backLabel: string;
   onBack: () => void;
   onSelectFaceShape: (shape: FaceShape | null) => void;
@@ -32,6 +34,7 @@ interface FrameDetailViewProps {
   onConfigureLenses: (frame: OpticalFrame, color: FrameColorOption) => void;
   onTryOnAr: (frame: OpticalFrame) => void;
   onToggleCompare: (frame: OpticalFrame) => void;
+  onToggleBookmark: (frame: OpticalFrame) => void;
   onSelectRelatedFrame: (frame: OpticalFrame) => void;
 }
 
@@ -44,6 +47,7 @@ export const FrameDetailView: React.FC<FrameDetailViewProps> = ({
   userFaceShape,
   userPd,
   isCompared,
+  isBookmarked,
   backLabel,
   onBack,
   onSelectFaceShape,
@@ -53,6 +57,7 @@ export const FrameDetailView: React.FC<FrameDetailViewProps> = ({
   onConfigureLenses,
   onTryOnAr,
   onToggleCompare,
+  onToggleBookmark,
   onSelectRelatedFrame,
 }) => {
   const [selectedColor, setSelectedColor] = useState<FrameColorOption>(
@@ -188,6 +193,18 @@ export const FrameDetailView: React.FC<FrameDetailViewProps> = ({
               >
                 {isCompared ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                 <span>{isCompared ? 'Dibandingkan' : 'Bandingkan'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleBookmark(frame)}
+                aria-pressed={isBookmarked}
+                aria-label={isBookmarked ? 'Hapus dari favorit' : 'Tambah ke favorit'}
+                title={isBookmarked ? 'Favorit' : 'Tambah ke favorit'}
+                className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${
+                  isBookmarked ? 'border-red-200 bg-red-50 text-red-500' : 'border-line hover:border-ink text-ink'
+                }`}
+              >
+                <Heart className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
               </button>
             </div>
           </div>
@@ -329,14 +346,18 @@ export const FrameDetailView: React.FC<FrameDetailViewProps> = ({
             </h1>
 
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted tabular-nums">
-              <span className="inline-flex items-center gap-1 text-ink">
-                <Star className="w-3.5 h-3.5 fill-current" />
-                {frame.rating.toFixed(1)}
-              </span>
-              <span>({frame.reviewsCount} ulasan terverifikasi)</span>
-              <span aria-hidden="true">·</span>
+              {frame.reviewsCount > 0 && (
+                <>
+                  <span className="inline-flex items-center gap-1 text-ink">
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                    {frame.rating.toFixed(1)}
+                  </span>
+                  <span>({frame.reviewsCount} ulasan)</span>
+                  <span aria-hidden="true">·</span>
+                </>
+              )}
               <span className={frame.stock > 0 ? 'text-body' : 'text-muted'}>
-                {frame.stock > 0 ? `Tersedia (${frame.stock} unit)` : 'Stok habis'}
+                {frame.stock > 0 ? 'Dibuat sesuai pesanan' : 'Sedang tidak menerima pesanan'}
               </span>
             </div>
 
@@ -345,7 +366,7 @@ export const FrameDetailView: React.FC<FrameDetailViewProps> = ({
                 {formatRupiah(frame.price)}
               </div>
               <p className="text-xs text-muted mt-1">
-                Harga termasuk frame & lensa standar tanpa resep · PPN 11% dihitung saat checkout.
+                Harga frame saja. Lensa resep bisa ditambahkan lewat Atur Lensa Resep.
               </p>
             </div>
           </div>
@@ -455,7 +476,7 @@ export const FrameDetailView: React.FC<FrameDetailViewProps> = ({
               className="w-full h-12 px-6 rounded-full bg-ink hover:bg-ink-soft disabled:opacity-50 text-white text-sm font-medium shadow-float flex items-center justify-center gap-2 whitespace-nowrap transition-colors cursor-pointer"
             >
               <ShoppingBag className="w-4 h-4" />
-              <span>Checkout Sekarang · {formatRupiah(frame.price)}</span>
+              <span>Beli sekarang · {formatRupiah(frame.price)}</span>
             </button>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -483,9 +504,9 @@ export const FrameDetailView: React.FC<FrameDetailViewProps> = ({
 
           {/* Service & Craftsmanship Notes */}
           <ul className="space-y-2 border-t border-line pt-5 text-xs text-muted">
-            <li>Gratis pengiriman berasuransi ke seluruh Indonesia</li>
-            <li>Garansi kecocokan & penyetelan engsel 30 hari</li>
-            <li>Termasuk hardcase pelindung & kain mikrofiber optik</li>
+            <li>Dibuat tangan oleh BJ Homemade, Semarang, sesuai pesanan</li>
+            <li>Dari limbah kayu sonokeling dan jati</li>
+            <li>Garansi perbaikan seumur hidup dari BJ Homemade</li>
           </ul>
         </div>
       </div>
