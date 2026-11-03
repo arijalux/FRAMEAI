@@ -17,6 +17,9 @@ import {
   Sliders,
   X,
 } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
+import { StoreAdminManager } from './StoreAdminManager';
+import { SUPERADMIN_EMAIL } from '../lib/firebase';
 import { formatRupiah, frameShapeLabel, materialLabel, orderStatusLabel, lensTypeLabel, faceShapeLabel } from '../utils/format';
 
 const URGENCY_LABELS: Record<string, string> = { High: 'Tinggi', Medium: 'Sedang', Low: 'Rendah' };
@@ -29,6 +32,8 @@ interface SellerOperationsPortalProps {
   onUpdateOrderStatus: (orderId: string, status: OrderStatus) => void;
   customDesigns: CustomDesignRequest[];
   onUpdateDesignStatus: (designId: string, status: CustomDesignStatus) => void;
+  /** Superadmin sees an extra tab to manage store admins */
+  isSuperAdmin?: boolean;
 }
 
 export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
@@ -39,8 +44,9 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
   onUpdateOrderStatus,
   customDesigns,
   onUpdateDesignStatus,
+  isSuperAdmin = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<'inventory' | 'orders' | 'custom' | 'ai_insights'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'orders' | 'custom' | 'ai_insights' | 'admins'>('inventory');
   const [aiInsights, setAiInsights] = useState<SellerInsights | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState<boolean>(false);
   const [insightsError, setInsightsError] = useState<string | null>(null);
@@ -238,7 +244,20 @@ export const SellerOperationsPortal: React.FC<SellerOperationsPortalProps> = ({
           <Sparkles className="w-3.5 h-3.5" />
           Insight AI
         </button>
+        {isSuperAdmin && (
+          <button
+            onClick={() => setActiveTab('admins')}
+            className={`px-4 py-2 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all ${
+              activeTab === 'admins' ? 'bg-ink text-white shadow-md' : 'text-muted hover:text-ink hover:bg-white'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Kelola admin
+          </button>
+        )}
       </div>
+
+      {activeTab === 'admins' && isSuperAdmin && <StoreAdminManager superAdminEmail={SUPERADMIN_EMAIL} />}
 
       {/* TAB 1: Inventory Management */}
       {activeTab === 'inventory' && (

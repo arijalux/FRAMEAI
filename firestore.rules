@@ -14,15 +14,50 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // The one superadmin is fixed here (and in src/lib/firebase.ts), never stored in Firestore.
+    // A password account can be opened with any address, so the email must be verified.
+    function isSuperAdmin() {
+      return isSignedIn()
+        && request.auth.token.email is string
+        && request.auth.token.email.lower() == 'arijalibnujati@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    // Store admins are documents in /admins, which only the superadmin can write
     function isAdmin() {
-      return isSignedIn() && (
-        (request.auth.token.email == 'arijalibnujati@gmail.com' && request.auth.token.email_verified == true) ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
+      return isSuperAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
     }
 
     function isValidId(id) {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Profiles of signed-in users, so the superadmin can find an account by email
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isSuperAdmin();
+      allow list: if isSuperAdmin();
+      allow create, update: if isOwner(userId)
+                    && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'lastSignInAt'])
+                    && request.resource.data.uid == userId
+                    && request.resource.data.email == request.auth.token.email.lower()
+                    && request.resource.data.displayName is string
+                    && request.resource.data.displayName.size() <= 80
+                    && request.resource.data.lastSignInAt == request.time;
+      allow delete: if false;
+    }
+
+    // Store admins: each user can see whether they are one; only the superadmin lists or changes them
+    match /admins/{userId} {
+      allow get: if isOwner(userId) || isSuperAdmin();
+      allow list: if isSuperAdmin();
+      allow create, update: if isSuperAdmin()
+                    && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'addedBy', 'addedAt'])
+                    && request.resource.data.uid == userId
+                    && request.resource.data.email is string
+                    && request.resource.data.displayName is string
+                    && request.resource.data.addedBy == request.auth.token.email
+                    && request.resource.data.addedAt == request.time;
+      allow delete: if isSuperAdmin();
     }
 
     // Optical Catalog

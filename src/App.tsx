@@ -9,6 +9,10 @@ import {
   saveFrameToDb,
   updateOrderStatusInDb,
   checkIsAdmin,
+  isSuperAdmin,
+  saveUserProfile,
+  refreshCurrentUser,
+  resendVerification,
   auth,
   loginWithGoogle,
   logoutUser,
@@ -129,6 +133,34 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
+  // Admin access and admin data follow the signed-in user
+  const applyUser = async (usr: User | null) => {
+    setCurrentUser(usr);
+    if (usr) void saveUserProfile(usr);
+    const admin = await checkIsAdmin(usr);
+    setIsAdmin(admin);
+    setAllOrders(admin ? await fetchAllOrders().catch(() => []) : []);
+    setCustomDesigns(admin ? await fetchCustomDesigns().catch(() => []) : []);
+  };
+
+  // Clicking the verification link happens in another tab and doesn't trigger onAuthStateChanged,
+  // so recheck when the visitor comes back to this tab
+  const needsVerification = Boolean(
+    currentUser && !currentUser.emailVerified && currentUser.providerData.some((p) => p.providerId === 'password')
+  );
+  const [verifyNotice, setVerifyNotice] = useState<string | null>(null);
+  const recheckVerification = async () => {
+    const usr = await refreshCurrentUser().catch(() => null);
+    await applyUser(usr);
+    setVerifyNotice(usr?.emailVerified ? null : 'Email belum terverifikasi. Buka link di email, lalu coba lagi.');
+  };
+  useEffect(() => {
+    if (!needsVerification) return;
+    const onFocus = () => void recheckVerification();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [needsVerification]);
+
   // Load Catalog from Firestore
   useEffect(() => {
     fetchCatalogFrames().then((loaded) => {
@@ -138,13 +170,7 @@ export default function App() {
       }
     });
 
-    const unsubscribe = onAuthStateChanged(auth, async (usr) => {
-      setCurrentUser(usr);
-      const admin = await checkIsAdmin(usr);
-      setIsAdmin(admin);
-      setAllOrders(admin ? await fetchAllOrders().catch(() => []) : []);
-      setCustomDesigns(admin ? await fetchCustomDesigns().catch(() => []) : []);
-    });
+    const unsubscribe = onAuthStateChanged(auth, applyUser);
 
     return () => unsubscribe();
   }, []);
@@ -406,6 +432,25 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-10 space-y-12">
+        {needsVerification && (
+          <div className="rounded-2xl bg-sage-tint px-5 py-4 flex flex-wrap items-center gap-3 text-sm text-ink">
+            <span className="flex-1 min-w-60">
+              Verifikasi email <strong className="font-medium">{currentUser?.email}</strong> lewat link yang kami kirim. Akses
+              admin baru aktif setelah email terverifikasi.
+              {verifyNotice && <span className="block text-muted mt-1">{verifyNotice}</span>}
+            </span>
+            <button
+              onClick={() => resendVerification().then(() => setVerifyNotice('Link verifikasi dikirim ulang. Cek juga folder spam.')).catch(() => setVerifyNotice('Gagal mengirim. Coba lagi beberapa menit lagi.'))}
+              className="h-9 px-4 rounded-full border border-ink/20 hover:border-ink"
+            >
+              Kirim ulang
+            </button>
+            <button onClick={recheckVerification} className="h-9 px-4 rounded-full bg-ink text-white hover:bg-ink-soft">
+              Sudah verifikasi
+            </button>
+          </div>
+        )}
+
         <Suspense fallback={<div className="py-24 text-center text-sm text-faint">Memuat...</div>}>
         {/* VIEW 0: Landing page */}
         {activeView === 'home' && (
@@ -849,6 +894,7 @@ export default function App() {
             onUpdateOrderStatus={handleUpdateOrderStatus}
             customDesigns={customDesigns}
             onUpdateDesignStatus={handleUpdateDesignStatus}
+            isSuperAdmin={isSuperAdmin(currentUser)}
           />
         )}
         </Suspense>
