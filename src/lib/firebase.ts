@@ -17,6 +17,11 @@ import {
   getAuth,
   signInWithPopup,
   GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  updateProfile,
   signOut,
   onAuthStateChanged,
   type User,
@@ -99,6 +104,24 @@ export async function loginWithGoogle(): Promise<User> {
   return result.user;
 }
 
+// Email & password (the Email/Password provider must be enabled in the Firebase console)
+export async function loginWithEmail(email: string, password: string): Promise<User> {
+  const result = await signInWithEmailAndPassword(auth, email.trim(), password);
+  return result.user;
+}
+
+/** New account; sends a verification email, which admin access requires */
+export async function registerWithEmail(name: string, email: string, password: string): Promise<User> {
+  const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
+  if (name.trim()) await updateProfile(result.user, { displayName: name.trim() });
+  await sendEmailVerification(result.user).catch(() => undefined);
+  return result.user;
+}
+
+export async function resetPassword(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email.trim());
+}
+
 export async function logoutUser(): Promise<void> {
   await signOut(auth);
 }
@@ -109,7 +132,8 @@ const ADMIN_EMAIL = 'arijalibnujati@gmail.com';
 
 export async function checkIsAdmin(user: User | null): Promise<boolean> {
   if (!user) return false;
-  if (user.email === ADMIN_EMAIL) return true;
+  // A password account can be opened with any address, so the admin email only counts once verified
+  if (user.email === ADMIN_EMAIL && user.emailVerified) return true;
   try {
     const snap = await getDocFromServer(doc(db, 'admins', user.uid));
     return snap.exists();
