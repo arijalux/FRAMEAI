@@ -1,9 +1,10 @@
 import React from 'react';
-import { Download } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import { CustomDesignRequest, CustomDesignStatus } from '../types';
 import { faceShapeLabel, frameShapeLabel } from '../utils/format';
 import { buildFrameGeometry } from '../utils/frameGenerator';
 import { downloadCutFile } from '../utils/cutFileDownload';
+import { printDrawing } from '../utils/technicalDrawing';
 
 const STATUSES: { value: CustomDesignStatus; label: string }[] = [
   { value: 'new', label: 'Baru' },
@@ -97,6 +98,23 @@ export const CustomDesignInbox: React.FC<CustomDesignInboxProps> = ({ designs, o
                     {format.toUpperCase()}
                   </button>
                 ))}
+                <button
+                  onClick={() =>
+                    printDrawing(d.params, {
+                      designId: d.id,
+                      customerName: d.customerName,
+                      wood: d.wood,
+                      faceShape: d.faceShape,
+                      estimatedPd: d.estimatedPd,
+                      date: new Date(d.createdAt),
+                    })
+                  }
+                  title="Gambar kerja A4 dengan ukuran, untuk dicetak atau disimpan sebagai PDF"
+                  className="h-10 px-4 rounded-full border border-ink/20 hover:border-ink text-ink text-sm font-medium flex items-center gap-2 transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  Gambar kerja (PDF)
+                </button>
                 <span className="text-xs text-muted">{new Date(d.createdAt).toLocaleDateString('id-ID')}</span>
               </div>
             </div>

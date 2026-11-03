@@ -1,9 +1,10 @@
 import React, { useDeferredValue, useMemo, useState } from 'react';
-import { CheckCircle2, Download, MessageCircle, ScanFace, Send, Sparkles } from 'lucide-react';
+import { CheckCircle2, Download, FileText, MessageCircle, ScanFace, Send, Sparkles } from 'lucide-react';
 import { FaceAnalysisResult, FrameShape } from '../types';
 import { FaceScanPanel } from './FaceScanPanel';
 import { faceShapeLabel, frameShapeLabel } from '../utils/format';
 import { downloadCutFile } from '../utils/cutFileDownload';
+import { printDrawing } from '../utils/technicalDrawing';
 import { submitCustomDesign } from '../lib/firebase';
 import {
   CustomFrameParams,
@@ -426,8 +427,22 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
                     {format.toUpperCase()}
                   </button>
                 ))}
+                <button
+                  onClick={() =>
+                    printDrawing(params, {
+                      wood: woodLabel,
+                      faceShape: faceAnalysis?.faceShape ?? null,
+                      estimatedPd: faceAnalysis?.estimatedPd ?? null,
+                    })
+                  }
+                  className="col-span-2 h-12 rounded-full border border-line hover:border-ink text-ink text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  Gambar kerja (PDF)
+                </button>
               </div>
               <p className="text-xs text-muted leading-relaxed">
+                Gambar kerja berisi ukuran, data wajah dan catatan pengerjaan; simpan sebagai PDF dari jendela cetak.
                 Ukuran asli dalam milimeter. SVG untuk software laser, DXF untuk CNC atau CAD. Garis potong merah (layer
                 CUT), ukiran hitam (layer ENGRAVE). Lubang lensa perlu disesuaikan dengan alur lensa dari optik.
               </p>
