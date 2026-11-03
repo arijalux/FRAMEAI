@@ -25,6 +25,7 @@ import { ShoppingBagDrawer } from './components/ShoppingBagDrawer';
 import { UserSavedLooksModal } from './components/UserSavedLooksModal';
 import { LandingHero } from './components/LandingHero';
 import { FrameDetailView } from './components/FrameDetailView';
+import { AuthModal } from './components/AuthModal';
 import { REAL_SIZE_PARAM } from './components/realsize/realSizeModels';
 
 // Secondary views are code-split so the catalog loads fast
@@ -114,6 +115,7 @@ export default function App() {
   const [isLensConfiguratorOpen, setIsLensConfiguratorOpen] = useState<boolean>(false);
   const [isBagOpen, setIsBagOpen] = useState<boolean>(false);
   const [isVaultOpen, setIsVaultOpen] = useState<boolean>(false);
+  const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
 
   // Cart & Orders State
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -297,15 +299,9 @@ export default function App() {
 
   // Auth toggle
   const handleAuthAction = async () => {
-    if (currentUser) {
-      await logoutUser();
-    } else {
-      try {
-        await loginWithGoogle();
-      } catch (e) {
-        console.warn('Google sign-in popup closed or cancelled:', e);
-      }
-    }
+    // Signed in: the button signs out. Signed out: choose Google or email and password.
+    if (currentUser) await logoutUser();
+    else setIsAuthOpen(true);
   };
 
   // AR try-on and the 3D inspector start from a chosen frame (card buttons), so they aren't nav items
@@ -914,6 +910,8 @@ export default function App() {
           setCartItems([]);
         }}
       />
+
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
       <UserSavedLooksModal
         isOpen={isVaultOpen}
