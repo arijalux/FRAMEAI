@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { OpticalFrame, CartItem, Order, OrderStatus, CustomDesignRequest, CustomDesignStatus, FaceAnalysisResult, FrameShape, FrameMaterial, FaceShape } from './types';
+import { OpticalFrame, CartItem, Order, OrderStatus, CustomDesignRequest, CustomDesignStatus, FaceAnalysisResult, FrameShape, FrameMaterial, FaceShape, FrameColorOption, LensConfiguration } from './types';
 import { INITIAL_FRAMES } from './data/initialFrames';
 import {
   fetchCatalogFrames,
@@ -24,6 +24,7 @@ import { LensConfiguratorModal } from './components/LensConfiguratorModal';
 import { ShoppingBagDrawer } from './components/ShoppingBagDrawer';
 import { UserSavedLooksModal } from './components/UserSavedLooksModal';
 import { LandingHero } from './components/LandingHero';
+import { FrameDetailView } from './components/FrameDetailView';
 import { REAL_SIZE_PARAM } from './components/realsize/realSizeModels';
 
 // Secondary views are code-split so the catalog loads fast
@@ -49,6 +50,7 @@ import {
   Eye,
   Sliders,
   Check,
+  Bookmark,
   Search,
   Filter,
   User as UserIcon,
@@ -63,9 +65,19 @@ import {
   Flame,
 } from 'lucide-react';
 
+const BOOKMARKS_KEY = 'frameai:bookmarks';
+
+const FRAME_ONLY_LENS: LensConfiguration = {
+  type: 'non_prescription',
+  index: '1.50_standard',
+  blueLightFilter: false,
+  photochromic: false,
+  antiReflective: false,
+};
+
 export default function App() {
   // Navigation View
-  const [activeView, setActiveView] = useState<'home' | 'catalog' | 'ar_tryon' | '3d_studio' | 'compare' | 'finder' | 'custom' | 'real_size' | 'seller'>(() =>
+  const [activeView, setActiveView] = useState<'home' | 'catalog' | 'detail' | 'ar_tryon' | '3d_studio' | 'compare' | 'finder' | 'custom' | 'real_size' | 'seller'>(() =>
     // The printed card's QR code opens the real-size viewer directly
     new URLSearchParams(window.location.search).has(REAL_SIZE_PARAM) ? 'real_size' : 'home'
   );
@@ -83,6 +95,17 @@ export default function App() {
   // Unknown until the visitor picks a shape, runs the AI face scan or completes Cari dengan AI;
   // match scores are hidden until then rather than assuming a face shape
   const [userFaceShape, setUserFaceShape] = useState<FaceShape | null>(null);
+  // Frames the visitor bookmarked; kept in this browser only, so a failed read just starts empty
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(BOOKMARKS_KEY) ?? '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [savedOnly, setSavedOnly] = useState<boolean>(false);
+  // Briefly shows a tick on the card whose frame was just added to the cart
+  const [justAddedId, setJustAddedId] = useState<string | null>(null);
   // Free-text question sent to Gemini from the navbar's AI search button
   const [aiQuery, setAiQuery] = useState<string>('');
 
@@ -138,7 +161,8 @@ export default function App() {
         f.material.toLowerCase().includes(searchQuery.toLowerCase());
       const matchShape = shapeFilter === 'All' || f.shape === shapeFilter;
       const matchMat = materialFilter === 'All' || f.material === materialFilter;
-      return matchSearch && matchShape && matchMat;
+      const matchSaved = !savedOnly || bookmarkedIds.includes(f.id);
+      return matchSearch && matchShape && matchMat && matchSaved;
     })
     .sort((a, b) => {
       // Best match first once we know the face shape; otherwise keep catalog order
@@ -162,6 +186,46 @@ export default function App() {
     setIsBagOpen(true);
   };
 
+  // Buying from a card or the detail page orders the frame alone; lenses are set up
+  // through "Atur Lensa Resep" on the detail page
+  const addFrameOnly = (frame: OpticalFrame, color: FrameColorOption, openBag: boolean) => {
+    setCartItems((prev) => [
+      ...prev,
+      {
+        id: 'cart-' + Date.now(),
+        frame,
+        selectedColor: color,
+        lensConfig: FRAME_ONLY_LENS,
+        calculatedPrice: frame.price,
+        quantity: 1,
+      },
+    ]);
+    if (openBag) {
+      setIsBagOpen(true);
+    } else {
+      setJustAddedId(frame.id);
+      setTimeout(() => setJustAddedId((cur) => (cur === frame.id ? null : cur)), 1500);
+    }
+  };
+
+  const toggleBookmark = (frameId: string) => {
+    setBookmarkedIds((prev) => {
+      const next = prev.includes(frameId) ? prev.filter((id) => id !== frameId) : [...prev, frameId];
+      try {
+        localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(next));
+      } catch {
+        // Storage can be unavailable (private mode); the bookmark still holds for this visit
+      }
+      return next;
+    });
+  };
+
+  const openDetail = (frame: OpticalFrame) => {
+    setSelectedFrame(frame);
+    setActiveView('detail');
+    window.scrollTo({ top: 0 });
+  };
+
   const handleRemoveCartItem = (id: string) => {
     setCartItems((prev) => prev.filter((it) => it.id !== id));
   };
@@ -179,6 +243,15 @@ export default function App() {
       setComparedFrames([...comparedFrames, frame]);
     }
     setActiveView('compare');
+  };
+
+  // From the detail page: add or remove without leaving the page
+  const handleToggleCompare = (frame: OpticalFrame) => {
+    setComparedFrames((prev) =>
+      prev.some((f) => f.id === frame.id)
+        ? prev.filter((f) => f.id !== frame.id)
+        : [...(prev.length >= 4 ? prev.slice(1) : prev), frame]
+    );
   };
 
   const handleRemoveFromCompare = (frameId: string) => {
@@ -427,6 +500,16 @@ export default function App() {
                     <option value="Sonokeling">Kayu Sonokeling</option>
                     <option value="Jati">Kayu Jati</option>
                   </select>
+                  <button
+                    onClick={() => setSavedOnly((v) => !v)}
+                    aria-pressed={savedOnly}
+                    className={`shrink-0 h-10 px-4 rounded-full text-sm flex items-center gap-1.5 transition-colors ${
+                      savedOnly ? 'bg-ink text-white' : 'bg-soft text-ink'
+                    }`}
+                  >
+                    <Bookmark className={`w-4 h-4 ${savedOnly ? 'fill-current' : ''}`} />
+                    Disimpan ({bookmarkedIds.length})
+                  </button>
                 </div>
               </div>
 
@@ -436,17 +519,43 @@ export default function App() {
                   // Rotate through the soft panel tints like an editorial grid
                   const tint = ['bg-sand', 'bg-mist', 'bg-sage-tint', 'bg-stone'][idx % 4];
 
+                  const saved = bookmarkedIds.includes(frame.id);
+                  const added = justAddedId === frame.id;
+
                   return (
+                    // The whole card opens the detail page; its buttons act on their own
                     <article
                       key={frame.id}
-                      className="group rounded-3xl border border-line bg-white overflow-hidden flex flex-col transition-shadow hover:shadow-float"
+                      onClick={() => openDetail(frame)}
+                      onKeyDown={(e) => {
+                        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                          e.preventDefault();
+                          openDetail(frame);
+                        }
+                      }}
+                      tabIndex={0}
+                      aria-label={`Lihat detail ${frame.name}`}
+                      className="group rounded-3xl border border-line bg-white overflow-hidden flex flex-col transition-shadow hover:shadow-float cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
                     >
                       <div className={`relative ${tint} p-5 pb-0`}>
-                        {match && (
-                          <span className="inline-block mb-4 px-2.5 py-1 rounded-full bg-white/90 text-xs text-ink">
-                            Cocok {match.score}%
-                          </span>
-                        )}
+                        <div className="flex items-start justify-between gap-3 mb-4 min-h-10">
+                          {match ? (
+                            <span className="px-2.5 py-1 rounded-full bg-white/90 text-xs text-ink">Cocok {match.score}%</span>
+                          ) : (
+                            <span />
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleBookmark(frame.id);
+                            }}
+                            aria-pressed={saved}
+                            aria-label={saved ? `Hapus ${frame.name} dari simpanan` : `Simpan ${frame.name}`}
+                            className="w-10 h-10 rounded-full bg-white/90 hover:bg-white text-ink flex items-center justify-center transition-colors"
+                          >
+                            <Bookmark className={`w-4 h-4 ${saved ? 'fill-current' : ''}`} />
+                          </button>
+                        </div>
                         <div className="aspect-[4/3] rounded-t-2xl overflow-hidden shadow-card">
                           <img
                             src={frame.imageUrl}
@@ -457,21 +566,9 @@ export default function App() {
                       </div>
 
                       <div className="p-5 flex-1 flex flex-col gap-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="space-y-1">
-                            <span className="text-xs text-muted">{materialLabel(frame.material)}</span>
-                            <h3 className="text-xl font-normal tracking-[-0.03em] text-ink">{frame.name}</h3>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setSelectedFrame(frame);
-                              setIsLensConfiguratorOpen(true);
-                            }}
-                            aria-label={`Atur lensa untuk ${frame.name}`}
-                            className="shrink-0 w-10 h-10 rounded-full border border-line group-hover:bg-ink group-hover:text-white group-hover:border-ink text-ink flex items-center justify-center transition-colors"
-                          >
-                            <ArrowUpRight className="w-4 h-4" />
-                          </button>
+                        <div className="space-y-1">
+                          <span className="text-xs text-muted">{materialLabel(frame.material)}</span>
+                          <h3 className="text-xl font-normal tracking-[-0.03em] text-ink">{frame.name}</h3>
                         </div>
 
                         <div className="flex items-center gap-1.5">
@@ -486,35 +583,32 @@ export default function App() {
                           <span className="ml-auto text-base tabular-nums text-ink">{formatRupiah(frame.price)}</span>
                         </div>
 
+                        {/* Buying is the main action; adding to the cart sits beside it */}
                         <div className="mt-auto pt-4 border-t border-line flex items-center gap-2">
                           <button
-                            onClick={() => {
-                              setSelectedFrame(frame);
-                              setActiveView('ar_tryon');
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addFrameOnly(frame, frame.colors[0], true);
                             }}
-                            className="flex-1 h-10 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
+                            disabled={frame.stock <= 0}
+                            className="flex-1 h-11 rounded-full bg-ink hover:bg-ink-soft disabled:opacity-50 text-white text-sm font-medium shadow-card flex items-center justify-center gap-1.5 transition-colors"
                           >
-                            <Camera className="w-4 h-4" />
-                            Coba AR
+                            <ShoppingBag className="w-4 h-4" />
+                            Beli sekarang
                           </button>
                           <button
-                            onClick={() => {
-                              setSelectedFrame(frame);
-                              setActiveView('3d_studio');
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addFrameOnly(frame, frame.colors[0], false);
                             }}
-                            title="Lihat 3D"
-                            aria-label={`Lihat ${frame.name} dalam 3D`}
-                            className="w-10 h-10 rounded-full border border-line hover:border-ink text-ink flex items-center justify-center transition-colors"
+                            disabled={frame.stock <= 0}
+                            title="Tambah ke keranjang"
+                            aria-label={`Tambah ${frame.name} ke keranjang`}
+                            className={`w-11 h-11 rounded-full border flex items-center justify-center transition-colors disabled:opacity-50 ${
+                              added ? 'border-sage bg-sage-tint text-sage' : 'border-line hover:border-ink text-ink'
+                            }`}
                           >
-                            <Layers className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleAddToCompare(frame)}
-                            title="Bandingkan"
-                            aria-label={`Bandingkan ${frame.name}`}
-                            className="w-10 h-10 rounded-full border border-line hover:border-ink text-ink flex items-center justify-center transition-colors"
-                          >
-                            <Plus className="w-4 h-4" />
+                            {added ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                           </button>
                         </div>
                       </div>
@@ -527,7 +621,7 @@ export default function App() {
         )}
 
         {/* Shortcut back to the comparison once frames have been added from Koleksi */}
-        {activeView === 'catalog' && comparedFrames.length > 0 && (
+        {(activeView === 'catalog' || activeView === 'detail') && comparedFrames.length > 0 && (
           <button
             onClick={() => setActiveView('compare')}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 h-12 pl-5 pr-2 rounded-full bg-ink text-white text-sm font-medium shadow-float flex items-center gap-3"
@@ -537,6 +631,38 @@ export default function App() {
               <ArrowUpRight className="w-4 h-4" />
             </span>
           </button>
+        )}
+
+        {/* Frame detail: try-on, 3D, lenses and comparing live here, not on the card */}
+        {activeView === 'detail' && (
+          <FrameDetailView
+            frame={selectedFrame}
+            allFrames={frames}
+            userFaceShape={userFaceShape}
+            userPd={faceAnalysis?.estimatedPd}
+            isCompared={comparedFrames.some((f) => f.id === selectedFrame.id)}
+            isBookmarked={bookmarkedIds.includes(selectedFrame.id)}
+            backLabel="Kembali ke Koleksi"
+            onBack={() => setActiveView('catalog')}
+            onSelectFaceShape={setUserFaceShape}
+            onOpenFinder={() => {
+              setAiQuery('');
+              setActiveView('finder');
+            }}
+            onDirectCheckout={(f, color) => addFrameOnly(f, color, true)}
+            onQuickAddToCart={(f, color) => addFrameOnly(f, color, false)}
+            onConfigureLenses={(f) => {
+              setSelectedFrame(f);
+              setIsLensConfiguratorOpen(true);
+            }}
+            onTryOnAr={(f) => {
+              setSelectedFrame(f);
+              setActiveView('ar_tryon');
+            }}
+            onToggleCompare={handleToggleCompare}
+            onToggleBookmark={(f) => toggleBookmark(f.id)}
+            onSelectRelatedFrame={openDetail}
+          />
         )}
 
         {/* VIEW 2: Real-time Live AR Try-On */}
