@@ -142,11 +142,15 @@ export const ProblemSection: React.FC = () => {
         <p className="text-xs text-muted">Ulasan pembeli kacamata di marketplace, nama disamarkan.</p>
       </div>
 
-      {/* Data behind the problem */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 sm:gap-8 max-w-5xl mx-auto">
+      {/* Data behind the problem, on a dark band so the figures break up the white page */}
+      <div className="rounded-[32px] bg-ink text-white px-6 py-14 md:px-12 md:py-20 space-y-10">
+        <motion.p {...anim(0)} className="text-sm text-white/60">
+          Dalam angka, di Indonesia
+        </motion.p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 sm:gap-0 sm:divide-x divide-white/15 max-w-5xl mx-auto">
         {DATA.map((d, i) => (
-          <motion.div key={d.source} {...anim(i)} className="space-y-3">
-            <p className="whitespace-nowrap text-6xl md:text-8xl font-normal tracking-[-0.05em] leading-none text-ink tabular-nums">
+          <motion.div key={d.source} {...anim(i)} className="space-y-3 sm:px-8">
+            <p className="whitespace-nowrap text-6xl md:text-8xl font-normal tracking-[-0.05em] leading-none text-white tabular-nums">
               <CountUp to={d.count} still={still} />
               {/* A word unit sits smaller beside the number so it stays on one line */}
               {d.suffix.length > 1 ? (
@@ -155,12 +159,13 @@ export const ProblemSection: React.FC = () => {
                 d.suffix
               )}
             </p>
-            <p className="text-base text-body leading-relaxed max-w-md mx-auto">{d.text}</p>
-            <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted underline underline-offset-2 hover:text-ink">
+            <p className="text-base text-white/80 leading-relaxed max-w-md mx-auto">{d.text}</p>
+            <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs text-white/50 underline underline-offset-2 hover:text-white">
               {d.source}
             </a>
           </motion.div>
         ))}
+        </div>
       </div>
 
       <div className="space-y-8 border-t border-line pt-12">
