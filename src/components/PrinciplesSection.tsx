@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Leaf, Lightbulb, MapPin, Sparkles } from 'lucide-react';
+import { PRINCIPLE_ILLUSTRATIONS } from './PrincipleIllustrations';
 
 // The principles FrameAI is built on, each with how the app meets it
 const PRINCIPLES = [
@@ -108,16 +109,24 @@ export const PrinciplesSection: React.FC = () => {
       {/* Idea checklist */}
       <div className="space-y-8 border-t border-line pt-12">
         <h3 className="text-sm text-sage">Cara kami mewujudkannya</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10 max-w-4xl mx-auto">
-          {CHECKLIST.map((c, i) => (
-            <motion.div key={c.title} {...anim(i % 2)} className="space-y-2">
-              <span className="block text-xl text-sage tabular-nums">0{i + 1}</span>
-              <div className="space-y-1">
-                <p className="text-xl text-ink">{c.title}</p>
-                <p className="text-base text-muted leading-relaxed">{c.text}</p>
-              </div>
-            </motion.div>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {CHECKLIST.map((c, i) => {
+            const Illustration = PRINCIPLE_ILLUSTRATIONS[i];
+            // Same rotating panel tints as the catalog cards
+            const tint = ['bg-sand', 'bg-mist', 'bg-sage-tint', 'bg-stone'][i % 4];
+            return (
+              <motion.article key={c.title} {...anim(i % 3)} className="rounded-3xl border border-line bg-white overflow-hidden flex flex-col">
+                <div className={`${tint} h-44 px-6 py-5`}>
+                  <Illustration />
+                </div>
+                <div className="p-6 space-y-2">
+                  <span className="block text-sm text-sage tabular-nums">0{i + 1}</span>
+                  <p className="text-xl text-ink">{c.title}</p>
+                  <p className="text-base text-muted leading-relaxed">{c.text}</p>
+                </div>
+              </motion.article>
+            );
+          })}
         </div>
       </div>
     </section>
