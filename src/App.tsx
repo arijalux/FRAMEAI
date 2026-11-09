@@ -30,6 +30,7 @@ import { UserSavedLooksModal } from './components/UserSavedLooksModal';
 import { LandingHero } from './components/LandingHero';
 import { FrameDetailView } from './components/FrameDetailView';
 import { AuthModal } from './components/AuthModal';
+import { FrameAILogo } from './components/FrameAILogo';
 import { REAL_SIZE_PARAM } from './components/realsize/realSizeModels';
 
 // Secondary views are code-split so the catalog loads fast
@@ -344,9 +345,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center shrink-0">
             <button onClick={() => setActiveView('home')} aria-label="Beranda frameai" className="flex items-center gap-2 text-left">
-              <span className="w-8 h-8 rounded-full border-[1.5px] border-ink flex items-center justify-center">
-                <Eye className="w-4 h-4 text-ink" />
-              </span>
+              <FrameAILogo className="h-6 w-auto text-ink" />
               <span className="hidden sm:inline text-xl font-medium tracking-[-0.04em] text-ink">frameai</span>
             </button>
           </div>
@@ -904,9 +903,7 @@ export default function App() {
       <footer className="mt-auto border-t border-line">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-sm text-muted">
           <div className="flex items-center gap-2">
-            <span className="w-7 h-7 rounded-full border-[1.5px] border-ink flex items-center justify-center">
-              <Eye className="w-3.5 h-3.5 text-ink" />
-            </span>
+            <FrameAILogo className="h-5 w-auto text-ink" />
             <span className="text-lg font-medium tracking-[-0.04em] text-ink">frameai</span>
             <span className="ml-2">Kacamata yang pas, dibantu AI. © 2026</span>
           </div>
