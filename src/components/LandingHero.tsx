@@ -75,7 +75,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ frames, onOpenCatalog,
               alt: `${f.name}, ${materialLabel(f.material)}, ${formatRupiah(f.price)}`,
             }))}
             cardWidth={230}
-            aspectRatio={0.78}
+            aspectRatio={1}
             speed={12}
             tilt={-8}
             onCardClick={onOpenCatalog}
