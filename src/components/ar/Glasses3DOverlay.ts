@@ -16,7 +16,7 @@ export interface OverlayPose {
   lensTint: LensTint;
 }
 
-const LENS_TINTS: Record<LensTint, { color: number; opacity: number }> = {
+export const LENS_TINTS: Record<LensTint, { color: number; opacity: number }> = {
   clear: { color: 0xffffff, opacity: 0.08 },
   blue_light: { color: 0xcfe0ff, opacity: 0.16 },
   sun: { color: 0x2a2a26, opacity: 0.72 },
@@ -64,7 +64,11 @@ export class Glasses3DOverlay {
   }
 
   async load(url: string): Promise<void> {
-    const loaded = await loadGlassesModel(url);
+    this.useModel(await loadGlassesModel(url));
+  }
+
+  /** Puts a ready-made pair on the face, e.g. one built from a custom design */
+  useModel(loaded: LoadedGlasses): void {
     const { width, lensSize, templeInner } = loaded;
     this.lensMaterials = loaded.lensMaterials;
     this.modelWidth = width;

@@ -1,6 +1,6 @@
-import React, { useDeferredValue, useMemo, useState } from 'react';
-import { CheckCircle2, Download, FileText, MessageCircle, ScanFace, Send, Sparkles } from 'lucide-react';
-import { FaceAnalysisResult, FrameShape } from '../types';
+import React, { Suspense, lazy, useDeferredValue, useMemo, useState } from 'react';
+import { ArrowLeft, Camera, CheckCircle2, Download, FileText, MessageCircle, ScanFace, Send, Sparkles } from 'lucide-react';
+import { FaceAnalysisResult, FrameShape, OpticalFrame } from '../types';
 import { FaceScanPanel } from './FaceScanPanel';
 import { faceShapeLabel, frameShapeLabel } from '../utils/format';
 import { downloadCutFile } from '../utils/cutFileDownload';
@@ -21,6 +21,9 @@ import {
   withChange,
 } from '../utils/frameGenerator';
 import { whatsappLink } from '../utils/contact';
+
+// The camera try-on is heavy (MediaPipe + three.js), so it loads only when opened
+const ARFaceTryOn = lazy(() => import('./ARFaceTryOn').then((m) => ({ default: m.ARFaceTryOn })));
 
 const SHAPES: FrameShape[] = ['Round', 'Oval', 'Square', 'Geometric', 'Aviator', 'Cat-Eye'];
 
@@ -105,6 +108,35 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
   };
 
   const woodLabel = WOODS.find((w) => w.id === wood)!.label;
+  const [tryOnOpen, setTryOnOpen] = useState(false);
+
+  // The design as a catalog-style frame, so the AR view can size and label it; its 3D model is
+  // built from the same outlines as the cut file
+  const tryOnFrame: OpticalFrame = {
+    id: 'custom-design',
+    name: `Desain custom ${frameShapeLabel(params.shape)}`,
+    brand: 'BJ Homemade',
+    shape: params.shape,
+    material: wood === 'jati' ? 'Jati' : 'Sonokeling',
+    price: 0,
+    colors: [{ name: woodLabel, hex: woodColor, acetateTexture: 'matte' }],
+    dimensions: {
+      lensWidth: params.lensWidth,
+      bridgeWidth: params.bridgeWidth,
+      templeLength: params.templeLength,
+      lensHeight: params.lensHeight,
+      totalWidth: geometry.width,
+    },
+    weightGrams: 0,
+    fitFaceShapes: [],
+    description: '',
+    isPolarized: false,
+    imageUrl: '',
+    model3dPreset: 'wayfarer',
+    stock: 1,
+    rating: 0,
+    reviewsCount: 0,
+  };
   const canSend = customerName.trim().length > 0 && contact.trim().length >= 5 && sendState !== 'sending';
 
   const send = async (e: React.FormEvent) => {
@@ -133,6 +165,37 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
 
   const pad = 6;
   const frontBox = `${-geometry.width / 2 - pad} ${geometry.top - pad} ${geometry.width + pad * 2} ${geometry.height + pad * 2}`;
+
+  if (tryOnOpen) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-normal tracking-[-0.04em] text-ink">Coba desainmu</h2>
+            <p className="text-sm text-muted">
+              {frameShapeLabel(params.shape)} · {woodLabel} · {sizeCode(params)}, ukuran asli di wajahmu.
+            </p>
+          </div>
+          <button
+            onClick={() => setTryOnOpen(false)}
+            className="h-10 px-4 rounded-full border border-line hover:border-ink text-sm text-ink flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Kembali ke desain
+          </button>
+        </div>
+        <Suspense fallback={<div className="py-24 text-center text-sm text-muted">Memuat kamera…</div>}>
+          <ARFaceTryOn
+            frames={[tryOnFrame]}
+            activeFrame={tryOnFrame}
+            onSelectFrame={() => undefined}
+            userPd={faceAnalysis?.estimatedPd || 63}
+            customDesign={{ params, woodColor }}
+          />
+        </Suspense>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">
@@ -389,6 +452,13 @@ export const CustomFrameDesigner: React.FC<CustomFrameDesignerProps> = ({ faceAn
               </form>
             ) : (
               <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setTryOnOpen(true)}
+                  className="col-span-2 h-12 rounded-full border border-ink hover:bg-soft text-ink text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Camera className="w-4 h-4" />
+                  Coba di wajah dulu
+                </button>
                 <button
                   onClick={() => setSendOpen(true)}
                   className="h-12 rounded-full bg-ink hover:bg-ink-soft text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors"

@@ -23,6 +23,7 @@ import {
 import { saveTryOnLookToFirestore } from '../lib/firebase';
 import { OpticalFaceTracker, TrackedLandmarks, landmarksFromEyes, coverTransform } from '../utils/faceTracker';
 import type { Glasses3DOverlay } from './ar/Glasses3DOverlay';
+import type { CustomFrameParams } from '../utils/frameGenerator';
 
 // Sample 3D frame (CC BY 4.0) until BJ Homemade's own models are available
 const GLASSES_MODEL_URL = '/models/wood-glasses.glb';
@@ -67,6 +68,8 @@ interface ARFaceTryOnProps {
   onSelectFrame: (frame: OpticalFrame) => void;
   onClose?: () => void;
   userPd?: number;
+  /** Try on a custom design instead of the catalog model; the frame picker is hidden */
+  customDesign?: { params: CustomFrameParams; woodColor: string };
 }
 
 const DEMO_MODELS = [
@@ -99,6 +102,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
   onSelectFrame,
   onClose,
   userPd = 63,
+  customDesign,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const demoImageRef = useRef<HTMLImageElement>(null);
@@ -178,7 +182,12 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
         const { Glasses3DOverlay } = await import('./ar/Glasses3DOverlay');
         if (cancelled || !glCanvasRef.current) return;
         overlay = new Glasses3DOverlay(glCanvasRef.current);
-        await overlay.load(GLASSES_MODEL_URL);
+        if (customDesign) {
+          const { buildCustomGlassesModel } = await import('./ar/customGlassesModel');
+          overlay.useModel(buildCustomGlassesModel(customDesign.params, customDesign.woodColor));
+        } else {
+          await overlay.load(GLASSES_MODEL_URL);
+        }
         if (cancelled) return;
         overlayRef.current = overlay;
         setOverlayStatus('ready');
@@ -743,7 +752,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
     ctx.fillStyle = '#6E6E6E';
     ctx.font = `${12 * k}px "Instrument Sans", sans-serif`;
     const caption =
-      renderMode === '3d' && overlayStatus === 'ready'
+      renderMode === '3d' && overlayStatus === 'ready' && !customDesign
         ? `Contoh model 3D kayu · ${GLASSES_MODEL_CREDIT.author} (CC BY 4.0)`
         : `${activeFrame.name} · ${activeColor.name}`;
     ctx.fillText(caption, 24 * k, h - 18 * k);
@@ -880,7 +889,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
 
         {/* 3D glasses, drawn above the guides; drag events go to the canvas below */}
         <canvas ref={glCanvasRef} className="absolute inset-0 w-full h-full z-[11] pointer-events-none" />
-        {renderMode === '3d' && overlayStatus === 'ready' && (cameraActive || demoMode) && (
+        {renderMode === '3d' && overlayStatus === 'ready' && !customDesign && (cameraActive || demoMode) && (
           <a
             href={GLASSES_MODEL_CREDIT.url}
             target="_blank"
@@ -1138,7 +1147,14 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
       {/* Bottom Frame Switcher & Customization Drawer */}
       <div className="p-4 bg-soft border-t border-line">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3">
-          {renderMode === '3d' && overlayStatus === 'ready' ? (
+          {customDesign ? (
+            <div>
+              <h4 className="font-display text-lg font-medium text-ink tracking-wide">{activeFrame.name}</h4>
+              <p className="text-xs text-muted">
+                Dibuat dari desainmu dengan ukuran asli; warna kayu polos, tanpa serat.
+              </p>
+            </div>
+          ) : renderMode === '3d' && overlayStatus === 'ready' ? (
             <div>
               <h4 className="font-display text-lg font-medium text-ink tracking-wide">Contoh model 3D kayu</h4>
               <p className="text-xs text-muted">Bukan produk katalog. Pilih “Frame ini (2D)” untuk mencoba {activeFrame.name}.</p>
@@ -1228,7 +1244,8 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
           </div>
         </div>
 
-        {/* Horizontal Frame Quick-Carousel */}
+        {/* Horizontal Frame Quick-Carousel (not for a custom design: there is only the one) */}
+        {!customDesign && (
         <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-neutral-800">
           {frames.map((f) => {
             const isSelected = f.id === activeFrame.id;
@@ -1251,6 +1268,7 @@ export const ARFaceTryOn: React.FC<ARFaceTryOnProps> = ({
             );
           })}
         </div>
+        )}
       </div>
     </div>
   );
