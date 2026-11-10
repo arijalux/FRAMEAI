@@ -31,6 +31,7 @@ import { LandingHero } from './components/LandingHero';
 import { FrameDetailView } from './components/FrameDetailView';
 import { AuthModal } from './components/AuthModal';
 import { ProfileMenu } from './components/ProfileMenu';
+import { CatalogBanners } from './components/CatalogBanners';
 import { FrameAILogo } from './components/FrameAILogo';
 import { REAL_SIZE_PARAM } from './components/realsize/realSizeModels';
 
@@ -490,6 +491,19 @@ export default function App() {
         {/* VIEW 1: Catalog, focused on choosing frames */}
         {activeView === 'catalog' && (
           <div className="space-y-10">
+            <CatalogBanners
+              onOpenCustom={() => {
+                setActiveView('custom');
+                window.scrollTo({ top: 0 });
+              }}
+              onOpenTryOn={() => setActiveView('ar_tryon')}
+              onOpenPartner={() => {
+                // The maker's section lives on the landing page
+                setActiveView('home');
+                setTimeout(() => document.getElementById('partner-title')?.scrollIntoView({ block: 'center' }), 300);
+              }}
+            />
+
             {/* Catalog */}
             <section className="space-y-8">
               <div className="space-y-6">
