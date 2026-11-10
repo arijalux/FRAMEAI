@@ -30,6 +30,7 @@ import { UserSavedLooksModal } from './components/UserSavedLooksModal';
 import { LandingHero } from './components/LandingHero';
 import { FrameDetailView } from './components/FrameDetailView';
 import { AuthModal } from './components/AuthModal';
+import { ProfileMenu } from './components/ProfileMenu';
 import { FrameAILogo } from './components/FrameAILogo';
 import { REAL_SIZE_PARAM } from './components/realsize/realSizeModels';
 
@@ -325,11 +326,8 @@ export default function App() {
   };
 
   // Auth toggle
-  const handleAuthAction = async () => {
-    // Signed in: the button signs out. Signed out: choose Google or email and password.
-    if (currentUser) await logoutUser();
-    else setIsAuthOpen(true);
-  };
+  // Signed out: choose Google or email and password. Signed in, the profile menu has "Keluar".
+  const handleAuthAction = () => setIsAuthOpen(true);
 
   // AR try-on and the 3D inspector start from a chosen frame (card buttons), so they aren't nav items
   const navItems: { view: typeof activeView; label: string }[] = [
@@ -417,13 +415,32 @@ export default function App() {
               )}
             </button>
 
-            <button
-              onClick={handleAuthAction}
-              className="flex items-center gap-1.5 h-9 px-3 rounded-full text-sm text-muted hover:text-ink whitespace-nowrap transition-colors"
-            >
-              <UserIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">{currentUser ? currentUser.displayName || 'Akun' : 'Masuk'}</span>
-            </button>
+            {currentUser ? (
+              <ProfileMenu
+                user={currentUser}
+                role={isSuperAdmin(currentUser) ? 'superadmin' : isAdmin ? 'admin' : null}
+                favoritesCount={bookmarkedIds.length}
+                onOpenOrders={() => setIsVaultOpen(true)}
+                onOpenFavorites={() => {
+                  setSavedOnly(true);
+                  setActiveView('catalog');
+                  window.scrollTo({ top: 0 });
+                }}
+                onOpenPortal={() => setActiveView('seller')}
+                onSignOut={() => {
+                  void logoutUser();
+                  if (activeView === 'seller') setActiveView('home');
+                }}
+              />
+            ) : (
+              <button
+                onClick={handleAuthAction}
+                className="flex items-center gap-1.5 h-9 px-3 rounded-full text-sm text-muted hover:text-ink whitespace-nowrap transition-colors"
+              >
+                <UserIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">Masuk</span>
+              </button>
+            )}
           </div>
         </div>
 
