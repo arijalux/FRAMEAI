@@ -90,7 +90,8 @@ export const CatalogBanners: React.FC<CatalogBannersProps> = ({ onOpenCustom, on
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
-      className="relative rounded-[32px] overflow-hidden"
+      // One height for every banner, so Koleksi below doesn't jump when they change
+      className="relative h-[440px] md:h-[320px] rounded-[32px] overflow-hidden"
     >
       <AnimatePresence initial={false} custom={direction} mode="popLayout">
         <motion.div
@@ -110,7 +111,7 @@ export const CatalogBanners: React.FC<CatalogBannersProps> = ({ onOpenCustom, on
           }}
           aria-roledescription="slide"
           aria-label={`${index + 1} dari ${banners.length}`}
-          className={`${b.tone} grid grid-cols-1 md:grid-cols-[1.3fr_1fr] items-center gap-6 px-6 pt-8 pb-20 md:px-12 md:py-10 min-h-[260px] cursor-grab active:cursor-grabbing`}
+          className={`${b.tone} grid grid-cols-1 md:grid-cols-[1.3fr_1fr] items-center h-full gap-6 px-6 pt-8 pb-20 md:px-12 md:py-10 cursor-grab active:cursor-grabbing`}
         >
           <div className="space-y-3 max-w-xl">
             <span className={`block text-sm ${dark ? 'text-white/60' : 'text-muted'}`}>{b.eyebrow}</span>
